@@ -220,6 +220,45 @@
   ::-webkit-scrollbar-track { background: var(--bg-subtle); }
   ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+  /* ── Load Bar ── */
+  .load-bar-cell { padding: 10px 14px; vertical-align: middle; }
+  .load-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; width:150px; background:var(--bg-sunken); gap:1px; }
+  .lb-seg { min-width:3px; height:100%; transition:opacity 0.15s; cursor:default; }
+  .lb-seg:hover { opacity:0.75; }
+  .lb-it   { background:var(--lm-green); }
+  .lb-dual { background:#6B2FA0; }
+  .lb-oit  { background:var(--lm-teal); }
+  .lb-adv  { background:var(--lm-amber); }
+  .lb-oat  { background:#E8941A; }
+  .lb-ws   { background:var(--accent2); }
+  .load-bar-empty { color:var(--border-mid); font-size:11px; }
+
+  /* ── Timeline ── */
+  .tl-wrap { padding:4px 0 10px; }
+  .tl-months { display:flex; gap:0; overflow-x:auto; min-width:max-content; padding-bottom:4px; }
+  .tl-month { width:46px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:3px; border-right:1px solid var(--border); padding:0 4px 6px; }
+  .tl-month:last-child { border-right:none; }
+  .tl-dots { min-height:32px; display:flex; flex-direction:column; align-items:center; gap:3px; justify-content:flex-end; }
+  .tl-dot { width:10px; height:10px; border-radius:50%; cursor:pointer; flex-shrink:0; transition:transform 0.1s; }
+  .tl-dot:hover { transform:scale(1.4); z-index:2; position:relative; }
+  .tl-dot-dual { box-shadow:0 0 0 2px #6B2FA0, 0 0 0 3px white; }
+  .tl-label { font-size:8px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .tl-legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); }
+  .tl-leg-item { display:flex; align-items:center; gap:5px; font-size:10px; font-weight:500; color:var(--ink-mid); }
+  .tl-leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* ── Heatmap ── */
+  .heatmap-section { margin-bottom:20px; }
+  .heatmap-subtitle { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .heatmap-wrap { overflow-x:auto; }
+  .heatmap-grid { display:grid; gap:2px; min-width:max-content; }
+  .hm-corner { }
+  .hm-col-head { font-size:8px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); text-align:center; padding:2px 0 4px; white-space:nowrap; }
+  .hm-row-head { font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:0 10px 0 0; display:flex; align-items:center; white-space:nowrap; }
+  .hm-cell { width:38px; height:30px; border-radius:3px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; transition:transform 0.1s; cursor:default; }
+  .hm-cell:hover { transform:scale(1.15); z-index:1; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+  .hm-cell-empty { background:var(--bg-subtle); color:var(--border-mid); }
 </style>
 </head>
 <body>
@@ -228,9 +267,10 @@
   <div class="header-logo"></div>
   <div>
     <div class="header-title">LMUS <em>TΛP</em></div>
-    <div class="header-sub">Trainer Bookings — FY26 &amp; FY27</div>
+    <div class="header-sub">TRAINER TEAM</div>
   </div>
   <div class="header-spacer"></div>
+  <a href="map.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:6px 14px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;transition:all 0.15s;margin-right:12px;" onmouseover="this.style.color='#00FF63';this.style.borderColor='rgba(0,255,99,0.4)'" onmouseout="this.style.color='rgba(255,255,255,0.55)';this.style.borderColor='rgba(255,255,255,0.15)'">&#9651; REGIONAL OPS</a>
   <div class="header-badge" id="totalBadge">&#8212; bookings</div>
 </header>
 
@@ -261,6 +301,7 @@
       <button class="filter-btn" data-val="Dual Training">Dual Training</button>
       <button class="filter-btn" data-val="Online IT">Online IT</button>
       <button class="filter-btn" data-val="Advanced Training">Advanced Training</button>
+      <button class="filter-btn" data-val="Online Advanced Training">Online Advanced Training</button>
       <button class="filter-btn" data-val="Instructor Workshop">Instructor Workshop</button>
     </div>
   </div>
@@ -298,12 +339,24 @@
     <div class="stat-card adv">
       <div class="stat-type">Advanced Training</div>
       <div class="stat-num" id="statAdv">&#8212;</div>
-      <div class="stat-sub">in-person &amp; online</div>
+      <div class="stat-sub" id="statAdvSub">in-person &amp; online</div>
     </div>
     <div class="stat-card workshop">
       <div class="stat-type">Instructor Workshop</div>
       <div class="stat-num" id="statWS">&#8212;</div>
       <div class="stat-sub">quarterly workshops</div>
+    </div>
+  </div>
+
+  <!-- Program Drill-Down -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-title">PROGRAM DISTRIBUTION</div>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px;">Select a program to see trainer team bookings, region &amp; quarter breakdown</span>
+    </div>
+    <div class="prog-pills" id="progPills"></div>
+    <div class="drill-body" id="drillBody">
+      <div class="drill-empty">Select a program above to view distribution</div>
     </div>
   </div>
 
@@ -322,18 +375,6 @@
     </div>
   </div>
 
-  <!-- Program Drill-Down -->
-  <div class="section-card">
-    <div class="section-header">
-      <div class="section-title">PROGRAM DISTRIBUTION</div>
-      <span style="font-size:11px;color:var(--muted);margin-left:8px;">Select a program to see trainer team bookings, region &amp; quarter breakdown</span>
-    </div>
-    <div class="prog-pills" id="progPills"></div>
-    <div class="drill-body" id="drillBody">
-      <div class="drill-empty">Select a program above to view distribution</div>
-    </div>
-  </div>
-
   <!-- Trainer Table -->
   <div class="table-card">
     <div class="table-header-bar">
@@ -345,8 +386,7 @@
         <tr>
           <th onclick="sortTable('trainer')">Trainer</th>
           <th onclick="sortTable('region')">Region</th>
-          <th onclick="sortTable('q4fy26')" style="text-align:right">Q4 FY26</th>
-          <th onclick="sortTable('q1fy27')" style="text-align:right">Q1 FY27</th>
+          <th>Workload</th>
           <th onclick="sortTable('total')"  style="text-align:right">Total</th>
           <th onclick="sortTable('it')"     style="text-align:right">IT</th>
           <th onclick="sortTable('dual')"   style="text-align:right">Dual</th>
@@ -366,7 +406,7 @@ const BOOKINGS = [{"event":"Online BODYPUMP Initial Training","bookingId":"TB-15
 
 
 const state = {
-  fy: 'All', q: 'All', type: 'All', region: 'All',
+  fy: 'All', q: 'All', type: [], region: 'All',
   sortCol: 'total', sortDir: -1, expandedTrainer: null, selectedProgram: null
 };
 
@@ -374,7 +414,7 @@ function getFiltered() {
   return BOOKINGS.filter(b => {
     if (state.fy     !== 'All' && b.fiscalYear    !== state.fy)     return false;
     if (state.q      !== 'All' && b.fiscalQuarter !== state.q)      return false;
-    if (state.type   !== 'All' && b.eventType     !== state.type)   return false;
+    if (state.type.length > 0 && !state.type.includes(b.eventType)) return false;
     if (state.region !== 'All' && b.region        !== state.region) return false;
     return true;
   });
@@ -417,6 +457,7 @@ function initCharts() {
         { label: 'Dual Training',    data: [], backgroundColor: '#6B2FA0', borderRadius: 2, barPercentage: 0.8 },
         { label: 'Online IT',        data: [], backgroundColor: '#0E7490', borderRadius: 2, barPercentage: 0.8 },
         { label: 'Advanced',         data: [], backgroundColor: '#B85C00', borderRadius: 2, barPercentage: 0.8 },
+        { label: 'Online Advanced',  data: [], backgroundColor: '#E8941A', borderRadius: 2, barPercentage: 0.8 },
         { label: 'Workshop',         data: [], backgroundColor: '#FF623E', borderRadius: 2, barPercentage: 0.8 }
       ]
     },
@@ -453,7 +494,9 @@ function render() {
   // Stat counts
   const it     = filtered.filter(b => b.eventType === 'Initial Training').length;
   const onlineIT = filtered.filter(b => b.eventType === 'Online IT').length;
-  const adv    = filtered.filter(b => b.eventType === 'Advanced Training').length;
+  const advIP  = filtered.filter(b => b.eventType === 'Advanced Training').length;
+  const advOnline = filtered.filter(b => b.eventType === 'Online Advanced Training').length;
+  const adv    = advIP + advOnline;
   const ws     = filtered.filter(b => b.eventType === 'Instructor Workshop').length;
   // Dual: count unique dualGroup values
   const dualGroups = new Set(filtered.filter(b => b.eventType === 'Dual Training' && b.dualGroup).map(b => b.dualGroup));
@@ -463,6 +506,7 @@ function render() {
   document.getElementById('statDualSub').textContent  = dualGroups.size + ' events · ' + dualBookings + ' bookings';
   document.getElementById('statOnlineIT').textContent = onlineIT;
   document.getElementById('statAdv').textContent      = adv;
+  document.getElementById('statAdvSub').textContent   = advIP + ' in-person · ' + advOnline + ' online';
   document.getElementById('statWS').textContent       = ws;
 
   updateCharts(filtered);
@@ -480,7 +524,7 @@ function updateCharts(filtered) {
   regionChart.update();
 
   const qs = ['Q1','Q2','Q3','Q4'];
-  const types = ['Initial Training','Dual Training','Online IT','Advanced Training','Instructor Workshop'];
+  const types = ['Initial Training','Dual Training','Online IT','Advanced Training','Online Advanced Training','Instructor Workshop'];
   types.forEach((t, i) => {
     quarterChart.data.datasets[i].data = qs.map(q => filtered.filter(b => b.fiscalQuarter === q && b.eventType === t).length);
   });
@@ -548,60 +592,74 @@ function renderDrill(prog, filtered) {
 
   const RC = {'East Coast':'rb-east','Mid West':'rb-midwest','South Central':'rb-southcentral','Central':'rb-central','West Coast':'rb-west'};
 
+  // Build heatmap months from data range
+  const allDates = progData.map(b => new Date(b.startDate)).filter(d => !isNaN(d));
+  const minD = new Date(Math.min(...allDates)), maxD = new Date(Math.max(...allDates));
+  const hmMonths = [];
+  const cur = new Date(minD.getFullYear(), minD.getMonth());
+  while (cur <= maxD) {
+    hmMonths.push({ key: `${cur.getFullYear()}-${cur.getMonth()}`, label: cur.toLocaleString('en-US',{month:'short'}), fy: cur.getFullYear(), mo: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  // Count per region per month
+  const hmData = {};
+  regions.forEach(r => { hmData[r] = {}; hmMonths.forEach(m => { hmData[r][m.key] = 0; }); });
+  progData.forEach(b => {
+    const d = new Date(b.startDate);
+    if (isNaN(d)) return;
+    const k = `${d.getFullYear()}-${d.getMonth()}`;
+    if (hmData[b.region] && hmData[b.region][k] !== undefined) hmData[b.region][k]++;
+  });
+  const hmMax = Math.max(1, ...Object.values(hmData).flatMap(rv => Object.values(rv)));
+  const hmCols = 1 + hmMonths.length;
+
+  // Dual training count
+  const dualCount = progData.filter(b => b.eventType === 'Dual Training').length;
+
   document.getElementById('drillBody').innerHTML = `
-    <div class="drill-region-totals">
-      ${regions.map((r,i) => `
-        <div class="drill-region-chip">
-          <div class="drc-name">${r}</div>
-          <div class="drc-num ${regionCls[i]}">${regionCounts[i] || '—'}</div>
-        </div>`).join('')}
-    </div>
-    <div class="drill-grid">
-      <div>
-        <div class="drill-subtitle">By Region</div>
-        <div class="drill-chart-wrap"><canvas id="drillRegionChart"></canvas></div>
+    <div class="heatmap-section">
+      <div class="heatmap-subtitle">Region × Month — ${progData.length} bookings${dualCount ? ` · <span style="color:#6B2FA0">${dualCount} dual</span>` : ''}</div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-grid" style="grid-template-columns:110px ${hmMonths.map(()=>'38px').join(' ')}">
+          <div class="hm-corner"></div>
+          ${hmMonths.map(m => `<div class="hm-col-head">${m.label}<br><span style="font-size:7px;opacity:0.6">'${String(m.fy).slice(2)}</span></div>`).join('')}
+          ${regions.map((r,ri) => {
+            const rColor = regionColors[ri];
+            return `<div class="hm-row-head" style="color:${rColor}">${r}</div>
+            ${hmMonths.map(m => {
+              const cnt = hmData[r][m.key] || 0;
+              const intensity = cnt / hmMax;
+              const bg = cnt ? `rgba(${ri===0?'26,122,60':ri===1?'184,92,0':ri===2?'255,98,62':ri===3?'26,82,128':'155,111,0'},${0.12 + intensity * 0.78})` : '';
+              const fg = cnt ? (intensity > 0.55 ? '#fff' : rColor) : '';
+              return `<div class="hm-cell${cnt?'':' hm-cell-empty'}" style="${cnt?`background:${bg};color:${fg}`:''}" title="${r} · ${m.label} '${String(m.fy).slice(2)}: ${cnt} booking${cnt!==1?'s':''}">${cnt||'·'}</div>`;
+            }).join('')}`;
+          }).join('')}
+        </div>
       </div>
-      <div>
-        <div class="drill-subtitle">By Quarter</div>
-        <div class="drill-chart-wrap"><canvas id="drillQtrChart"></canvas></div>
-      </div>
     </div>
-    <div class="drill-subtitle">${trainers.length} trainer${trainers.length!==1?'s':''} — ${progData.length} bookings</div>
+    <div class="drill-subtitle" style="margin-bottom:12px">${trainers.length} trainer${trainers.length!==1?'s':''}</div>
     <table class="drill-trainer-table">
       <thead><tr>
         <th>Trainer</th><th>Region</th>
-        <th style="text-align:right">Q4 FY26</th>
-        <th style="text-align:right">Q1 FY27</th>
-        <th style="text-align:right">Total</th>
+        <th style="text-align:right">Q4 FY26</th><th style="text-align:right">Q1 FY27</th>
+        <th style="text-align:right">Total</th><th style="text-align:right">Dual</th>
       </tr></thead>
-      <tbody>${trainers.map(t => `<tr>
-        <td class="dtt-name">${t.trainer}</td>
-        <td><span class="region-badge ${RC[t.region]||''}">${t.region}</span></td>
-        <td class="${t.q4fy26?'dtt-num':'dtt-num zero'}" style="text-align:right">${t.q4fy26||'—'}</td>
-        <td class="${t.q1fy27?'dtt-num':'dtt-num zero'}" style="text-align:right">${t.q1fy27||'—'}</td>
-        <td class="dtt-num" style="text-align:right">${t.total}</td>
-      </tr>`).join('')}</tbody>
+      <tbody>${trainers.map(t => {
+        const tDual = progData.filter(b => b.trainer===t.trainer && b.eventType==='Dual Training').length;
+        return `<tr>
+          <td class="dtt-name">${t.trainer}</td>
+          <td><span class="region-badge ${RC[t.region]||''}">${t.region}</span></td>
+          <td class="${t.q4fy26?'dtt-num':'dtt-num zero'}" style="text-align:right">${t.q4fy26||'—'}</td>
+          <td class="${t.q1fy27?'dtt-num':'dtt-num zero'}" style="text-align:right">${t.q1fy27||'—'}</td>
+          <td class="dtt-num" style="text-align:right">${t.total}</td>
+          <td class="${tDual?'dtt-num':'dtt-num zero'}" style="text-align:right;color:#6B2FA0">${tDual||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
     </table>
   `;
 
-  // Re-init drill charts (needed after innerHTML replacement)
-  const gc = '#E5E5E5', tc = '#888';
-  if (drillRegionChart) drillRegionChart.destroy();
-  if (drillQtrChart)    drillQtrChart.destroy();
-
-  drillRegionChart = new Chart(document.getElementById('drillRegionChart'), {
-    type: 'bar',
-    data: { labels: regions, datasets: [{ data: regionCounts, backgroundColor: regionColors, borderRadius: 4, barPercentage: 0.7 }] },
-    options: { ...CDEFS, indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      scales: { x:{grid:{color:gc},ticks:{color:tc,font:{size:9}}}, y:{grid:{display:false},ticks:{color:'#444',font:{family:"'Barlow Condensed'",size:11,weight:'600'}}} } }
-  });
-
-  drillQtrChart = new Chart(document.getElementById('drillQtrChart'), {
-    type: 'bar',
-    data: { labels:['Q1','Q2','Q3','Q4'], datasets:[{ data:qCounts, backgroundColor:'#1A5280', borderRadius:3, barPercentage:0.65 }] },
-    options: { ...CDEFS, responsive:true, maintainAspectRatio:false,
-      scales: { x:{grid:{display:false},ticks:{color:'#444',font:{family:"'Barlow Condensed'",size:12}}}, y:{grid:{color:gc},ticks:{color:tc,font:{size:9}}} } }
-  });
+  if (drillRegionChart) { drillRegionChart.destroy(); drillRegionChart = null; }
+  if (drillQtrChart)    { drillQtrChart.destroy();    drillQtrChart = null; }
 }
 
 // ── Trainer table ──────────────────────────────────────────────────────────
@@ -645,30 +703,83 @@ function renderTable(filtered) {
     return `<tr class="${exp?'expanded':''}" onclick="toggleExpand('${eid}')">
       <td class="td-trainer">${r.trainer}</td>
       <td>${regionBadge(r.region)}</td>
-      ${numCell(r.q4fy26,'total')}${numCell(r.q1fy27,'total')}${numCell(r.total,'total')}
+      ${loadBar(r)}
+      ${numCell(r.total,'total')}
       ${numCell(r.it,'it-col')}${numCell(r.dual,'dual-col')}${numCell(r.onlineIT,'online-col')}${numCell(r.adv,'adv-col')}${numCell(r.ws,'ws-col')}
     </tr>${exp ? expandRow(r) : ''}`;
   }).join('');
-  const cols = ['trainer','region','q4fy26','q1fy27','total','it','dual','onlineIT','adv','ws'];
+  const cols = ['trainer','region','workload','total','it','dual','onlineIT','adv','ws'];
   document.querySelectorAll('thead th').forEach((th,i) => {
     th.classList.remove('sort-asc','sort-desc');
     if (cols[i]===state.sortCol) th.classList.add(state.sortDir===-1?'sort-desc':'sort-asc');
   });
 }
 
+function loadBar(r) {
+  if (!r.total) return '<td class="load-bar-cell"><span class="load-bar-empty">—</span></td>';
+  const segs = [
+    { val: r.it,       cls: 'lb-it',   label: 'IT' },
+    { val: r.dual,     cls: 'lb-dual', label: 'Dual' },
+    { val: r.onlineIT, cls: 'lb-oit',  label: 'Online IT' },
+    { val: r.adv,      cls: 'lb-adv',  label: 'Adv' },
+    { val: r.ws,       cls: 'lb-ws',   label: 'Workshop' },
+  ].filter(s => s.val > 0);
+  return `<td class="load-bar-cell"><div class="load-bar" title="${r.total} total bookings">${
+    segs.map(s => `<div class="lb-seg ${s.cls}" style="flex:${s.val}" title="${s.label}: ${s.val}"></div>`).join('')
+  }</div></td>`;
+}
+
 function expandRow(r) {
-  const evs = r.events.slice().sort((a,b) => (a.startDate||'')<(b.startDate||'') ? -1 : 1);
-  const typeClass = t => t==='Initial Training'?'it':t==='Online IT'?'oit':t==='Dual Training'?'dual':t==='Advanced Training'?'adv':'ws';
-  const typeLabel = t => t==='Online IT'?'ONLINE IT':t==='Dual Training'?'DUAL':t==='Initial Training'?'INITIAL':t==='Advanced Training'?'ADVANCED':'WORKSHOP';
-  return `<tr class="expand-row"><td colspan="10"><div class="expand-inner"><ul class="expand-list">${
-    evs.map(e => `<li class="expand-item${e.eventType==='Dual Training'?' dual-pair':''}">
-      <span class="ei-id">${e.bookingId}</span>
-      <span class="ei-date">${e.startDate}</span>
-      <span class="ei-type ${typeClass(e.eventType)}">${typeLabel(e.eventType)}</span>
-      <span class="ei-prog">${e.program!=='Other'?e.program:''}</span>
-      <span class="ei-name">${e.event.replace(/</g,'&lt;')}${e.eventType==='Dual Training'?'<span class="dual-badge">dual</span>':''}</span>
-    </li>`).join('')
-  }</ul></div></td></tr>`;
+  const evs = r.events.slice().sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+  const TYPE_COLOR = {
+    'Initial Training':'var(--lm-green)', 'Online IT':'var(--lm-teal)',
+    'Dual Training':'#6B2FA0', 'Advanced Training':'var(--lm-amber)',
+    'Online Advanced Training':'#E8941A', 'Instructor Workshop':'var(--accent2)'
+  };
+  const TYPE_LABEL = {
+    'Initial Training':'IT', 'Online IT':'Online IT', 'Dual Training':'Dual',
+    'Advanced Training':'Advanced', 'Online Advanced Training':'Online Adv', 'Instructor Workshop':'Workshop'
+  };
+
+  // Build month grid — collapse to selected quarter if active
+  const allMonths = [];
+  for (let y = 2025; y <= 2026; y++) {
+    const s = y === 2025 ? 6 : 0;
+    for (let m = s; m < 12; m++) {
+      const d = new Date(y, m);
+      allMonths.push({ key: `${y}-${m}`, short: d.toLocaleString('en-US',{month:'short'}), year: y, month: m });
+    }
+  }
+  const byMonth = {};
+  evs.forEach(e => {
+    const d = new Date(e.startDate);
+    if (isNaN(d)) return;
+    const k = `${d.getFullYear()}-${d.getMonth()}`;
+    (byMonth[k] = byMonth[k] || []).push(e);
+  });
+  // When a quarter is selected, show only months that have bookings in that quarter
+  const months = state.q !== 'All'
+    ? allMonths.filter(m => byMonth[m.key] && byMonth[m.key].some(e => e.fiscalQuarter === state.q))
+    : allMonths;
+
+  const usedTypes = [...new Set(evs.map(e => e.eventType))];
+
+  return `<tr class="expand-row"><td colspan="9"><div class="expand-inner">
+    <div class="tl-wrap">
+      <div class="tl-months">${months.map(m => {
+        const dots = (byMonth[m.key] || []);
+        return `<div class="tl-month">
+          <div class="tl-dots">${dots.map(e =>
+            `<div class="tl-dot${e.eventType==='Dual Training'?' tl-dot-dual':''}" style="background:${TYPE_COLOR[e.eventType]||'#888'}" title="${e.startDate} · ${e.program} · ${e.event.replace(/"/g,'&quot;')}"></div>`
+          ).join('')}</div>
+          <div class="tl-label">${m.short}${m.month===0||m.month===6?`<br>'${String(m.year).slice(2)}`:''}</div>
+        </div>`;
+      }).join('')}</div>
+    </div>
+    <div class="tl-legend">${usedTypes.map(t =>
+      `<span class="tl-leg-item"><span class="tl-leg-dot" style="background:${TYPE_COLOR[t]||'#888'}"></span>${TYPE_LABEL[t]||t}</span>`
+    ).join('')}</div>
+  </div></td></tr>`;
 }
 
 function toggleExpand(trainer) {
@@ -692,13 +803,39 @@ function wireFilter(id, key) {
     render();
   });
 }
+function wireMultiFilter(id, key) {
+  const allBtn = () => document.querySelector('#'+id+' .filter-btn[data-val="All"]');
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    const val = btn.dataset.val;
+    if (val === 'All') {
+      state[key] = [];
+      document.querySelectorAll('#'+id+' .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    } else {
+      allBtn().classList.remove('active');
+      const idx = state[key].indexOf(val);
+      if (idx > -1) {
+        state[key].splice(idx, 1);
+        btn.classList.remove('active');
+        if (state[key].length === 0) allBtn().classList.add('active');
+      } else {
+        state[key].push(val);
+        btn.classList.add('active');
+      }
+    }
+    state.expandedTrainer = null;
+    render();
+  });
+}
 wireFilter('fyFilters','fy');
 wireFilter('qFilters','q');
-wireFilter('typeFilters','type');
+wireMultiFilter('typeFilters','type');
 wireFilter('regionFilters','region');
 
 document.getElementById('resetBtn').addEventListener('click', () => {
-  Object.assign(state, { fy:'All',q:'All',type:'All',region:'All',expandedTrainer:null,selectedProgram:null });
+  Object.assign(state, { fy:'All',q:'All',type:[],region:'All',expandedTrainer:null,selectedProgram:null });
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.val==='All'));
   render();
 });

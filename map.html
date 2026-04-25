@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMUS TAP — Trainer Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0A0A0A; color: #fff; font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+  header {
+    background: #0A0A0A; border-bottom: 2px solid rgba(0,255,99,0.3);
+    padding: 0 32px; display: flex; align-items: center; gap: 16px; height: 60px;
+  }
+  .header-logo { width: 3px; height: 24px; background: #00FF63; border-radius: 2px; box-shadow: 0 0 10px #00FF63; }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+  .header-title em { color: #00FF63; font-style: normal; }
+  .header-sub { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 3px; }
+  .spacer { flex: 1; }
+  .back-link {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.55);
+    text-decoration: none; padding: 6px 14px; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; transition: all 0.15s;
+  }
+  .back-link:hover { color: #00FF63; border-color: rgba(0,255,99,0.4); }
+  .coming-soon {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  }
+  .cs-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 48px; letter-spacing: 3px; text-transform: uppercase; color: #00FF63; }
+  .cs-sub { font-size: 13px; color: rgba(255,255,255,0.35); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-logo"></div>
+  <div>
+    <div class="header-title">LMUS <em>TΛP</em></div>
+    <div class="header-sub">TRAINER MAP</div>
+  </div>
+  <div class="spacer"></div>
+  <a class="back-link" href="index.html">&#8592; Dashboard</a>
+</header>
+<div class="coming-soon">
+  <div class="cs-label">Coming Soon</div>
+  <div class="cs-sub">Trainer map &amp; event finder — in development</div>
+</div>
+</body>
+</html>
