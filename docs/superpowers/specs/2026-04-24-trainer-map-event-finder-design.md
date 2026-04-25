@@ -38,7 +38,33 @@ A new standalone page (`map.html`) that plots all 56 trainers on an interactive 
 ```
 All 56 trainers from the LMUS 2026 Trainer Team PDF. Region assigned per existing booking data (matching `index.html` region values: East Coast, Mid West, South Central, Central, West Coast).
 
-Programs per trainer are **derived at runtime** from the BOOKINGS array — any trainer who appears in a booking for a program is considered certified for it. No separate certification table needed.
+Programs per trainer are **hardcoded from the certification spreadsheet** (LMUS 2026 Trainer Team role matrix). Each trainer has a `trainerPrograms` array listing only the programs where their role contains **T** (Trainer): values T, T/P, T/A, T/A/P all qualify. Roles of I (Instructor) or P (Presenter) alone do not qualify — those trainers are excluded from event finder results and program-filtered map pins for that program.
+
+Program column codes map to full names:
+| Code | Program |
+|------|---------|
+| BA | BODYATTACK |
+| BC | BODYCOMBAT |
+| BB | BODYBALANCE |
+| BJ | BODYJAM |
+| BP | BODYPUMP |
+| BPH | BODYPUMP HEAVY |
+| BS | BODYSTEP |
+| BTM | LES MILLS CEREMONY |
+| TONE | LES MILLS TONE |
+| CORE | LES MILLS CORE |
+| GR | LES MILLS GRIT |
+| RPM | RPM |
+| SP | LES MILLS SPRINT |
+| TRIP | LES MILLS CONQUER |
+| DANC | LES MILLS DANCE |
+| CEF | LES MILLS CEREMONY STUDIO |
+| YOG | LES MILLS YOGA |
+| SD | STRENGTH DEVELOPMENT |
+| SHAP | LES MILLS SHAPES |
+| FS | LES MILLS FUNCTIONAL STRENGTH |
+| PL | LES MILLS PILATES |
+| THRI | LES MILLS THRIVE |
 
 ### BOOKINGS array
 Copied from `index.html` as seed data. Can be overridden by CSV upload. Structure:
@@ -126,7 +152,7 @@ Copied from `index.html` as seed data. Can be overridden by CSV upload. Structur
 - Defaults to all trainers (alphabetical)
 - Filters by **both** active region (from map click) **and** active program (from Event Finder program input) simultaneously — a trainer only appears if they match both conditions
 - If no region is selected, shows all regions; if no program is selected, shows all programs
-- Trainers who have no bookings for the selected program are excluded entirely — they are not dimmed or greyed, they are removed from the list
+- Trainers whose `trainerPrograms` does not include the selected program are excluded entirely — not dimmed, removed from the list
 - Each row: name, city/state, region badge, program tags (up to 4 shown, "+N more" if overflow)
 - Clicking a trainer row flies the map to their pin and opens their popup
 
