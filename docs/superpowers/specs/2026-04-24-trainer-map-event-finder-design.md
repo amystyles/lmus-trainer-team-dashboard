@@ -91,6 +91,7 @@ Copied from `index.html` as seed data. Can be overridden by CSV upload. Structur
 - Circle markers, colored by region
 - Click → Leaflet popup: name, city/state, certified programs (derived), total bookings count
 - Pins visible at all zoom levels
+- When a program is selected in the Event Finder, pins for trainers not certified in that program are hidden from the map. Only certified trainers remain visible.
 
 ---
 
@@ -116,14 +117,16 @@ Copied from `index.html` as seed data. Can be overridden by CSV upload. Structur
 - Status: **Available** (green pill) or **Booked** (red pill + conflicting event name shown)
 - Region badge
 
-**Top 3 callout:**
-- The nearest available trainers (up to 3) for the selected program are surfaced in a highlighted block at the top of results, using the LMUS `--accent` green style. If fewer than 3 are available, shows however many exist.
+**Available trainers callout:**
+- All available trainers for the selected program are surfaced at the top of results in a highlighted block (LMUS `--accent` green style), sorted by distance ascending. No cap on the number shown. Booked trainers appear below in a separate section, also sorted by distance.
 
 ### Trainer List panel
 
 - Shown below Event Finder
 - Defaults to all trainers (alphabetical)
-- Filters to selected region when a map region is clicked
+- Filters by **both** active region (from map click) **and** active program (from Event Finder program input) simultaneously — a trainer only appears if they match both conditions
+- If no region is selected, shows all regions; if no program is selected, shows all programs
+- Trainers who have no bookings for the selected program are excluded entirely — they are not dimmed or greyed, they are removed from the list
 - Each row: name, city/state, region badge, program tags (up to 4 shown, "+N more" if overflow)
 - Clicking a trainer row flies the map to their pin and opens their popup
 
