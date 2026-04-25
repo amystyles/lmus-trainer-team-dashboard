@@ -38,6 +38,19 @@ A new standalone page (`map.html`) that plots all 56 trainers on an interactive 
 ```
 All 56 trainers from the LMUS 2026 Trainer Team PDF. Region assigned per existing booking data (matching `index.html` region values: East Coast, Mid West, South Central, Central, West Coast).
 
+There are two certified trainer role types used in this feature:
+
+| Role | Description |
+|------|-------------|
+| **Trainer (T)** | Standard trainer for a program |
+| **Advanced Trainer (AT)** | Senior trainer designation, sourced from a separate Advanced Trainer role matrix |
+
+Both qualify for event finder results. Advanced Trainers are visually distinguished with an **AT** badge in results and the trainer list. Results sort order: available Advanced Trainers first (by distance), then available Trainers (by distance), then booked trainers (AT then T, by distance).
+
+Each trainer carries two arrays: `trainerPrograms` (T role) and `advancedPrograms` (AT role). A trainer can appear in both for the same program.
+
+Advanced Trainers from the AT matrix (17 trainers): Andres Camargo, Andy Parrish, Ashley Lyon, Barb Knutson, Colleen King, Dan Maroun, Jaime Terrill, Jen Parrish, Karen Torrell, Keri Ball, Lauren Vibbert, Luca Callini, Nikki Snow-Ybe, Mohamed Bounaim, Sanna Ronkko, Stacy Dee Rathbone, Sydnee Weinberg.
+
 Programs per trainer are **hardcoded from the certification spreadsheet** (LMUS 2026 Trainer Team role matrix). Each trainer has a `trainerPrograms` array listing only the programs where their role contains **T** (Trainer): values T, T/P, T/A, T/A/P all qualify. Roles of I (Instructor) or P (Presenter) alone do not qualify — those trainers are excluded from event finder results and program-filtered map pins for that program.
 
 Program column codes map to full names:
