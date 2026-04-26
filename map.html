@@ -798,9 +798,91 @@ function renderTrainerList() {
   });
 }
 
-// Stubs — replaced by Tasks 4–8
-function initUpload() {}
-function loadBookingsFromStorage() {}
+// ── BOOKINGS STORAGE ──────────────────────────────────────────
+function loadBookingsFromStorage() {
+  const saved = localStorage.getItem(BOOKINGS_KEY);
+  if (saved) {
+    const parsed = parseCSV(saved);
+    if (parsed) {
+      activeBookings = parsed;
+      setUploadMsg('Bookings: custom CSV loaded');
+    }
+  }
+}
+
+function initUpload() {
+  const btn = document.getElementById('upload-btn');
+  const fileInput = document.getElementById('csv-file');
+  btn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const csv = e.target.result;
+      const parsed = parseCSV(csv);
+      if (parsed) {
+        activeBookings = parsed;
+        localStorage.setItem(BOOKINGS_KEY, csv);
+        setUploadMsg(`${parsed.length} bookings loaded`);
+        // Refresh pin popup counts
+        trainerMarkers.forEach(m => {
+          const t = m.trainerData;
+          const count = trainerBookingCount(t.name);
+          m.bindPopup(`
+            <div class="popup-name">${t.name}${AT_NAMES.has(t.name) ? ' <span style="font-size:10px;background:#e8f0fb;color:#1A5280;border-radius:3px;padding:1px 5px;font-weight:700;">AT</span>' : ''}</div>
+            <div class="popup-loc">${t.city}, ${t.state} · ${t.region}</div>
+            <div class="popup-programs"><strong>Programs:</strong> ${t.trainerPrograms.join(', ') || '—'}</div>
+            <div class="popup-programs" style="margin-top:4px;"><strong>Bookings:</strong> ${count}</div>
+          `, { maxWidth: 260 });
+        });
+      } else {
+        setUploadMsg('Upload failed — check CSV columns', true);
+      }
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
+
+const REQUIRED_COLS = ['trainer','program','startDate','confirmed','region','eventType','status'];
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return null;
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const missing = REQUIRED_COLS.filter(c => !headers.includes(c));
+  if (missing.length) { console.warn('CSV missing columns:', missing); return null; }
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    if (vals.length < headers.length) continue;
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = vals[idx]?.replace(/^"|"$/g, '').trim(); });
+    row.confirmed = row.confirmed === 'true' || row.confirmed === '1' || row.confirmed === 'TRUE';
+    row.isOnline = row.isOnline === 'true' || row.isOnline === '1' || row.isOnline === 'TRUE';
+    rows.push(row);
+  }
+  return rows.length ? rows : null;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQuote = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { result.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+function setUploadMsg(msg, isError = false) {
+  const el = document.getElementById('upload-msg');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--accent2)' : 'var(--muted)';
+}
 </script>
 </body>
 </html>
