@@ -330,6 +330,7 @@ const TRAINERS = [
   { name:'Melissa Schimmel',     city:'Los Angeles',    state:'CA', lat:34.0700,  lng:-118.2600, region:'West Coast',   trainerPrograms:['LES MILLS YOGA'], advancedPrograms:[] },
   { name:'Mohamed Bounaim',      city:'New York',       state:'NY', lat:40.7600,  lng:-73.9800,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','BODYPUMP','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'] },
   { name:'Nichola Smiles',       city:'Houston',        state:'TX', lat:29.7700,  lng:-95.3800,  region:'South Central',trainerPrograms:['BODYCOMBAT','BODYPUMP'], advancedPrograms:[] },
+  { name:'Nikki Snow-Ybe',       city:'Portland',       state:'OR', lat:45.5051,  lng:-122.6800, region:'West Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS SHAPES'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS SHAPES'] },
   { name:'Nicholas Castro',      city:'San Diego',      state:'CA', lat:32.7157,  lng:-117.1611, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES'], advancedPrograms:[] },
   { name:'Paula Thomas',         city:'Pittsburgh',     state:'PA', lat:40.4406,  lng:-79.9959,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS SPRINT','RPM','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
   { name:'Sanna Ronkko',         city:'San Francisco',  state:'CA', lat:37.7800,  lng:-122.4100, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES','LES MILLS SPRINT','RPM'], advancedPrograms:['BODYPUMP','LES MILLS PILATES','LES MILLS SPRINT','RPM'] },
@@ -346,10 +347,9 @@ const TRAINERS = [
 const AT_NAMES = new Set([
   'Andres Camargo','Andy Parrish','Ashley Lyon','Barb Knutson','Colleen King',
   'Dan Maroun','Jaime Terrell','Jen Parrish','Karen Torrell','Keri Ball',
-  'Lauren Vibbert','Luca Callini','Mohamed Bounaim','Sanna Ronkko',
+  'Lauren Vibbert','Luca Callini','Mohamed Bounaim','Nikki Snow-Ybe','Sanna Ronkko',
   'Stacy Dee Rathborne','Sydnee Weinberg'
 ]);
-// Note: Nikki Snow-Ybe (17th AT from spec) has no bookings — add to TRAINERS with geocoords from PDF if needed.
 
 // All unique programs across all trainers (for autocomplete)
 const ALL_PROGRAMS = [...new Set(TRAINERS.flatMap(t => t.trainerPrograms))].sort();
@@ -469,7 +469,7 @@ function regionColor(region) {
 }
 
 function trainerBookingCount(trainerName) {
-  return getBookings().filter(b => b.trainer === trainerName && !b.isCancelled).length;
+  return getBookings().filter(b => b.trainer === trainerName).length;
 }
 
 function addTrainerPins() {
@@ -598,7 +598,11 @@ function initFinder() {
     const items = acList.querySelectorAll('.ac-item');
     if (e.key === 'ArrowDown') { acFocusIdx = Math.min(acFocusIdx + 1, items.length - 1); refreshAcFocus(items); e.preventDefault(); }
     else if (e.key === 'ArrowUp') { acFocusIdx = Math.max(acFocusIdx - 1, 0); refreshAcFocus(items); e.preventDefault(); }
-    else if (e.key === 'Enter' && acFocusIdx >= 0) { selectProgram(items[acFocusIdx].dataset.val); e.preventDefault(); }
+    else if (e.key === 'Enter') {
+      if (acFocusIdx >= 0 && items[acFocusIdx]) { selectProgram(items[acFocusIdx].dataset.val); }
+      else { acList.classList.remove('open'); runFinder(); }
+      e.preventDefault();
+    }
     else if (e.key === 'Escape') { acList.classList.remove('open'); }
   });
 
@@ -607,6 +611,12 @@ function initFinder() {
   });
 
   document.getElementById('find-btn').addEventListener('click', runFinder);
+
+  ['city-input','state-input','date-input'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') runFinder();
+    });
+  });
 }
 
 function refreshAcFocus(items) {
