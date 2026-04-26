@@ -1,0 +1,1246 @@
+# Trainer Map & Event Finder — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Replace the existing `map.html` heatmap/analytics page with a Leaflet interactive US map + event finder that lets TAP admins visualize the trainer team by region and find available trainers by location, program, and date.
+
+**Architecture:** Single static HTML file (`map.html`) — complete rewrite of the existing 488-line file. Leaflet.js via CDN for the interactive map. Shares `bookings-data.js` (already linked). Password gate via `localStorage` flag. All trainer geocoords and city lookups hardcoded inline.
+
+**Tech Stack:** Leaflet.js 1.9.4 (CDN + OpenStreetMap tiles), Haversine formula (in-browser JS), FileReader API, `localStorage`, Inter + Barlow Condensed fonts (CDN).
+
+---
+
+## File Map
+
+| Action | Path | Responsibility |
+|--------|------|---------------|
+| Full rewrite | `map.html` | Auth gate, Leaflet map, Event Finder, Trainer List, CSV upload |
+| Modify | `index.html` | Update nav link label (line ~253) |
+
+---
+
+## Task 1: map.html shell — auth gate + base layout
+
+**Files:**
+- Rewrite: `map.html` (replace entire file)
+
+- [ ] **Step 1: Write the full HTML shell with auth gate**
+
+Replace `map.html` entirely with the following. This sets up the password gate, design-system CSS tokens, two-column layout, and Leaflet CDN — no map logic yet.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMUS TAP — Trainer Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="bookings-data.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg:           #FFFFFF;
+    --bg-subtle:    #F7F7F7;
+    --bg-sunken:    #F0F0F0;
+    --bg-dark:      #0A0A0A;
+    --card:         #FFFFFF;
+    --accent:       #00FF63;
+    --accent-soft:  rgba(0,255,99,0.10);
+    --accent-mid:   rgba(0,255,99,0.20);
+    --accent2:      #FF623E;
+    --accent2-soft: rgba(255,98,62,0.12);
+    --lm-green:     #1A7A3C;
+    --lm-red:       #D4220F;
+    --text:         #111111;
+    --ink-mid:      #444444;
+    --muted:        #888888;
+    --border:       #E5E5E5;
+    --border-mid:   #D0D0D0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg-subtle); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  /* ── AUTH GATE ─────────────────────────────────────────────── */
+  #auth-screen {
+    position: fixed; inset: 0; background: var(--bg-dark);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .auth-card {
+    background: #141414; border: 1px solid rgba(0,255,99,0.2); border-radius: 16px;
+    padding: 48px 40px; width: 360px; text-align: center;
+  }
+  .auth-logo { width: 3px; height: 32px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 16px var(--accent); margin: 0 auto 24px; }
+  .auth-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 6px; }
+  .auth-title em { color: var(--accent); font-style: normal; }
+  .auth-sub { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 32px; }
+  .auth-input {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; padding: 12px 16px; color: #fff; font-family: 'Inter', sans-serif;
+    font-size: 14px; margin-bottom: 12px; outline: none;
+    transition: border-color 0.15s;
+  }
+  .auth-input:focus { border-color: rgba(0,255,99,0.4); }
+  .auth-btn {
+    width: 100%; background: var(--accent); color: #000; border: none;
+    border-radius: 8px; padding: 13px; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.15s; margin-bottom: 12px;
+  }
+  .auth-btn:hover { opacity: 0.88; }
+  .auth-error { font-size: 11px; color: var(--accent2); font-weight: 600; letter-spacing: 0.5px; min-height: 16px; }
+
+  /* ── HEADER ─────────────────────────────────────────────────── */
+  header {
+    background: var(--bg-dark); border-bottom: 2px solid rgba(0,255,99,0.3);
+    padding: 0 32px; display: flex; align-items: center; gap: 16px; height: 60px;
+    position: sticky; top: 0; z-index: 500;
+  }
+  .header-logo { width: 3px; height: 24px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent); flex-shrink: 0; }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+  .header-title em { color: var(--accent); font-style: normal; }
+  .header-spacer { flex: 1; }
+  .back-link {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.55);
+    text-decoration: none; padding: 6px 14px; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; transition: all 0.15s;
+  }
+  .back-link:hover { color: var(--accent); border-color: rgba(0,255,99,0.4); }
+  .upload-btn {
+    background: rgba(0,255,99,0.08); color: var(--accent); border: 1px solid rgba(0,255,99,0.25);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase; padding: 6px 16px; border-radius: 20px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .upload-btn:hover { background: rgba(0,255,99,0.15); }
+  .signout-btn {
+    background: transparent; color: rgba(255,255,255,0.35); border: 1px solid rgba(255,255,255,0.1);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; border-radius: 20px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .signout-btn:hover { color: var(--accent2); border-color: rgba(255,98,62,0.3); }
+  .upload-msg { font-size: 11px; color: var(--muted); letter-spacing: 0.3px; }
+
+  /* ── MAIN LAYOUT ────────────────────────────────────────────── */
+  #app { display: none; flex-direction: column; height: 100vh; }
+  #app.visible { display: flex; }
+  #map-container {
+    display: flex; flex: 1; overflow: hidden;
+  }
+  #map { flex: 1; min-height: 0; }
+  #sidebar {
+    width: 360px; flex-shrink: 0; background: var(--bg);
+    border-left: 1px solid var(--border); overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── SIDEBAR PANELS ─────────────────────────────────────────── */
+  .panel { border-bottom: 1px solid var(--border); }
+  .panel-header {
+    padding: 16px 20px 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .panel-title {
+    font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title::before { content: ''; display: inline-block; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+  .panel-body { padding: 0 20px 16px; }
+
+  /* ── EVENT FINDER INPUTS ────────────────────────────────────── */
+  .finder-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .finder-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .finder-label { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .finder-input {
+    background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.15s; width: 100%;
+  }
+  .finder-input:focus { border-color: rgba(0,255,99,0.4); background: #fff; }
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-list {
+    position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+    border: 1px solid var(--border-mid); border-radius: 6px; max-height: 200px;
+    overflow-y: auto; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    display: none;
+  }
+  .autocomplete-list.open { display: block; }
+  .ac-item {
+    padding: 8px 12px; font-size: 12px; cursor: pointer; transition: background 0.1s;
+  }
+  .ac-item:hover, .ac-item.focused { background: var(--accent-soft); }
+  .find-btn {
+    width: 100%; background: var(--bg-dark); color: var(--accent); border: none;
+    border-radius: 6px; padding: 11px; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.15s; margin-top: 4px;
+  }
+  .find-btn:hover { opacity: 0.85; }
+  .finder-error { font-size: 11px; color: var(--accent2); font-weight: 600; margin-top: 6px; display: none; }
+
+  /* ── RESULTS ────────────────────────────────────────────────── */
+  .results-section { margin-top: 16px; }
+  .results-heading {
+    font-size: 9px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .results-heading::before { content: ''; display: inline-block; width: 3px; height: 10px; background: var(--accent); border-radius: 2px; }
+  .result-row {
+    background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .result-row:hover { border-color: rgba(0,255,99,0.35); }
+  .result-row.booked { opacity: 0.7; }
+  .result-name { font-weight: 700; font-size: 13px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+  .result-meta { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+  .badge-available { background: rgba(0,255,99,0.12); color: var(--lm-green); border: 1px solid rgba(0,255,99,0.25); }
+  .badge-booked { background: var(--accent2-soft); color: var(--lm-red); border: 1px solid rgba(255,98,62,0.2); }
+  .badge-at { background: rgba(26,82,128,0.12); color: #1A5280; border: 1px solid rgba(26,82,128,0.2); }
+  .badge-dist { background: var(--bg-sunken); color: var(--ink-mid); border: 1px solid var(--border); }
+  .region-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+  .conflict-note { font-size: 10px; color: var(--accent2); margin-top: 2px; font-style: italic; }
+
+  /* ── TRAINER LIST ───────────────────────────────────────────── */
+  .trainer-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+    border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s;
+  }
+  .trainer-row:hover { background: var(--accent-soft); }
+  .trainer-name { font-weight: 600; font-size: 12px; flex: 1; }
+  .trainer-loc { font-size: 10px; color: var(--muted); }
+  .prog-tags { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
+  .prog-tag { font-size: 8px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; background: var(--bg-sunken); color: var(--ink-mid); padding: 1px 5px; border-radius: 3px; }
+  .list-empty { padding: 32px 20px; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+  /* ── LEAFLET OVERRIDES ──────────────────────────────────────── */
+  .leaflet-container { background: #e8eef4; }
+  .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); font-family: 'Inter', sans-serif; }
+  .leaflet-popup-content { margin: 12px 16px; font-size: 12px; line-height: 1.6; }
+  .popup-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .popup-loc { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+  .popup-programs { font-size: 10px; color: var(--ink-mid); }
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"></div>
+    <div class="auth-title">LMUS <em>TΛP</em></div>
+    <div class="auth-sub">Admin Access Required</div>
+    <input class="auth-input" type="password" id="pw-input" placeholder="Enter password" autocomplete="current-password" />
+    <button class="auth-btn" id="pw-btn">Sign In</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="header-logo"></div>
+    <div>
+      <div class="header-title">LMUS <em>TΛP</em></div>
+    </div>
+    <div class="header-spacer"></div>
+    <span id="upload-msg" class="upload-msg"></span>
+    <button class="upload-btn" id="upload-btn">Update Bookings</button>
+    <input type="file" id="csv-file" accept=".csv" style="display:none" />
+    <a href="index.html" class="back-link">← Dashboard</a>
+    <button class="signout-btn" id="signout-btn">Sign Out</button>
+  </header>
+
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="sidebar">
+
+      <!-- EVENT FINDER -->
+      <div class="panel" id="finder-panel">
+        <div class="panel-header">
+          <div class="panel-title">Event Finder</div>
+        </div>
+        <div class="panel-body">
+          <div class="finder-row">
+            <div class="finder-field" style="flex:2">
+              <label class="finder-label">City</label>
+              <input class="finder-input" type="text" id="city-input" placeholder="e.g. Denver" />
+            </div>
+            <div class="finder-field" style="flex:1">
+              <label class="finder-label">State</label>
+              <input class="finder-input" type="text" id="state-input" placeholder="CO" maxlength="2" style="text-transform:uppercase" />
+            </div>
+          </div>
+          <div class="finder-row">
+            <div class="finder-field" style="flex:2">
+              <label class="finder-label">Program</label>
+              <div class="autocomplete-wrap">
+                <input class="finder-input" type="text" id="prog-input" placeholder="Search program…" autocomplete="off" />
+                <div class="autocomplete-list" id="prog-ac"></div>
+              </div>
+            </div>
+            <div class="finder-field" style="flex:1">
+              <label class="finder-label">Date</label>
+              <input class="finder-input" type="date" id="date-input" />
+            </div>
+          </div>
+          <button class="find-btn" id="find-btn">Find Trainers</button>
+          <div class="finder-error" id="finder-error"></div>
+          <div id="finder-results"></div>
+        </div>
+      </div>
+
+      <!-- TRAINER LIST -->
+      <div class="panel" id="list-panel">
+        <div class="panel-header">
+          <div class="panel-title">Trainer List</div>
+          <span id="list-count" style="font-size:10px;color:var(--muted);margin-left:auto;font-weight:600"></span>
+        </div>
+        <div id="trainer-list"></div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /map-container -->
+</div><!-- /app -->
+
+<script>
+const ADMIN_PASSWORD = 'lmus-tap-2026';
+const AUTH_KEY = 'lmus_admin_auth';
+const BOOKINGS_KEY = 'lmus_bookings_csv';
+
+// ── AUTH ──────────────────────────────────────────────────────
+function checkAuth() {
+  if (localStorage.getItem(AUTH_KEY) === '1') {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+  }
+}
+document.getElementById('pw-btn').addEventListener('click', () => {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    localStorage.setItem(AUTH_KEY, '1');
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+  } else {
+    document.getElementById('auth-error').textContent = 'Incorrect password';
+  }
+});
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pw-btn').click();
+});
+document.getElementById('signout-btn').addEventListener('click', () => {
+  localStorage.removeItem(AUTH_KEY);
+  location.reload();
+});
+checkAuth();
+</script>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Open `http://localhost:4001/map.html` in the browser**
+
+Verify: login screen shows on top of dark background. Enter `lmus-tap-2026` → auth screen dismisses, app shell appears (empty map area + sidebar). Sign Out button returns to login screen. No console errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+cd /Users/amy.styles/Documents/lmus-trainer-team-dashboard
+git add map.html
+git commit -m "feat: map.html shell — auth gate, layout, CSS tokens"
+```
+
+---
+
+## Task 2: Hardcoded trainer data array
+
+**Files:**
+- Modify: `map.html` — add `TRAINERS` and `AT_NAMES` constants inside the `<script>` block, before `initApp()`
+
+- [ ] **Step 1: Add the TRAINERS array and AT_NAMES set**
+
+Insert the following immediately after the `AUTH_KEY` / `BOOKINGS_KEY` constants (before the auth functions):
+
+```js
+// ── TRAINER DATA ──────────────────────────────────────────────
+// Coordinates are approximate city-center values; refine from PDF roster if needed.
+const TRAINERS = [
+  { name:'Alyx Sparrow',         city:'Littleton',      state:'CO', lat:39.5936,  lng:-105.0172, region:'Central',      trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS FUNCTIONAL STRENGTH'], advancedPrograms:[] },
+  { name:'Amy Fisher',           city:'Chicago',        state:'IL', lat:41.8781,  lng:-87.6298,  region:'Mid West',     trainerPrograms:['BODYBALANCE','BODYPUMP'], advancedPrograms:[] },
+  { name:'Amy Russo',            city:'New York',       state:'NY', lat:40.7128,  lng:-74.0060,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','BODYPUMP'], advancedPrograms:[] },
+  { name:'Ana Malvaez',          city:'Los Angeles',    state:'CA', lat:34.0522,  lng:-118.2437, region:'West Coast',   trainerPrograms:['BODYCOMBAT','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Andres Camargo',       city:'Miami',          state:'FL', lat:25.7617,  lng:-80.1918,  region:'East Coast',   trainerPrograms:['BODYBALANCE','LES MILLS CORE','LES MILLS SHAPES','LES MILLS THRIVE'], advancedPrograms:['BODYBALANCE','LES MILLS CORE','LES MILLS SHAPES','LES MILLS THRIVE'] },
+  { name:'Andrew Aleman',        city:'San Francisco',  state:'CA', lat:37.7749,  lng:-122.4194, region:'West Coast',   trainerPrograms:['LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:[] },
+  { name:'Andy Parrish',         city:'Richmond',       state:'VA', lat:37.5407,  lng:-77.4360,  region:'East Coast',   trainerPrograms:['BODYATTACK','BODYPUMP','BODYPUMP HEAVY','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CONQUER','LES MILLS CORE','LES MILLS GRIT','RPM'], advancedPrograms:['BODYATTACK','BODYPUMP','BODYPUMP HEAVY','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CONQUER','LES MILLS CORE','LES MILLS GRIT','RPM'] },
+  { name:'Ann McArthur',         city:'Denver',         state:'CO', lat:39.7392,  lng:-104.9903, region:'Central',      trainerPrograms:['LES MILLS CORE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Annette Perkins',      city:'Salt Lake City', state:'UT', lat:40.7608,  lng:-111.8910, region:'Central',      trainerPrograms:['BODYPUMP HEAVY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Ashley Lyon',          city:'Denver',         state:'CO', lat:39.7200,  lng:-104.9700, region:'Central',      trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CEREMONY','LES MILLS CORE','LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CEREMONY','LES MILLS CORE','LES MILLS PILATES','LES MILLS SHAPES'] },
+  { name:'Ashley McCallum',      city:'Charlotte',      state:'NC', lat:35.2271,  lng:-80.8431,  region:'East Coast',   trainerPrograms:['BODYATTACK','BODYCOMBAT'], advancedPrograms:[] },
+  { name:'Barb Knutson',         city:'Minneapolis',    state:'MN', lat:44.9778,  lng:-93.2650,  region:'Mid West',     trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS THRIVE'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS THRIVE'] },
+  { name:'Bethany Entrekin',     city:'Atlanta',        state:'GA', lat:33.7490,  lng:-84.3880,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES','RPM'], advancedPrograms:[] },
+  { name:'Colleen King',         city:'Kansas City',    state:'MO', lat:39.0997,  lng:-94.5786,  region:'Central',      trainerPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS DANCE','LES MILLS PILATES'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS DANCE','LES MILLS PILATES'] },
+  { name:'Dan Maroun',           city:'Chicago',        state:'IL', lat:41.8950,  lng:-87.6200,  region:'Mid West',     trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE','LES MILLS DANCE','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE','LES MILLS DANCE','LES MILLS SHAPES','STRENGTH DEVELOPMENT'] },
+  { name:'Danielle Kirk-Bagley', city:'Boston',         state:'MA', lat:42.3601,  lng:-71.0589,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Deidre Douglas',       city:'Washington',     state:'DC', lat:38.9072,  lng:-77.0369,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS PILATES','LES MILLS YOGA'], advancedPrograms:[] },
+  { name:'Elena Kohler',         city:'Columbus',       state:'OH', lat:39.9612,  lng:-82.9988,  region:'Mid West',     trainerPrograms:['BODYBALANCE','LES MILLS CEREMONY','LES MILLS CORE','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS YOGA'], advancedPrograms:[] },
+  { name:'Hope Bowie',           city:'Dallas',         state:'TX', lat:32.7767,  lng:-96.7970,  region:'South Central',trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY STUDIO','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Jaime Terrell',        city:'Philadelphia',   state:'PA', lat:39.9526,  lng:-75.1652,  region:'East Coast',   trainerPrograms:['BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:['BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS SHAPES'] },
+  { name:'Jake Pesquira',        city:'Baltimore',      state:'MD', lat:39.2904,  lng:-76.6122,  region:'East Coast',   trainerPrograms:['BODYBALANCE','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS YOGA'], advancedPrograms:[] },
+  { name:'Jamila Greene',        city:'Houston',        state:'TX', lat:29.7604,  lng:-95.3698,  region:'South Central',trainerPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS SPRINT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Janice Years',         city:'New York',       state:'NY', lat:40.7200,  lng:-74.0100,  region:'East Coast',   trainerPrograms:['LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Jen Parrish',          city:'Richmond',       state:'VA', lat:37.5500,  lng:-77.4500,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS SPRINT','RPM'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS SPRINT','RPM'] },
+  { name:'Jennifer Pontarelli',  city:'Hoboken',        state:'NJ', lat:40.7440,  lng:-74.0324,  region:'East Coast',   trainerPrograms:['BODYSTEP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES'], advancedPrograms:[] },
+  { name:'Jessica Shallock',     city:'Omaha',          state:'NE', lat:41.2565,  lng:-95.9345,  region:'Central',      trainerPrograms:['BODYPUMP','LES MILLS FUNCTIONAL STRENGTH','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Jessica Wong',         city:'New York',       state:'NY', lat:40.7300,  lng:-73.9950,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS SHAPES','LES MILLS YOGA','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Judson MacDonald',     city:'Boston',         state:'MA', lat:42.3700,  lng:-71.0700,  region:'East Coast',   trainerPrograms:['BODYATTACK','BODYBALANCE','BODYPUMP','BODYPUMP HEAVY','BODYSTEP'], advancedPrograms:[] },
+  { name:'Justine Collado',      city:'New York',       state:'NY', lat:40.7050,  lng:-74.0100,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Kamesha Myers',        city:'Washington',     state:'DC', lat:38.9150,  lng:-77.0300,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS GRIT','LES MILLS SHAPES','LES MILLS THRIVE'], advancedPrograms:[] },
+  { name:'Karen Torrell',        city:'Seattle',        state:'WA', lat:47.6062,  lng:-122.3321, region:'West Coast',   trainerPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS CEREMONY STUDIO','LES MILLS THRIVE','LES MILLS TONE','LES MILLS YOGA','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS CEREMONY STUDIO','LES MILLS THRIVE','LES MILLS TONE','LES MILLS YOGA','STRENGTH DEVELOPMENT'] },
+  { name:'Katie Kneupper',       city:'Austin',         state:'TX', lat:30.2672,  lng:-97.7431,  region:'South Central',trainerPrograms:['BODYCOMBAT','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO'], advancedPrograms:[] },
+  { name:'Keri Ball',            city:'New York',       state:'NY', lat:40.7400,  lng:-74.0050,  region:'East Coast',   trainerPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE'], advancedPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE'] },
+  { name:'Lauren Hodoval',       city:'Chicago',        state:'IL', lat:41.8850,  lng:-87.6150,  region:'Mid West',     trainerPrograms:['LES MILLS GRIT'], advancedPrograms:[] },
+  { name:'Lauren Vibbert',       city:'Washington',     state:'DC', lat:38.9000,  lng:-77.0500,  region:'East Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS SPRINT','LES MILLS TONE'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS SPRINT','LES MILLS TONE'] },
+  { name:'Luca Callini',         city:'San Antonio',    state:'TX', lat:29.4241,  lng:-98.4936,  region:'South Central',trainerPrograms:['BODYBALANCE','LES MILLS CEREMONY STUDIO','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','LES MILLS CEREMONY STUDIO','LES MILLS YOGA'] },
+  { name:'Lucy Xu',              city:'Dallas',         state:'TX', lat:32.7900,  lng:-96.8100,  region:'South Central',trainerPrograms:['BODYCOMBAT'], advancedPrograms:[] },
+  { name:'Lula Slaughter',       city:'Atlanta',        state:'GA', lat:33.7600,  lng:-84.4000,  region:'East Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CEREMONY STUDIO','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Marcus Zomphier',      city:'Washington',     state:'DC', lat:38.9200,  lng:-77.0200,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYSTEP','LES MILLS DANCE'], advancedPrograms:[] },
+  { name:'Megan Cloe',           city:'Portland',       state:'OR', lat:45.5051,  lng:-122.6750, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS SPRINT','RPM'], advancedPrograms:[] },
+  { name:'Melissa Schimmel',     city:'Los Angeles',    state:'CA', lat:34.0700,  lng:-118.2600, region:'West Coast',   trainerPrograms:['LES MILLS YOGA'], advancedPrograms:[] },
+  { name:'Mohamed Bounaim',      city:'New York',       state:'NY', lat:40.7600,  lng:-73.9800,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','BODYPUMP','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'] },
+  { name:'Nichola Smiles',       city:'Houston',        state:'TX', lat:29.7700,  lng:-95.3800,  region:'South Central',trainerPrograms:['BODYCOMBAT','BODYPUMP'], advancedPrograms:[] },
+  { name:'Nicholas Castro',      city:'San Diego',      state:'CA', lat:32.7157,  lng:-117.1611, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES'], advancedPrograms:[] },
+  { name:'Paula Thomas',         city:'Pittsburgh',     state:'PA', lat:40.4406,  lng:-79.9959,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS SPRINT','RPM','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Sanna Ronkko',         city:'San Francisco',  state:'CA', lat:37.7800,  lng:-122.4100, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES','LES MILLS SPRINT','RPM'], advancedPrograms:['BODYPUMP','LES MILLS PILATES','LES MILLS SPRINT','RPM'] },
+  { name:'Sarah Gruba',          city:'Oklahoma City',  state:'OK', lat:35.4676,  lng:-97.5164,  region:'South Central',trainerPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CONQUER','LES MILLS GRIT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Shelby Schrader',      city:'Denver',         state:'CO', lat:39.7100,  lng:-104.9600, region:'Central',      trainerPrograms:['LES MILLS FUNCTIONAL STRENGTH','LES MILLS SHAPES','LES MILLS SPRINT','RPM'], advancedPrograms:[] },
+  { name:'Stacy Dee Rathborne',  city:'New York',       state:'NY', lat:40.7150,  lng:-74.0000,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYCOMBAT','BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS YOGA'] },
+  { name:'Sydnee Weinberg',      city:'New York',       state:'NY', lat:40.7250,  lng:-73.9900,  region:'East Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS GRIT','LES MILLS PILATES','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS GRIT','LES MILLS PILATES','LES MILLS SHAPES','STRENGTH DEVELOPMENT'] },
+  { name:'Trae Tripoli',         city:'Colorado Springs',state:'CO',lat:38.8339,  lng:-104.8214, region:'Central',      trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES','LES MILLS SPRINT','LES MILLS TONE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Vivian Gill',          city:'New Orleans',    state:'LA', lat:29.9511,  lng:-90.0715,  region:'South Central',trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS SHAPES','LES MILLS YOGA'], advancedPrograms:[] },
+  { name:'Will Lee',             city:'Seattle',        state:'WA', lat:47.6200,  lng:-122.3400, region:'West Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+];
+
+// Advanced Trainer names for fast lookup (names match TRAINERS array exactly)
+const AT_NAMES = new Set([
+  'Andres Camargo','Andy Parrish','Ashley Lyon','Barb Knutson','Colleen King',
+  'Dan Maroun','Jaime Terrell','Jen Parrish','Karen Torrell','Keri Ball',
+  'Lauren Vibbert','Luca Callini','Mohamed Bounaim','Sanna Ronkko',
+  'Stacy Dee Rathborne','Sydnee Weinberg'
+]);
+// Note: Nikki Snow-Ybe (17th AT from spec) has no bookings — add to TRAINERS with geocoords from PDF if needed.
+
+// All unique programs across all trainers (for autocomplete)
+const ALL_PROGRAMS = [...new Set(TRAINERS.flatMap(t => t.trainerPrograms))].sort();
+```
+
+- [ ] **Step 2: Verify in browser console**
+
+Open browser console on `http://localhost:4001/map.html`, sign in, then run:
+```js
+console.log(TRAINERS.length);   // expected: 53
+console.log(AT_NAMES.size);     // expected: 16
+console.log(ALL_PROGRAMS.length); // expected: ~20
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: hardcoded TRAINERS array (53 trainers) + AT_NAMES set"
+```
+
+---
+
+## Task 3: Leaflet map init + region polygons
+
+**Files:**
+- Modify: `map.html` — add `initApp()` function and region polygon logic inside the `<script>` block
+
+- [ ] **Step 1: Add region config and initApp with Leaflet**
+
+Add the following immediately after the `AT_NAMES` block:
+
+```js
+// ── REGION CONFIG ─────────────────────────────────────────────
+const REGION_CONFIG = {
+  'East Coast':    { color: '#c8b400', bounds: [[24.5,-81],[47.5,-66]] },
+  'Mid West':      { color: '#c0392b', bounds: [[36,-104],[49,-81]] },
+  'South Central': { color: '#27ae60', bounds: [[25,-106],[37,-80]] },
+  'Central':       { color: '#1a6fd4', bounds: [[25,-116],[49,-96]] },
+  'West Coast':    { color: '#e07040', bounds: [[24,-125],[49,-114]] },
+};
+
+// Region GeoJSON polygons (simple rectangles — close enough for internal dashboard)
+function regionGeoJSON(bounds) {
+  const [[s,w],[n,e]] = bounds;
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [[[w,s],[e,s],[e,n],[w,n],[w,s]]] },
+  };
+}
+
+// ── APP STATE ─────────────────────────────────────────────────
+let map, trainerMarkers = [], regionLayers = {};
+let activeRegion = null;
+let activeProgram = null;
+let activeBookings = null; // null = use BOOKINGS from bookings-data.js
+
+function getBookings() {
+  return activeBookings || BOOKINGS;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function initApp() {
+  loadBookingsFromStorage();
+  initMap();
+  renderTrainerList();
+  initFinder();
+  initUpload();
+}
+
+function initMap() {
+  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([38, -96], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Region polygons
+  Object.entries(REGION_CONFIG).forEach(([name, cfg]) => {
+    const layer = L.geoJSON(regionGeoJSON(cfg.bounds), {
+      style: {
+        color: cfg.color, weight: 1.5, opacity: 0.5,
+        fillColor: cfg.color, fillOpacity: 0.08,
+      }
+    }).addTo(map);
+    layer.on('click', () => selectRegion(name));
+    regionLayers[name] = layer;
+  });
+
+  // Click map background → deselect region
+  map.on('click', e => {
+    if (!e.originalEvent._fromRegion) selectRegion(null);
+  });
+  Object.values(regionLayers).forEach(l => {
+    l.on('click', e => { e.originalEvent._fromRegion = true; });
+  });
+
+  addTrainerPins();
+}
+
+function selectRegion(name) {
+  activeRegion = name;
+  Object.entries(regionLayers).forEach(([rName, layer]) => {
+    const cfg = REGION_CONFIG[rName];
+    layer.setStyle({
+      fillOpacity: (!name || rName === name) ? 0.18 : 0.04,
+      opacity:     (!name || rName === name) ? 0.8 : 0.3,
+    });
+  });
+  if (name) {
+    const cfg = REGION_CONFIG[name];
+    map.fitBounds(cfg.bounds, { padding: [40, 40], maxZoom: 7 });
+  }
+  renderTrainerList();
+}
+```
+
+- [ ] **Step 2: Verify in browser**
+
+Reload, sign in. Map should show across the US. 5 colored region overlays visible. Clicking a region highlights it and zooms to it. Clicking the map background restores all regions at equal opacity. No console errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: Leaflet map init + 5 region polygons"
+```
+
+---
+
+## Task 4: Trainer pins + popups
+
+**Files:**
+- Modify: `map.html` — add `addTrainerPins()` and `updatePinVisibility()` functions
+
+- [ ] **Step 1: Add pin functions**
+
+After the `selectRegion` function, add:
+
+```js
+// ── PINS ──────────────────────────────────────────────────────
+function regionColor(region) {
+  return REGION_CONFIG[region]?.color || '#888';
+}
+
+function trainerBookingCount(trainerName) {
+  return getBookings().filter(b => b.trainer === trainerName && !b.isCancelled).length;
+}
+
+function addTrainerPins() {
+  trainerMarkers = TRAINERS.map(t => {
+    const isAT = AT_NAMES.has(t.name);
+    const bookingCount = trainerBookingCount(t.name);
+    const progList = t.trainerPrograms.join(', ') || '—';
+    const marker = L.circleMarker([t.lat, t.lng], {
+      radius: 7,
+      fillColor: regionColor(t.region),
+      color: '#fff',
+      weight: 1.5,
+      fillOpacity: 0.9,
+    });
+    marker.trainerData = t;
+    marker.bindPopup(`
+      <div class="popup-name">${t.name}${isAT ? ' <span style="font-size:10px;background:#e8f0fb;color:#1A5280;border-radius:3px;padding:1px 5px;font-weight:700;">AT</span>' : ''}</div>
+      <div class="popup-loc">${t.city}, ${t.state} · ${t.region}</div>
+      <div class="popup-programs"><strong>Programs:</strong> ${progList}</div>
+      <div class="popup-programs" style="margin-top:4px;"><strong>Bookings:</strong> ${bookingCount}</div>
+    `, { maxWidth: 260 });
+    marker.addTo(map);
+    return marker;
+  });
+}
+
+function updatePinVisibility() {
+  trainerMarkers.forEach(m => {
+    const t = m.trainerData;
+    const programMatch = !activeProgram || t.trainerPrograms.includes(activeProgram);
+    if (programMatch) {
+      if (!map.hasLayer(m)) m.addTo(map);
+    } else {
+      if (map.hasLayer(m)) map.removeLayer(m);
+    }
+  });
+}
+```
+
+- [ ] **Step 2: Verify in browser**
+
+Reload, sign in. 53 trainer pins should appear as colored circles across the US. Clicking a pin shows a popup with name, city, region, programs, booking count. No errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: trainer pins with region colors and booking count popups"
+```
+
+---
+
+## Task 5: City lookup table + Event Finder inputs wired
+
+**Files:**
+- Modify: `map.html` — add `CITIES` lookup table and `initFinder()` function
+
+- [ ] **Step 1: Add the CITIES lookup table**
+
+After the `updatePinVisibility` function, add:
+
+```js
+// ── CITY LOOKUP (~200 major US cities) ───────────────────────
+// Format: 'City, ST': [lat, lng]
+const CITIES = {
+  'Birmingham, AL':[33.5186,-86.8104],'Huntsville, AL':[34.7304,-86.5861],'Mobile, AL':[30.6954,-88.0399],'Montgomery, AL':[32.3668,-86.2999],
+  'Anchorage, AK':[61.2181,-149.9003],
+  'Chandler, AZ':[33.3062,-111.8413],'Gilbert, AZ':[33.3528,-111.7890],'Glendale, AZ':[33.5387,-112.1860],'Mesa, AZ':[33.4152,-111.8315],'Phoenix, AZ':[33.4484,-112.0740],'Scottsdale, AZ':[33.4942,-111.9261],'Tempe, AZ':[33.4255,-111.9400],'Tucson, AZ':[32.2226,-110.9747],
+  'Fort Smith, AR':[35.3859,-94.3985],'Little Rock, AR':[34.7465,-92.2896],
+  'Anaheim, CA':[33.8366,-117.9143],'Bakersfield, CA':[35.3733,-119.0187],'Chula Vista, CA':[32.6401,-117.0842],'Fremont, CA':[37.5485,-121.9886],'Fresno, CA':[36.7378,-119.7871],'Garden Grove, CA':[33.7743,-117.9379],'Glendale, CA':[34.1425,-118.2551],'Huntington Beach, CA':[33.6603,-117.9992],'Irvine, CA':[33.6846,-117.8265],'Long Beach, CA':[33.7701,-118.1937],'Los Angeles, CA':[34.0522,-118.2437],'Modesto, CA':[37.6391,-120.9969],'Moreno Valley, CA':[33.9425,-117.2297],'Oakland, CA':[37.8044,-122.2712],'Oceanside, CA':[33.1959,-117.3795],'Ontario, CA':[34.0633,-117.6509],'Oxnard, CA':[34.1975,-119.1771],'Rancho Cucamonga, CA':[34.1064,-117.5931],'Riverside, CA':[33.9806,-117.3755],'Sacramento, CA':[38.5816,-121.4944],'San Bernardino, CA':[34.1083,-117.2898],'San Diego, CA':[32.7157,-117.1611],'San Francisco, CA':[37.7749,-122.4194],'San Jose, CA':[37.3382,-121.8863],'Santa Ana, CA':[33.7455,-117.8677],'Santa Clarita, CA':[34.3917,-118.5426],'Santa Rosa, CA':[38.4404,-122.7141],'Stockton, CA':[37.9577,-121.2908],
+  'Aurora, CO':[39.7294,-104.8319],'Colorado Springs, CO':[38.8339,-104.8214],'Denver, CO':[39.7392,-104.9903],'Fort Collins, CO':[40.5853,-105.0844],'Lakewood, CO':[39.7047,-105.0814],'Littleton, CO':[39.5936,-105.0172],'Pueblo, CO':[38.2544,-104.6091],'Thornton, CO':[39.8680,-104.9719],'Westminster, CO':[39.8367,-105.0372],
+  'Bridgeport, CT':[41.1865,-73.1952],'Hartford, CT':[41.7658,-72.6851],'New Haven, CT':[41.3082,-72.9279],'Stamford, CT':[41.0534,-73.5387],
+  'Dover, DE':[39.1582,-75.5244],'Wilmington, DE':[39.7447,-75.5484],
+  'Washington, DC':[38.9072,-77.0369],
+  'Cape Coral, FL':[26.5629,-81.9495],'Clearwater, FL':[27.9659,-82.8001],'Coral Springs, FL':[26.2712,-80.2706],'Davie, FL':[26.0765,-80.2520],'Fort Lauderdale, FL':[26.1224,-80.1373],'Gainesville, FL':[29.6516,-82.3248],'Hialeah, FL':[25.8576,-80.2781],'Hollywood, FL':[26.0112,-80.1495],'Jacksonville, FL':[30.3322,-81.6557],'Lakeland, FL':[28.0395,-81.9498],'Miami, FL':[25.7617,-80.1918],'Miami Gardens, FL':[25.9420,-80.2456],'Miramar, FL':[25.9860,-80.2339],'Orlando, FL':[28.5383,-81.3792],'Palm Bay, FL':[28.0345,-80.5887],'Pembroke Pines, FL':[26.0076,-80.2963],'Port St. Lucie, FL':[27.2939,-80.3503],'St. Petersburg, FL':[27.7676,-82.6403],'Tallahassee, FL':[30.4518,-84.2807],'Tampa, FL':[27.9506,-82.4572],'West Palm Beach, FL':[26.7153,-80.0534],
+  'Athens, GA':[33.9519,-83.3576],'Atlanta, GA':[33.7490,-84.3880],'Columbus, GA':[32.4610,-84.9877],'Macon, GA':[32.8407,-83.6324],'Savannah, GA':[32.0835,-81.0998],
+  'Honolulu, HI':[21.3069,-157.8583],
+  'Boise, ID':[43.6150,-116.2023],'Meridian, ID':[43.6121,-116.3915],'Nampa, ID':[43.5407,-116.5635],
+  'Arlington Heights, IL':[42.0884,-87.9806],'Aurora, IL':[41.7606,-88.3201],'Chicago, IL':[41.8781,-87.6298],'Cicero, IL':[41.8456,-87.7539],'Elgin, IL':[42.0354,-88.2826],'Evanston, IL':[42.0451,-87.6877],'Joliet, IL':[41.5250,-88.0817],'Naperville, IL':[41.7508,-88.1535],'Northbrook, IL':[42.1253,-87.8270],'Peoria, IL':[40.6936,-89.5890],'Rockford, IL':[42.2711,-89.0940],'Schaumburg, IL':[42.0334,-88.0834],'Springfield, IL':[39.7817,-89.6501],'Waukegan, IL':[42.3636,-87.8448],
+  'Bloomington, IN':[39.1653,-86.5264],'Carmel, IN':[39.9784,-86.1180],'Evansville, IN':[37.9716,-87.5711],'Fishers, IN':[39.9553,-86.0134],'Fort Wayne, IN':[41.1306,-85.1289],'Gary, IN':[41.5934,-87.3468],'Hammond, IN':[41.5831,-87.5000],'Indianapolis, IN':[39.7684,-86.1581],'South Bend, IN':[41.6764,-86.2520],
+  'Cedar Rapids, IA':[41.9779,-91.6656],'Davenport, IA':[41.5236,-90.5776],'Des Moines, IA':[41.5868,-93.6250],'Sioux City, IA':[42.4999,-96.4003],
+  'Kansas City, KS':[39.1142,-94.6275],'Lawrence, KS':[38.9717,-95.2353],'Olathe, KS':[38.8814,-94.8191],'Overland Park, KS':[38.9822,-94.6708],'Topeka, KS':[39.0489,-95.6780],'Wichita, KS':[37.6872,-97.3301],
+  'Bowling Green, KY':[36.9685,-86.4808],'Lexington, KY':[38.0406,-84.5037],'Louisville, KY':[38.2527,-85.7585],
+  'Baton Rouge, LA':[30.4515,-91.1871],'Lafayette, LA':[30.2241,-92.0198],'Metairie, LA':[29.9977,-90.1786],'New Orleans, LA':[29.9511,-90.0715],'Shreveport, LA':[32.5252,-93.7502],
+  'Lewiston, ME':[44.1004,-70.2148],'Portland, ME':[43.6591,-70.2568],
+  'Baltimore, MD':[39.2904,-76.6122],'Bowie, MD':[38.9418,-76.7791],'Frederick, MD':[39.4143,-77.4105],'Gaithersburg, MD':[39.1434,-77.2014],'Rockville, MD':[39.0840,-77.1528],
+  'Boston, MA':[42.3601,-71.0589],'Cambridge, MA':[42.3736,-71.1097],'Lowell, MA':[42.6334,-71.3162],'Quincy, MA':[42.2529,-71.0023],'Springfield, MA':[42.1015,-72.5898],'Worcester, MA':[42.2626,-71.8023],
+  'Ann Arbor, MI':[42.2808,-83.7430],'Dearborn, MI':[42.3223,-83.1763],'Detroit, MI':[42.3314,-83.0458],'Flint, MI':[43.0125,-83.6875],'Grand Rapids, MI':[42.9634,-85.6681],'Lansing, MI':[42.7325,-84.5555],'Sterling Heights, MI':[42.5803,-83.0302],'Warren, MI':[42.5145,-83.0146],
+  'Bloomington, MN':[44.8408,-93.3477],'Duluth, MN':[46.7867,-92.1005],'Minneapolis, MN':[44.9778,-93.2650],'Plymouth, MN':[45.0105,-93.4555],'Rochester, MN':[44.0121,-92.4802],'Saint Paul, MN':[44.9537,-93.0900],
+  'Gulfport, MS':[30.3674,-89.0928],'Jackson, MS':[32.2988,-90.1848],'Southaven, MS':[34.9890,-90.0126],
+  'Columbia, MO':[38.9517,-92.3341],'Independence, MO':[39.0911,-94.4155],'Kansas City, MO':[39.0997,-94.5786],'Saint Louis, MO':[38.6270,-90.1994],'Springfield, MO':[37.2090,-93.2923],
+  'Billings, MT':[45.7833,-108.5007],'Great Falls, MT':[47.5002,-111.3008],'Missoula, MT':[46.8721,-113.9940],
+  'Bellevue, NE':[41.1372,-95.8942],'Lincoln, NE':[40.8136,-96.7026],'Omaha, NE':[41.2565,-95.9345],
+  'Henderson, NV':[36.0397,-114.9819],'Las Vegas, NV':[36.1699,-115.1398],'North Las Vegas, NV':[36.1989,-115.1175],'Reno, NV':[39.5296,-119.8138],'Sparks, NV':[39.5349,-119.7527],
+  'Concord, NH':[43.2081,-71.5376],'Manchester, NH':[42.9956,-71.4548],'Nashua, NH':[42.7654,-71.4676],
+  'Edison, NJ':[40.5187,-74.4121],'Elizabeth, NJ':[40.6640,-74.2107],'Hoboken, NJ':[40.7440,-74.0324],'Jersey City, NJ':[40.7178,-74.0431],'Lakewood, NJ':[40.0979,-74.2179],'Newark, NJ':[40.7357,-74.1724],'Paterson, NJ':[40.9168,-74.1719],'Toms River, NJ':[39.9537,-74.1979],'Trenton, NJ':[40.2170,-74.7429],'Woodbridge, NJ':[40.5576,-74.2846],
+  'Albuquerque, NM':[35.0844,-106.6504],'Las Cruces, NM':[32.3199,-106.7637],'Rio Rancho, NM':[35.2328,-106.6630],
+  'Albany, NY':[42.6526,-73.7562],'Buffalo, NY':[42.8864,-78.8784],'Mount Vernon, NY':[40.9126,-73.8371],'New Rochelle, NY':[40.9115,-73.7826],'New York, NY':[40.7128,-74.0060],'Rochester, NY':[43.1566,-77.6088],'Schenectady, NY':[42.8142,-73.9396],'Syracuse, NY':[43.0481,-76.1474],'Yonkers, NY':[40.9312,-73.8988],
+  'Asheville, NC':[35.5951,-82.5515],'Cary, NC':[35.7915,-78.7811],'Charlotte, NC':[35.2271,-80.8431],'Durham, NC':[35.9940,-78.8986],'Fayetteville, NC':[35.0527,-78.8784],'Greensboro, NC':[36.0726,-79.7920],'High Point, NC':[35.9557,-80.0053],'Raleigh, NC':[35.7796,-78.6382],'Wilmington, NC':[34.2257,-77.9447],'Winston-Salem, NC':[36.0999,-80.2442],
+  'Bismarck, ND':[46.8083,-100.7837],'Fargo, ND':[46.8772,-96.7898],'Grand Forks, ND':[47.9253,-97.0329],
+  'Akron, OH':[41.0814,-81.5190],'Canton, OH':[40.7989,-81.3784],'Cincinnati, OH':[39.1031,-84.5120],'Cleveland, OH':[41.4993,-81.6944],'Columbus, OH':[39.9612,-82.9988],'Dayton, OH':[39.7589,-84.1916],'Parma, OH':[41.3845,-81.7290],'Toledo, OH':[41.6528,-83.5379],'Youngstown, OH':[41.0998,-80.6495],
+  'Broken Arrow, OK':[36.0526,-95.7908],'Lawton, OK':[34.6036,-98.3959],'Norman, OK':[35.2226,-97.4395],'Oklahoma City, OK':[35.4676,-97.5164],'Tulsa, OK':[36.1540,-95.9928],
+  'Beaverton, OR':[45.4871,-122.8037],'Eugene, OR':[44.0521,-123.0868],'Gresham, OR':[45.5001,-122.4302],'Hillsboro, OR':[45.5229,-122.9898],'Portland, OR':[45.5051,-122.6750],'Salem, OR':[44.9429,-123.0351],
+  'Allentown, PA':[40.6084,-75.4902],'Bethlehem, PA':[40.6259,-75.3705],'Erie, PA':[42.1292,-80.0851],'Philadelphia, PA':[39.9526,-75.1652],'Pittsburgh, PA':[40.4406,-79.9959],'Reading, PA':[40.3356,-75.9269],'Scranton, PA':[41.4090,-75.6624],
+  'Cranston, RI':[41.7798,-71.4373],'Providence, RI':[41.8240,-71.4128],'Warwick, RI':[41.7001,-71.4162],
+  'Charleston, SC':[32.7765,-79.9311],'Columbia, SC':[34.0007,-81.0348],'Greenville, SC':[34.8526,-82.3940],'Spartanburg, SC':[34.9496,-81.9321],
+  'Rapid City, SD':[44.0805,-103.2310],'Sioux Falls, SD':[43.5473,-96.7283],
+  'Chattanooga, TN':[35.0456,-85.3097],'Clarksville, TN':[36.5298,-87.3595],'Knoxville, TN':[35.9606,-83.9207],'Memphis, TN':[35.1495,-90.0490],'Nashville, TN':[36.1627,-86.7816],
+  'Amarillo, TX':[35.2220,-101.8313],'Arlington, TX':[32.7357,-97.1081],'Austin, TX':[30.2672,-97.7431],'Brownsville, TX':[25.9017,-97.4975],'Carrollton, TX':[32.9537,-96.8899],'Corpus Christi, TX':[27.8006,-97.3964],'Dallas, TX':[32.7767,-96.7970],'El Paso, TX':[31.7619,-106.4850],'Fort Worth, TX':[32.7555,-97.3308],'Frisco, TX':[33.1507,-96.8236],'Garland, TX':[32.9126,-96.6389],'Grand Prairie, TX':[32.7460,-97.0086],'Houston, TX':[29.7604,-95.3698],'Irving, TX':[32.8140,-96.9489],'Killeen, TX':[31.1171,-97.7278],'Laredo, TX':[27.5306,-99.4803],'Lubbock, TX':[33.5779,-101.8552],'Mcallen, TX':[26.2034,-98.2300],'McKinney, TX':[33.1972,-96.6397],'Mesquite, TX':[32.7668,-96.5992],'Pasadena, TX':[29.6911,-95.2091],'Plano, TX':[33.0198,-96.6989],'San Antonio, TX':[29.4241,-98.4936],'Waco, TX':[31.5493,-97.1467],
+  'Layton, UT':[41.0602,-111.9710],'Ogden, UT':[41.2230,-111.9738],'Orem, UT':[40.2969,-111.6946],'Provo, UT':[40.2338,-111.6585],'Salt Lake City, UT':[40.7608,-111.8910],'Sandy, UT':[40.5649,-111.8389],'St. George, UT':[37.1041,-113.5841],'West Jordan, UT':[40.6097,-111.9391],'West Valley City, UT':[40.6916,-111.9391],
+  'Burlington, VT':[44.4759,-73.2121],
+  'Alexandria, VA':[38.8048,-77.0469],'Chesapeake, VA':[36.7682,-76.2875],'Hampton, VA':[37.0299,-76.3452],'Newport News, VA':[37.0871,-76.4730],'Norfolk, VA':[36.8508,-76.2859],'Portsmouth, VA':[36.8354,-76.2983],'Richmond, VA':[37.5407,-77.4360],'Roanoke, VA':[37.2710,-79.9414],'Virginia Beach, VA':[36.8529,-75.9780],
+  'Bellevue, WA':[47.6101,-122.2015],'Bellingham, WA':[48.7519,-122.4787],'Everett, WA':[47.9790,-122.2021],'Kent, WA':[47.3809,-122.2348],'Kirkland, WA':[47.6815,-122.2087],'Renton, WA':[47.4829,-122.2171],'Seattle, WA':[47.6062,-122.3321],'Spokane, WA':[47.6588,-117.4260],'Tacoma, WA':[47.2529,-122.4443],'Vancouver, WA':[45.6387,-122.6615],
+  'Charleston, WV':[38.3498,-81.6326],'Huntington, WV':[38.4193,-82.4452],
+  'Appleton, WI':[44.2619,-88.4154],'Green Bay, WI':[44.5133,-88.0133],'Kenosha, WI':[42.5847,-87.8212],'Madison, WI':[43.0731,-89.4012],'Milwaukee, WI':[43.0389,-87.9065],'Racine, WI':[42.7261,-87.7829],
+  'Casper, WY':[42.8666,-106.3131],'Cheyenne, WY':[41.1400,-104.8197],
+};
+
+function resolveCity(city, state) {
+  const key = `${city.trim()}, ${state.trim().toUpperCase()}`;
+  return CITIES[key] || null;
+}
+```
+
+- [ ] **Step 2: Add initFinder() and program autocomplete**
+
+After the `resolveCity` function, add:
+
+```js
+// ── EVENT FINDER ──────────────────────────────────────────────
+function initFinder() {
+  const progInput = document.getElementById('prog-input');
+  const acList = document.getElementById('prog-ac');
+  let acFocusIdx = -1;
+
+  progInput.addEventListener('input', () => {
+    const q = progInput.value.toLowerCase();
+    const matches = q ? ALL_PROGRAMS.filter(p => p.toLowerCase().includes(q)) : ALL_PROGRAMS;
+    acList.innerHTML = matches.map((p, i) =>
+      `<div class="ac-item" data-val="${p}">${p}</div>`
+    ).join('');
+    acList.classList.toggle('open', matches.length > 0 && q.length > 0);
+    acFocusIdx = -1;
+    activeProgram = null;
+    updatePinVisibility();
+    renderTrainerList();
+  });
+
+  acList.addEventListener('mousedown', e => {
+    const item = e.target.closest('.ac-item');
+    if (!item) return;
+    selectProgram(item.dataset.val);
+  });
+
+  progInput.addEventListener('keydown', e => {
+    const items = acList.querySelectorAll('.ac-item');
+    if (e.key === 'ArrowDown') { acFocusIdx = Math.min(acFocusIdx + 1, items.length - 1); refreshAcFocus(items); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { acFocusIdx = Math.max(acFocusIdx - 1, 0); refreshAcFocus(items); e.preventDefault(); }
+    else if (e.key === 'Enter' && acFocusIdx >= 0) { selectProgram(items[acFocusIdx].dataset.val); e.preventDefault(); }
+    else if (e.key === 'Escape') { acList.classList.remove('open'); }
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.autocomplete-wrap')) acList.classList.remove('open');
+  });
+
+  document.getElementById('find-btn').addEventListener('click', runFinder);
+}
+
+function refreshAcFocus(items) {
+  items.forEach((el, i) => el.classList.toggle('focused', i === acFocusIdx));
+  if (items[acFocusIdx]) items[acFocusIdx].scrollIntoView({ block: 'nearest' });
+}
+
+function selectProgram(prog) {
+  const progInput = document.getElementById('prog-input');
+  const acList = document.getElementById('prog-ac');
+  progInput.value = prog;
+  acList.classList.remove('open');
+  activeProgram = prog;
+  updatePinVisibility();
+  renderTrainerList();
+}
+```
+
+- [ ] **Step 3: Verify in browser**
+
+Reload, sign in. Type "BODY" in Program field → autocomplete list appears with matching programs. Click one → field fills, list closes. Trainer pins for non-certified trainers disappear from map (if a program is selected with few trainers, the change should be visible). Trainer List updates to match. No errors.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: city lookup table + Event Finder inputs + program autocomplete"
+```
+
+---
+
+## Task 6: Event Finder logic — Find Trainers results
+
+**Files:**
+- Modify: `map.html` — add `haversine()`, `runFinder()`, `renderResults()` functions
+
+- [ ] **Step 1: Add haversine + runFinder**
+
+After `selectProgram`, add:
+
+```js
+// ── HAVERSINE ────────────────────────────────────────────────
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 3958.8; // miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── CONFLICT CHECK ────────────────────────────────────────────
+function isConflicted(trainerName, eventDateStr) {
+  const eventDate = new Date(eventDateStr);
+  const window = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
+  const conflict = getBookings().find(b => {
+    if (b.trainer !== trainerName) return false;
+    if (!b.confirmed) return false;
+    const bDate = new Date(b.startDate);
+    return Math.abs(eventDate - bDate) <= window;
+  });
+  return conflict ? conflict.event : null;
+}
+
+// ── RUN FINDER ────────────────────────────────────────────────
+function runFinder() {
+  const city = document.getElementById('city-input').value.trim();
+  const state = document.getElementById('state-input').value.trim();
+  const prog = document.getElementById('prog-input').value.trim();
+  const dateStr = document.getElementById('date-input').value;
+  const errEl = document.getElementById('finder-error');
+
+  errEl.style.display = 'none';
+
+  if (!city || !state) { showFinderError('Enter a city and state.'); return; }
+  if (!prog) { showFinderError('Select a program.'); return; }
+  if (!dateStr) { showFinderError('Select an event date.'); return; }
+
+  const coords = resolveCity(city, state);
+  if (!coords) { showFinderError('City not found — try a nearby major city.'); return; }
+
+  const [evLat, evLng] = coords;
+
+  const certified = TRAINERS.filter(t => t.trainerPrograms.includes(prog));
+
+  const results = certified.map(t => {
+    const dist = Math.round(haversine(evLat, evLng, t.lat, t.lng));
+    const conflictEvent = isConflicted(t.name, dateStr);
+    return { ...t, dist, conflictEvent, isAT: AT_NAMES.has(t.name) };
+  });
+
+  // Sort: available ATs → available Ts → booked ATs → booked Ts; each group by distance asc
+  results.sort((a, b) => {
+    const aBooked = !!a.conflictEvent, bBooked = !!b.conflictEvent;
+    if (aBooked !== bBooked) return aBooked ? 1 : -1;
+    if (a.isAT !== b.isAT) return a.isAT ? -1 : 1;
+    return a.dist - b.dist;
+  });
+
+  renderResults(results, prog);
+}
+
+function showFinderError(msg) {
+  const el = document.getElementById('finder-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+```
+
+- [ ] **Step 2: Add renderResults()**
+
+After `showFinderError`, add:
+
+```js
+function renderResults(results, prog) {
+  const container = document.getElementById('finder-results');
+  if (!results.length) {
+    container.innerHTML = `<div style="padding:16px 0;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">No certified trainers found for ${prog}.</div>`;
+    return;
+  }
+
+  const available = results.filter(r => !r.conflictEvent);
+  const booked    = results.filter(r => r.conflictEvent);
+
+  let html = '';
+
+  if (available.length) {
+    html += `<div class="results-section"><div class="results-heading">Available (${available.length})</div>`;
+    html += available.map(r => resultRowHTML(r)).join('');
+    html += `</div>`;
+  }
+
+  if (booked.length) {
+    html += `<div class="results-section"><div class="results-heading" style="margin-top:12px;">Booked (${booked.length})</div>`;
+    html += booked.map(r => resultRowHTML(r)).join('');
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Attach click: fly to trainer pin
+  container.querySelectorAll('.result-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const name = row.dataset.name;
+      const marker = trainerMarkers.find(m => m.trainerData.name === name);
+      if (marker) {
+        map.flyTo(marker.getLatLng(), 9, { duration: 0.8 });
+        marker.openPopup();
+      }
+    });
+  });
+}
+
+function resultRowHTML(r) {
+  const regionColor = REGION_CONFIG[r.region]?.color || '#888';
+  return `
+    <div class="result-row${r.conflictEvent ? ' booked' : ''}" data-name="${r.name}">
+      <div class="result-name">
+        ${r.name}
+        ${r.isAT ? '<span class="badge badge-at">AT</span>' : ''}
+        <span class="badge ${r.conflictEvent ? 'badge-booked' : 'badge-available'}">${r.conflictEvent ? 'Booked' : 'Available'}</span>
+        <span class="badge badge-dist">${r.dist} mi</span>
+      </div>
+      <div class="result-meta">
+        <span>${r.city}, ${r.state}</span>
+        <span class="region-badge" style="background:${regionColor}22;color:${regionColor};border:1px solid ${regionColor}44;">${r.region}</span>
+      </div>
+      ${r.conflictEvent ? `<div class="conflict-note">Conflict: ${r.conflictEvent}</div>` : ''}
+    </div>
+  `;
+}
+```
+
+- [ ] **Step 3: Verify in browser**
+
+Sign in → enter "Denver, CO", select "BODYPUMP", pick any date → click Find Trainers. Results should appear: available trainers sorted by distance (closest first), ATs listed before Ts within each group. Booked trainers appear below. Clicking a result row flies the map to that trainer's pin. Error message shows for unknown cities.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: Event Finder — haversine distance, conflict check, sorted results"
+```
+
+---
+
+## Task 7: Trainer List panel
+
+**Files:**
+- Modify: `map.html` — add `renderTrainerList()` function
+
+- [ ] **Step 1: Add renderTrainerList()**
+
+After `resultRowHTML`, add:
+
+```js
+// ── TRAINER LIST ──────────────────────────────────────────────
+function renderTrainerList() {
+  const container = document.getElementById('trainer-list');
+  const countEl = document.getElementById('list-count');
+
+  let list = TRAINERS.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  if (activeRegion) list = list.filter(t => t.region === activeRegion);
+  if (activeProgram) list = list.filter(t => t.trainerPrograms.includes(activeProgram));
+
+  countEl.textContent = `${list.length} trainer${list.length !== 1 ? 's' : ''}`;
+
+  if (!list.length) {
+    container.innerHTML = `<div class="list-empty">No trainers match current filters</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(t => {
+    const isAT = AT_NAMES.has(t.name);
+    const regionColor = REGION_CONFIG[t.region]?.color || '#888';
+    const progs = t.trainerPrograms;
+    const shown = progs.slice(0, 4);
+    const more = progs.length - 4;
+    const tags = shown.map(p => `<span class="prog-tag">${p}</span>`).join('') +
+      (more > 0 ? `<span class="prog-tag" style="color:var(--muted)">+${more}</span>` : '');
+    return `
+      <div class="trainer-row" data-name="${t.name}">
+        <div style="flex:1;min-width:0">
+          <div class="trainer-name">${t.name}${isAT ? ' <span class="badge badge-at" style="font-size:9px;padding:1px 5px;">AT</span>' : ''}</div>
+          <div class="trainer-loc">${t.city}, ${t.state}</div>
+          <div class="prog-tags">${tags}</div>
+        </div>
+        <span class="region-badge" style="background:${regionColor}22;color:${regionColor};border:1px solid ${regionColor}44;flex-shrink:0;">${t.region}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Attach click → fly to pin + open popup
+  container.querySelectorAll('.trainer-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const name = row.dataset.name;
+      const marker = trainerMarkers.find(m => m.trainerData.name === name);
+      if (marker) {
+        map.flyTo(marker.getLatLng(), 10, { duration: 0.8 });
+        marker.openPopup();
+      }
+    });
+  });
+}
+```
+
+- [ ] **Step 2: Verify in browser**
+
+Sign in. Trainer List shows all 53 trainers alphabetically below the Event Finder. Clicking a region polygon filters the list. Clicking a trainer row flies the map to their pin and opens their popup. Selecting a program in Event Finder (and pressing Enter or clicking an autocomplete item) filters the Trainer List to only certified trainers. No errors.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: Trainer List panel — alphabetical, region+program filters, fly-to on click"
+```
+
+---
+
+## Task 8: CSV upload — FileReader + localStorage
+
+**Files:**
+- Modify: `map.html` — add `initUpload()` and `loadBookingsFromStorage()` functions
+
+- [ ] **Step 1: Add loadBookingsFromStorage()**
+
+At the start of `initApp()`, add (or confirm it calls `loadBookingsFromStorage()` — already included in Task 3's `initApp` snippet):
+
+```js
+function loadBookingsFromStorage() {
+  const saved = localStorage.getItem(BOOKINGS_KEY);
+  if (saved) {
+    const parsed = parseCSV(saved);
+    if (parsed) {
+      activeBookings = parsed;
+      setUploadMsg(`Bookings: custom CSV loaded`);
+    }
+  }
+}
+```
+
+- [ ] **Step 2: Add initUpload(), parseCSV(), setUploadMsg()**
+
+After `loadBookingsFromStorage`, add:
+
+```js
+function initUpload() {
+  const btn = document.getElementById('upload-btn');
+  const fileInput = document.getElementById('csv-file');
+  btn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const csv = e.target.result;
+      const parsed = parseCSV(csv);
+      if (parsed) {
+        activeBookings = parsed;
+        localStorage.setItem(BOOKINGS_KEY, csv);
+        setUploadMsg(`${parsed.length} bookings loaded`);
+        // Refresh pin popup counts
+        trainerMarkers.forEach(m => {
+          const t = m.trainerData;
+          const count = trainerBookingCount(t.name);
+          // Rebind popup with updated count
+          m.bindPopup(`
+            <div class="popup-name">${t.name}${AT_NAMES.has(t.name) ? ' <span style="font-size:10px;background:#e8f0fb;color:#1A5280;border-radius:3px;padding:1px 5px;font-weight:700;">AT</span>' : ''}</div>
+            <div class="popup-loc">${t.city}, ${t.state} · ${t.region}</div>
+            <div class="popup-programs"><strong>Programs:</strong> ${t.trainerPrograms.join(', ') || '—'}</div>
+            <div class="popup-programs" style="margin-top:4px;"><strong>Bookings:</strong> ${count}</div>
+          `, { maxWidth: 260 });
+        });
+      } else {
+        setUploadMsg('Upload failed — check CSV columns', true);
+      }
+      fileInput.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
+
+const REQUIRED_COLS = ['trainer','program','startDate','confirmed','region','eventType','status'];
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return null;
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const missing = REQUIRED_COLS.filter(c => !headers.includes(c));
+  if (missing.length) { console.warn('CSV missing columns:', missing); return null; }
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = splitCSVLine(lines[i]);
+    if (vals.length < headers.length) continue;
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = vals[idx]?.replace(/^"|"$/g, '').trim(); });
+    row.confirmed = row.confirmed === 'true' || row.confirmed === '1' || row.confirmed === 'TRUE';
+    row.isOnline = row.isOnline === 'true' || row.isOnline === '1' || row.isOnline === 'TRUE';
+    rows.push(row);
+  }
+  return rows.length ? rows : null;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQuote = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { result.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+function setUploadMsg(msg, isError = false) {
+  const el = document.getElementById('upload-msg');
+  el.textContent = msg;
+  el.style.color = isError ? 'var(--accent2)' : 'var(--muted)';
+}
+```
+
+- [ ] **Step 3: Verify in browser**
+
+Sign in. Click "Update Bookings" — native file picker opens. Upload a valid CSV (export from `bookings-data.js` manually or create a minimal test CSV with the required columns). Message in header shows booking count. Reload page — custom bookings persist from localStorage (message still shows). Upload a bad CSV → error message, existing data unchanged.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add map.html
+git commit -m "feat: CSV upload — FileReader, localStorage persistence, column validation"
+```
+
+---
+
+## Task 9: index.html nav link update
+
+**Files:**
+- Modify: `index.html` line ~253
+
+- [ ] **Step 1: Update the existing map link label**
+
+In `index.html`, find the current link to `map.html` (currently labelled "REGIONAL OPS"):
+
+```html
+<a href="map.html" style="...">&#9651; REGIONAL OPS</a>
+```
+
+Change the label text to "Map View" (keep all inline styles and the `href`):
+
+```html
+<a href="map.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:6px 14px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;transition:all 0.15s;margin-right:12px;" onmouseover="this.style.color='#00FF63';this.style.borderColor='rgba(0,255,99,0.4)'" onmouseout="this.style.color='rgba(255,255,255,0.55)';this.style.borderColor='rgba(255,255,255,0.15)'">Map View</a>
+```
+
+- [ ] **Step 2: Verify in browser**
+
+Load `http://localhost:4001/index.html`. Header shows "Map View" link. Clicking it navigates to `map.html`, which shows the login screen. After login, back-link in `map.html` header returns to `index.html`.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: update index.html nav link to 'Map View'"
+```
+
+---
+
+## Task 10: Final integration check + polish
+
+**Files:**
+- Modify: `map.html` — any loose ends
+
+- [ ] **Step 1: Smoke-test the full user journey**
+
+Open `http://localhost:4001/map.html`. Run through:
+
+1. Login screen → enter wrong password → error shown. Enter `lmus-tap-2026` → signs in.
+2. Map loads with 5 region polygons and 53 trainer pins.
+3. Click "East Coast" polygon → map zooms to east, Trainer List filters to East Coast trainers.
+4. Click map background → all regions restore, full list returns.
+5. Type "BODY" in Program → autocomplete shows matches. Select "BODYPUMP".
+6. Trainer pins for non-BODYPUMP trainers disappear. Trainer List shows only BODYPUMP trainers.
+7. Enter "New York, NY" + BODYPUMP + any date → Find Trainers. Results show available/booked split, sorted by distance.
+8. Click a result row → map flies to that trainer's pin, popup opens.
+9. Click a Trainer List row → map flies to that trainer.
+10. Click Sign Out → login screen returns.
+11. Reload `http://localhost:4001/map.html` → auto-signs in (localStorage flag set).
+
+- [ ] **Step 2: Fix any layout issues**
+
+Common issues to check:
+- Sidebar overflow: if content taller than viewport, `overflow-y: auto` on `#sidebar` handles it
+- Map height: `flex: 1; min-height: 0` on `#map` ensures it fills remaining space
+- Leaflet attribution: positioned bottom-right, check it's not hidden behind sidebar
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add map.html index.html
+git commit -m "feat: trainer map + event finder — complete"
+```
+
+---
+
+## Self-Review
+
+### Spec coverage check
+
+| Spec requirement | Task |
+|-----------------|------|
+| Single static HTML file, no backend | All tasks — no external dependencies beyond CDNs |
+| Leaflet + OpenStreetMap tiles | Task 3 |
+| Haversine in-browser | Task 6 |
+| FileReader + localStorage CSV | Task 8 |
+| 56 trainer geocoords (53 in bookings data; 3 may be absent) | Task 2 (note re Nikki Snow-Ybe) |
+| T and AT role types, AT badge | Task 2 (data) + Task 6 (results) + Task 7 (list) |
+| advancedPrograms array | Task 2 |
+| Sort: available AT → available T → booked AT → booked T | Task 6 `runFinder` sort |
+| Program code → name mapping | Not needed (bookings data already uses full names) |
+| City lookup ~200 cities + inline error | Task 5 (~200 cities) + Task 6 `showFinderError` |
+| 5 region polygons, color-coded | Task 3 |
+| Region click → highlight + zoom + filter list | Task 3 `selectRegion` |
+| Click background → deselect | Task 3 |
+| Trainer pins: color by region | Task 4 |
+| Pin popup: name, city/state, programs, booking count | Task 4 |
+| Program filter hides non-certified pins | Task 4 `updatePinVisibility` |
+| Event Finder: city/state/program/date inputs | Task 5 |
+| Conflict: ±14 days on confirmed bookings (incl. online) | Task 6 `isConflicted` |
+| Results: available callout + booked section, sorted by distance | Task 6 `renderResults` |
+| Result row: name, AT badge, distance, status, conflict event | Task 6 `resultRowHTML` |
+| Result row click → fly to pin | Task 6 |
+| Trainer List: alphabetical, dual filter (region + program) | Task 7 |
+| Trainer List row click → fly to pin | Task 7 |
+| CSV upload → FileReader + localStorage | Task 8 |
+| CSV column validation + inline error | Task 8 `parseCSV` |
+| On load: localStorage first, fallback to seed data | Task 8 `loadBookingsFromStorage` |
+| Auth gate: password, localStorage flag, sign out | Task 1 |
+| Header: ← Dashboard link + Update Bookings + Sign Out | Task 1 |
+| index.html gets Map View link (already present, label updated) | Task 9 |
+| LMUS design system tokens (fonts, colors, components) | Task 1 CSS |
+
+**Gaps identified:**
+- Nikki Snow-Ybe (17th AT from spec) has no bookings — noted in Task 2 comment. Implementer should check PDF roster and add with geocoords if found.
+- Region polygons are simple rectangles — trainer home cities may sit near boundaries. Acceptable for internal dashboard; note in Task 3.
+
+### Placeholder scan
+None found.
+
+### Type consistency
+- `TRAINERS[n].trainerPrograms` — string array, consistent across Tasks 2, 4, 5, 6, 7
+- `AT_NAMES` — `Set<string>`, consistent across Tasks 2, 4, 6, 7
+- `activeRegion` / `activeProgram` — `string | null`, consistent across Tasks 3–7
+- `activeBookings` — `Array | null`, `getBookings()` resolves to `BOOKINGS` or `activeBookings`, consistent across Tasks 6, 8
+- `marker.trainerData` — attached in Task 4, read in Tasks 6, 7 ✓
