@@ -463,9 +463,52 @@ function selectRegion(name) {
   renderTrainerList();
 }
 
+// ── PINS ──────────────────────────────────────────────────────
+function regionColor(region) {
+  return REGION_CONFIG[region]?.color || '#888';
+}
+
+function trainerBookingCount(trainerName) {
+  return getBookings().filter(b => b.trainer === trainerName && !b.isCancelled).length;
+}
+
+function addTrainerPins() {
+  trainerMarkers = TRAINERS.map(t => {
+    const isAT = AT_NAMES.has(t.name);
+    const bookingCount = trainerBookingCount(t.name);
+    const progList = t.trainerPrograms.join(', ') || '—';
+    const marker = L.circleMarker([t.lat, t.lng], {
+      radius: 7,
+      fillColor: regionColor(t.region),
+      color: '#fff',
+      weight: 1.5,
+      fillOpacity: 0.9,
+    });
+    marker.trainerData = t;
+    marker.bindPopup(`
+      <div class="popup-name">${t.name}${isAT ? ' <span style="font-size:10px;background:#e8f0fb;color:#1A5280;border-radius:3px;padding:1px 5px;font-weight:700;">AT</span>' : ''}</div>
+      <div class="popup-loc">${t.city}, ${t.state} · ${t.region}</div>
+      <div class="popup-programs"><strong>Programs:</strong> ${progList}</div>
+      <div class="popup-programs" style="margin-top:4px;"><strong>Bookings:</strong> ${bookingCount}</div>
+    `, { maxWidth: 260 });
+    marker.addTo(map);
+    return marker;
+  });
+}
+
+function updatePinVisibility() {
+  trainerMarkers.forEach(m => {
+    const t = m.trainerData;
+    const programMatch = !activeProgram || t.trainerPrograms.includes(activeProgram);
+    if (programMatch) {
+      if (!map.hasLayer(m)) m.addTo(map);
+    } else {
+      if (map.hasLayer(m)) map.removeLayer(m);
+    }
+  });
+}
+
 // Stubs — replaced by Tasks 4–8
-function addTrainerPins() {}
-function updatePinVisibility() {}
 function renderTrainerList() {}
 function initFinder() {}
 function initUpload() {}
