@@ -624,7 +624,129 @@ function selectProgram(prog) {
   renderTrainerList();
 }
 
-function runFinder() {}
+// ── HAVERSINE ────────────────────────────────────────────────
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 3958.8; // miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── CONFLICT CHECK ────────────────────────────────────────────
+function isConflicted(trainerName, eventDateStr) {
+  const eventDate = new Date(eventDateStr);
+  const window = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
+  const conflict = getBookings().find(b => {
+    if (b.trainer !== trainerName) return false;
+    if (!b.confirmed) return false;
+    const bDate = new Date(b.startDate);
+    return Math.abs(eventDate - bDate) <= window;
+  });
+  return conflict ? conflict.event : null;
+}
+
+// ── RUN FINDER ────────────────────────────────────────────────
+function runFinder() {
+  const city = document.getElementById('city-input').value.trim();
+  const state = document.getElementById('state-input').value.trim();
+  const prog = document.getElementById('prog-input').value.trim();
+  const dateStr = document.getElementById('date-input').value;
+  const errEl = document.getElementById('finder-error');
+
+  errEl.style.display = 'none';
+
+  if (!city || !state) { showFinderError('Enter a city and state.'); return; }
+  if (!prog) { showFinderError('Select a program.'); return; }
+  if (!dateStr) { showFinderError('Select an event date.'); return; }
+
+  const coords = resolveCity(city, state);
+  if (!coords) { showFinderError('City not found — try a nearby major city.'); return; }
+
+  const [evLat, evLng] = coords;
+
+  const certified = TRAINERS.filter(t => t.trainerPrograms.includes(prog));
+
+  const results = certified.map(t => {
+    const dist = Math.round(haversine(evLat, evLng, t.lat, t.lng));
+    const conflictEvent = isConflicted(t.name, dateStr);
+    return { ...t, dist, conflictEvent, isAT: AT_NAMES.has(t.name) };
+  });
+
+  // Sort: available ATs → available Ts → booked ATs → booked Ts; each group by distance asc
+  results.sort((a, b) => {
+    const aBooked = !!a.conflictEvent, bBooked = !!b.conflictEvent;
+    if (aBooked !== bBooked) return aBooked ? 1 : -1;
+    if (a.isAT !== b.isAT) return a.isAT ? -1 : 1;
+    return a.dist - b.dist;
+  });
+
+  renderResults(results, prog);
+}
+
+function showFinderError(msg) {
+  const el = document.getElementById('finder-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function renderResults(results, prog) {
+  const container = document.getElementById('finder-results');
+  if (!results.length) {
+    container.innerHTML = `<div style="padding:16px 0;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">No certified trainers found for ${prog}.</div>`;
+    return;
+  }
+
+  const available = results.filter(r => !r.conflictEvent);
+  const booked    = results.filter(r => r.conflictEvent);
+
+  let html = '';
+
+  if (available.length) {
+    html += `<div class="results-section"><div class="results-heading">Available (${available.length})</div>`;
+    html += available.map(r => resultRowHTML(r)).join('');
+    html += `</div>`;
+  }
+
+  if (booked.length) {
+    html += `<div class="results-section"><div class="results-heading" style="margin-top:12px;">Booked (${booked.length})</div>`;
+    html += booked.map(r => resultRowHTML(r)).join('');
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Attach click: fly to trainer pin
+  container.querySelectorAll('.result-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const name = row.dataset.name;
+      const marker = trainerMarkers.find(m => m.trainerData.name === name);
+      if (marker) {
+        map.flyTo(marker.getLatLng(), 9, { duration: 0.8 });
+        marker.openPopup();
+      }
+    });
+  });
+}
+
+function resultRowHTML(r) {
+  const regionColor = REGION_CONFIG[r.region]?.color || '#888';
+  return `
+    <div class="result-row${r.conflictEvent ? ' booked' : ''}" data-name="${r.name}">
+      <div class="result-name">
+        ${r.name}
+        ${r.isAT ? '<span class="badge badge-at">AT</span>' : ''}
+        <span class="badge ${r.conflictEvent ? 'badge-booked' : 'badge-available'}">${r.conflictEvent ? 'Booked' : 'Available'}</span>
+        <span class="badge badge-dist">${r.dist} mi</span>
+      </div>
+      <div class="result-meta">
+        <span>${r.city}, ${r.state}</span>
+        <span class="region-badge" style="background:${regionColor}22;color:${regionColor};border:1px solid ${regionColor}44;">${r.region}</span>
+      </div>
+      ${r.conflictEvent ? `<div class="conflict-note">Conflict: ${r.conflictEvent}</div>` : ''}
+    </div>
+  `;
+}
 
 // Stubs — replaced by Tasks 4–8
 function renderTrainerList() {}
