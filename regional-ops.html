@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMUS TAP — Regional Ops</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg:           #FFFFFF;
+    --bg-subtle:    #F7F7F7;
+    --bg-sunken:    #F0F0F0;
+    --bg-dark:      #0A0A0A;
+    --card:         #FFFFFF;
+    --accent:       #00FF63;
+    --accent-soft:  rgba(0,255,99,0.10);
+    --accent-mid:   rgba(0,255,99,0.20);
+    --accent2:      #FF623E;
+    --lm-green:     #1A7A3C;
+    --lm-amber:     #B85C00;
+    --lm-blue:      #1A5280;
+    --lm-gold:      #9B6F00;
+    --lm-purple:    #6B2FA0;
+    --lm-teal:      #0E7490;
+    --text:         #111111;
+    --ink-mid:      #444444;
+    --muted:        #888888;
+    --border:       #E5E5E5;
+    --border-mid:   #D0D0D0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg-subtle); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  /* ── AUTH GATE ─────────────────────────────────────────────── */
+  #auth-screen {
+    position: fixed; inset: 0; background: var(--bg-dark);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  .auth-card {
+    background: #141414; border: 1px solid rgba(0,255,99,0.2); border-radius: 16px;
+    padding: 48px 40px; width: 360px; text-align: center;
+  }
+  .auth-logo { width: 3px; height: 32px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 16px var(--accent); margin: 0 auto 24px; }
+  .auth-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 6px; }
+  .auth-title em { color: var(--accent); font-style: normal; }
+  .auth-sub { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 32px; }
+  .auth-input {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; padding: 12px 16px; color: #fff; font-family: 'Inter', sans-serif;
+    font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color 0.15s;
+  }
+  .auth-input:focus { border-color: rgba(0,255,99,0.4); }
+  .auth-btn {
+    width: 100%; background: var(--accent); color: #000; border: none;
+    border-radius: 8px; padding: 13px; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.15s; margin-bottom: 12px;
+  }
+  .auth-btn:hover { opacity: 0.88; }
+  .auth-error { font-size: 11px; color: var(--accent2); font-weight: 600; letter-spacing: 0.5px; min-height: 16px; }
+
+  /* ── HEADER ─────────────────────────────────────────────────── */
+  header {
+    background: var(--bg-dark); border-bottom: 2px solid rgba(0,255,99,0.3);
+    padding: 0 32px; display: flex; align-items: center; gap: 16px; height: 60px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-logo { width: 3px; height: 24px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px var(--accent); flex-shrink: 0; }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: 2px; text-transform: uppercase; color: #fff; }
+  .header-title em { color: var(--accent); font-style: normal; }
+  .header-sub { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 3px; }
+  .header-spacer { flex: 1; }
+  .back-link {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.55);
+    text-decoration: none; padding: 6px 14px; border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px; transition: all 0.15s;
+  }
+  .back-link:hover { color: var(--accent); border-color: rgba(0,255,99,0.4); }
+  .header-badge { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(0,255,99,0.25); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 5px 14px; border-radius: 20px; text-transform: uppercase; }
+  .signout-btn {
+    background: transparent; color: rgba(255,255,255,0.35); border: 1px solid rgba(255,255,255,0.1);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; border-radius: 20px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .signout-btn:hover { color: var(--accent2); border-color: rgba(255,98,62,0.3); }
+
+  #app { display: none; }
+  #app.visible { display: block; }
+
+  /* ── FILTERS ────────────────────────────────────────────────── */
+  .filters-bar {
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    padding: 12px 32px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
+  }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-label { font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+  .filter-btn {
+    background: none; border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px;
+    color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--border-mid); color: var(--text); }
+  .filter-btn.active { background: var(--bg-dark); border-color: var(--bg-dark); color: var(--accent); font-weight: 700; }
+  .filters-reset {
+    margin-left: auto; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 4px 12px; cursor: pointer; border-radius: 20px; text-transform: uppercase; transition: all 0.15s;
+  }
+  .filters-reset:hover { border-color: var(--border-mid); color: var(--text); }
+
+  /* ── CONTENT ─────────────────────────────────────────────────── */
+  main { max-width: 1400px; margin: 0 auto; padding: 28px 32px 48px; }
+
+  .section-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .section-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .section-title { font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+  .section-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
+
+  .prog-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding: 0 24px 16px; border-bottom: 1px solid var(--border); }
+  .prog-pill { background: var(--bg-subtle); border: 1px solid var(--border); color: var(--ink-mid); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; padding: 5px 12px; cursor: pointer; border-radius: 20px; transition: all 0.15s; white-space: nowrap; }
+  .prog-pill:hover { border-color: var(--border-mid); color: var(--text); }
+  .prog-pill.active { background: var(--bg-dark); border-color: var(--bg-dark); color: var(--accent); font-weight: 700; }
+
+  .drill-region-filters { display:flex; flex-wrap:wrap; gap:6px; padding:10px 24px; border-bottom:1px solid var(--border); }
+  .drf-btn { background:none; border:1px solid var(--border); border-radius:20px; padding:4px 12px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all 0.15s; }
+  .drf-btn:hover { border-color:var(--border-mid); color:var(--text); }
+  .drf-btn.active { background:var(--bg-dark); border-color:var(--bg-dark); color:var(--accent); }
+
+  .drill-body { padding: 20px 24px; }
+  .drill-subtitle { font-size: 9px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .drill-empty { padding: 48px; text-align: center; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+
+  .heatmap-section { margin-bottom:20px; }
+  .heatmap-subtitle { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .heatmap-wrap { width:100%; }
+  .heatmap-grid { display:grid; gap:3px; width:100%; }
+  .hm-corner { }
+  .hm-col-head { font-size:8px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--muted); text-align:center; padding:2px 0 4px; white-space:nowrap; }
+  .hm-row-head { font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:0 10px 0 0; display:flex; align-items:center; white-space:nowrap; }
+  .hm-cell { width:100%; height:40px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; transition:transform 0.1s; cursor:default; }
+  .hm-cell:hover { transform:scale(1.15); z-index:1; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+  .hm-cell-empty { background:var(--bg-subtle); color:var(--border-mid); }
+
+  .drill-trainer-table { width: 100%; border-collapse: collapse; }
+  .drill-trainer-table th { background: var(--bg-subtle); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .drill-trainer-table td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .drill-trainer-table tr:last-child td { border-bottom: none; }
+  .drill-trainer-table tr:hover td { background: var(--bg-subtle); }
+  .drill-trainer-table.hm-active tbody tr { opacity: 0.3; transition: opacity 0.1s; }
+  .drill-trainer-table.hm-active tbody tr.hm-highlight { opacity: 1; background: rgba(0,255,99,0.05); }
+  .dtt-name { font-weight: 600; }
+  .dtt-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; text-align: right; color: var(--lm-blue); }
+  .dtt-num.zero { color: var(--border-mid); }
+  .drill-trainer-table tbody tr[data-trainer] { cursor: pointer; }
+  .drill-trainer-table tbody tr.dt-expanded td { background: rgba(0,255,99,0.03); border-bottom: none; }
+  .drill-expand-row td { padding: 0 !important; background: rgba(0,255,99,0.02) !important; border-bottom: 1px solid var(--border) !important; }
+  .de-inner { padding: 6px 16px 10px 32px; display: flex; flex-direction: column; gap: 1px; animation: deSlide 0.12s ease; }
+  @keyframes deSlide { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+  .de-row { display: grid; grid-template-columns: 90px 90px 170px 1fr; gap: 10px; padding: 4px 8px; border-radius: 4px; font-size: 12px; align-items: center; }
+  .de-row:hover { background: var(--bg-sunken); }
+  .de-dual { background: rgba(107,47,160,0.04); border-left: 2px solid rgba(107,47,160,0.3); padding-left: 10px; }
+  .de-date { font-size: 10px; color: var(--ink-mid); font-weight: 500; }
+  .de-type { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .de-prog { font-size: 10px; color: var(--muted); line-height: 1.5; }
+  .de-name { color: var(--ink-mid); font-size: 12px; }
+
+  .region-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1px solid; }
+  .rb-east         { color: var(--lm-green); border-color: rgba(26,122,60,0.25); background: rgba(26,122,60,0.08); }
+  .rb-midwest      { color: var(--lm-amber); border-color: rgba(184,92,0,0.25); background: rgba(184,92,0,0.08); }
+  .rb-southcentral { color: var(--accent2); border-color: rgba(255,98,62,0.25); background: rgba(255,98,62,0.08); }
+  .rb-central      { color: var(--lm-blue); border-color: rgba(26,82,128,0.25); background: rgba(26,82,128,0.08); }
+  .rb-west         { color: var(--lm-gold); border-color: rgba(155,111,0,0.25); background: rgba(155,111,0,0.08); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-subtle); }
+  ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"></div>
+    <div class="auth-title">LMUS <em>TΛP</em></div>
+    <div class="auth-sub">Admin Access Required</div>
+    <input class="auth-input" type="password" id="pw-input" placeholder="Enter password" autocomplete="current-password" />
+    <button class="auth-btn" id="pw-btn">Sign In</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="header-logo"></div>
+    <div>
+      <div class="header-title">LMUS <em>TΛP</em></div>
+      <div class="header-sub">Regional Ops</div>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-badge" id="totalBadge">— bookings</div>
+    <a href="map.html" class="back-link">Trainer Map</a>
+    <a href="index.html" class="back-link">← Dashboard</a>
+    <button class="signout-btn" id="signout-btn">Sign Out</button>
+  </header>
+
+  <div class="filters-bar">
+    <div class="filter-group">
+      <span class="filter-label">FY</span>
+      <div class="filter-btns" id="fyFilters">
+        <button class="filter-btn active" data-val="All">All</button>
+        <button class="filter-btn" data-val="FY2026">FY2026</button>
+        <button class="filter-btn" data-val="FY2027">FY2027</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Quarter</span>
+      <div class="filter-btns" id="qFilters">
+        <button class="filter-btn active" data-val="All">All</button>
+        <button class="filter-btn" data-val="Q1">Q1</button>
+        <button class="filter-btn" data-val="Q2">Q2</button>
+        <button class="filter-btn" data-val="Q3">Q3</button>
+        <button class="filter-btn" data-val="Q4">Q4</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Type</span>
+      <div class="filter-btns" id="typeFilters">
+        <button class="filter-btn active" data-val="All">All</button>
+        <button class="filter-btn" data-val="Initial Training">Initial Training</button>
+        <button class="filter-btn" data-val="Dual Training">Dual Training</button>
+        <button class="filter-btn" data-val="Online IT">Online IT</button>
+        <button class="filter-btn" data-val="Advanced Training">Advanced Training</button>
+        <button class="filter-btn" data-val="Instructor Workshop">Instructor Workshop</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Region</span>
+      <div class="filter-btns" id="regionFilters">
+        <button class="filter-btn active" data-val="All">All</button>
+        <button class="filter-btn" data-val="East Coast">East Coast</button>
+        <button class="filter-btn" data-val="Mid West">Mid West</button>
+        <button class="filter-btn" data-val="South Central">South Central</button>
+        <button class="filter-btn" data-val="Central">Central</button>
+        <button class="filter-btn" data-val="West Coast">West Coast</button>
+      </div>
+    </div>
+    <button class="filters-reset" id="resetBtn">Reset Filters</button>
+  </div>
+
+  <main>
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">PROGRAM DISTRIBUTION</div>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px;">Select programs to compare · hover a cell to highlight trainers</span>
+      </div>
+      <div class="prog-pills" id="progPills"></div>
+      <div class="drill-region-filters" id="drillRegionFilters"></div>
+      <div class="drill-body" id="drillBody">
+        <div class="drill-empty">Select a program above to view distribution</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="bookings-data.js"></script>
+<script>
+const ADMIN_PASSWORD = 'lmus-tap-2026';
+const AUTH_KEY = 'lmus_admin_auth';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+const state = { fy:'All', q:'All', type:[], region:'All', selectedPrograms:[], drillRegion:'All' };
+let currentDrillData = [];
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('totalBadge').textContent = BOOKINGS.length + ' bookings';
+  renderProgPills();
+}
+
+if (localStorage.getItem(AUTH_KEY) === '1') {
+  showApp();
+}
+
+document.getElementById('pw-btn').addEventListener('click', () => {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    localStorage.setItem(AUTH_KEY, '1');
+    showApp();
+  } else {
+    document.getElementById('auth-error').textContent = 'Incorrect password';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+});
+
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pw-btn').click();
+});
+
+document.getElementById('signout-btn').addEventListener('click', () => {
+  localStorage.removeItem(AUTH_KEY);
+  location.reload();
+});
+
+function getFiltered() {
+  return BOOKINGS.filter(b => {
+    if (state.fy     !== 'All' && b.fiscalYear    !== state.fy)     return false;
+    if (state.q      !== 'All' && b.fiscalQuarter !== state.q)      return false;
+    if (state.type.length > 0 && !state.type.includes(b.eventType)) return false;
+    if (state.region !== 'All' && b.region        !== state.region) return false;
+    return true;
+  });
+}
+
+function getPrograms() {
+  const pc = {};
+  BOOKINGS.filter(b => b.program !== 'Other').forEach(b => { pc[b.program] = (pc[b.program]||0)+1; });
+  return Object.entries(pc).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+}
+
+function renderProgPills() {
+  const programs = getPrograms();
+  document.getElementById('progPills').innerHTML = programs.map(p =>
+    `<button class="prog-pill${state.selectedPrograms.includes(p)?' active':''}" onclick="selectProgram('${p.replace(/'/g,"\\'")}')">` + p + `</button>`
+  ).join('');
+  renderDrillRegionFilters();
+}
+
+function renderDrillRegionFilters() {
+  const regions = ['All','East Coast','Mid West','South Central','Central','West Coast'];
+  document.getElementById('drillRegionFilters').innerHTML = state.selectedPrograms.length ? regions.map(r =>
+    `<button class="drf-btn${state.drillRegion===r?' active':''}" onclick="selectDrillRegion('${r}')">${r}</button>`
+  ).join('') : '';
+}
+
+function selectProgram(prog) {
+  const idx = state.selectedPrograms.indexOf(prog);
+  if (idx === -1) state.selectedPrograms.push(prog);
+  else state.selectedPrograms.splice(idx, 1);
+  renderProgPills();
+  refreshDrill();
+}
+
+function selectDrillRegion(r) {
+  state.drillRegion = r;
+  renderDrillRegionFilters();
+  refreshDrill();
+}
+
+function refreshDrill() {
+  const filtered = getFiltered();
+  if (state.selectedPrograms.length) {
+    renderDrill(filtered);
+  } else {
+    document.getElementById('drillBody').innerHTML = '<div class="drill-empty">Select a program above to view distribution</div>';
+  }
+}
+
+function renderDrill(filtered) {
+  const progData = filtered.filter(b =>
+    state.selectedPrograms.includes(b.program) &&
+    (state.drillRegion === 'All' || b.region === state.drillRegion)
+  );
+  currentDrillData = progData;
+  if (!progData.length) {
+    document.getElementById('drillBody').innerHTML = '<div class="drill-empty">No bookings match selected programs and region</div>';
+    return;
+  }
+
+  const regions = ['East Coast','Mid West','South Central','Central','West Coast'];
+  const regionColors = ['#1A7A3C','#B85C00','#FF623E','#1A5280','#9B6F00'];
+  const RC = {'East Coast':'rb-east','Mid West':'rb-midwest','South Central':'rb-southcentral','Central':'rb-central','West Coast':'rb-west'};
+
+  const trainerMap = {};
+  progData.forEach(b => {
+    if (!trainerMap[b.trainer]) trainerMap[b.trainer] = { trainer:b.trainer, region:b.region, total:0, q4fy26:0, q1fy27:0 };
+    trainerMap[b.trainer].total++;
+    if (b.fiscalYear==='FY2026' && b.fiscalQuarter==='Q4') trainerMap[b.trainer].q4fy26++;
+    if (b.fiscalYear==='FY2027' && b.fiscalQuarter==='Q1') trainerMap[b.trainer].q1fy27++;
+  });
+  const trainers = Object.values(trainerMap).sort((a,b) => b.total - a.total);
+
+  const allDates = progData.map(b => new Date(b.startDate)).filter(d => !isNaN(d));
+  const minD = new Date(Math.min(...allDates)), maxD = new Date(Math.max(...allDates));
+  const hmMonths = [];
+  const cur = new Date(minD.getFullYear(), minD.getMonth());
+  while (cur <= maxD) {
+    hmMonths.push({ key:`${cur.getFullYear()}-${cur.getMonth()}`, label:cur.toLocaleString('en-US',{month:'short'}), fy:cur.getFullYear(), mo:cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const hmData = {};
+  regions.forEach(r => { hmData[r] = {}; hmMonths.forEach(m => { hmData[r][m.key] = {total:0, dual:0, trainers:new Set()}; }); });
+  progData.forEach(b => {
+    const d = new Date(b.startDate);
+    if (isNaN(d)) return;
+    const k = `${d.getFullYear()}-${d.getMonth()}`;
+    if (hmData[b.region]?.[k] !== undefined) {
+      hmData[b.region][k].total++;
+      if (b.eventType === 'Dual Training') hmData[b.region][k].dual++;
+      hmData[b.region][k].trainers.add(b.trainer);
+    }
+  });
+  const hmMax = Math.max(1, ...Object.values(hmData).flatMap(rv => Object.values(rv).map(c => c.total)));
+  const dualCount = progData.filter(b => b.eventType === 'Dual Training').length;
+
+  document.getElementById('drillBody').innerHTML = `
+    <div class="heatmap-section">
+      <div class="heatmap-subtitle">${state.selectedPrograms.length > 1 ? state.selectedPrograms.join(' + ') + ' — ' : ''}Region × Month — ${progData.length} bookings${dualCount ? ` · <span style="color:#6B2FA0">${dualCount} dual</span>` : ''}</div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-grid" style="grid-template-columns:110px repeat(${hmMonths.length},1fr)">
+          <div class="hm-corner"></div>
+          ${hmMonths.map(m => `<div class="hm-col-head">${m.label}<br><span style="font-size:7px;opacity:0.6">'${String(m.fy).slice(2)}</span></div>`).join('')}
+          ${regions.map((r,ri) => {
+            const rColor = regionColors[ri];
+            return `<div class="hm-row-head" style="color:${rColor}">${r}</div>
+            ${hmMonths.map(m => {
+              const cell = hmData[r][m.key];
+              const cnt = cell.total, dCnt = cell.dual, rCnt = cnt - dCnt;
+              const intensity = cnt / hmMax;
+              const rgbMap = ['26,122,60','184,92,0','255,98,62','26,82,128','155,111,0'];
+              const a = 0.15 + intensity * 0.75;
+              let style = '';
+              if (cnt) {
+                if (dCnt && rCnt) {
+                  style = `background:linear-gradient(135deg,rgba(${rgbMap[ri]},${a}) 50%,rgba(107,47,160,${a}) 50%);color:#fff`;
+                } else if (dCnt) {
+                  style = `background:rgba(107,47,160,${a});color:${intensity>0.55?'#fff':'#6B2FA0'}`;
+                } else {
+                  style = `background:rgba(${rgbMap[ri]},${a});color:${intensity>0.55?'#fff':rColor}`;
+                }
+              }
+              const tip = `${r} · ${m.label} '${String(m.fy).slice(2)}: ${cnt} booking${cnt!==1?'s':''}${dCnt?` (${dCnt} dual)`:''}`;
+              return `<div class="hm-cell${cnt?'':' hm-cell-empty'}" style="${style}" title="${tip}" data-hmkey="${r}|${m.key}">${cnt||'·'}</div>`;
+            }).join('')}`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="drill-subtitle" style="margin-bottom:12px">${trainers.length} trainer${trainers.length!==1?'s':''}</div>
+    <table class="drill-trainer-table">
+      <thead><tr>
+        <th>Trainer</th><th>Region</th>
+        <th style="text-align:right">Q4 FY26</th><th style="text-align:right">Q1 FY27</th>
+        <th style="text-align:right">Total</th><th style="text-align:right">Dual</th>
+      </tr></thead>
+      <tbody>${trainers.map(t => {
+        const tDual = progData.filter(b => b.trainer===t.trainer && b.eventType==='Dual Training').length;
+        return `<tr data-trainer="${t.trainer}" onclick="toggleDrillExpand('${t.trainer.replace(/'/g,"\\'")}')">
+          <td class="dtt-name">${t.trainer}</td>
+          <td><span class="region-badge ${RC[t.region]||''}">${t.region}</span></td>
+          <td class="${t.q4fy26?'dtt-num':'dtt-num zero'}" style="text-align:right">${t.q4fy26||'—'}</td>
+          <td class="${t.q1fy27?'dtt-num':'dtt-num zero'}" style="text-align:right">${t.q1fy27||'—'}</td>
+          <td class="dtt-num" style="text-align:right">${t.total}</td>
+          <td class="${tDual?'dtt-num':'dtt-num zero'}" style="text-align:right;color:#6B2FA0">${tDual||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  `;
+
+  const drillTable = document.querySelector('.drill-trainer-table');
+  document.querySelectorAll('.hm-cell[data-hmkey]').forEach(cell => {
+    cell.addEventListener('mouseenter', () => {
+      const [region, monthKey] = cell.dataset.hmkey.split('|');
+      const active = hmData[region]?.[monthKey]?.trainers || new Set();
+      if (!active.size) return;
+      drillTable.classList.add('hm-active');
+      drillTable.querySelectorAll('tbody tr').forEach(row => {
+        row.classList.toggle('hm-highlight', active.has(row.dataset.trainer));
+      });
+    });
+    cell.addEventListener('mouseleave', () => {
+      drillTable.classList.remove('hm-active');
+      drillTable.querySelectorAll('tbody tr').forEach(row => row.classList.remove('hm-highlight'));
+    });
+  });
+}
+
+const DE_COLOR = { 'Initial Training':'#1A7A3C','Online IT':'#0E7490','Dual Training':'#6B2FA0','Advanced Training':'#B85C00','Online Advanced Training':'#E8941A','Instructor Workshop':'#FF623E' };
+const DE_LABEL = { 'Initial Training':'IT','Online IT':'Online IT','Dual Training':'Dual','Advanced Training':'Advanced','Online Advanced Training':'Online Adv','Instructor Workshop':'Workshop' };
+
+function toggleDrillExpand(trainer) {
+  const table = document.querySelector('.drill-trainer-table');
+  let trainerRow = null;
+  for (const row of table.querySelectorAll('tbody tr[data-trainer]')) {
+    if (row.dataset.trainer === trainer) { trainerRow = row; break; }
+  }
+  if (!trainerRow) return;
+
+  const existing = trainerRow.nextElementSibling;
+  if (existing && existing.classList.contains('drill-expand-row')) {
+    existing.remove();
+    trainerRow.classList.remove('dt-expanded');
+    return;
+  }
+
+  table.querySelectorAll('.drill-expand-row').forEach(r => r.remove());
+  table.querySelectorAll('tr.dt-expanded').forEach(r => r.classList.remove('dt-expanded'));
+
+  const bookings = currentDrillData
+    .filter(b => b.trainer === trainer)
+    .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+  const seen = new Set();
+  const rowsHtml = bookings.filter(b => {
+    if (b.eventType === 'Dual Training' && b.dualGroup) {
+      if (seen.has(b.dualGroup)) return false;
+      seen.add(b.dualGroup);
+    }
+    return true;
+  }).map(b => {
+    const isDual = b.eventType === 'Dual Training' && b.dualGroup;
+    const prog = isDual
+      ? currentDrillData.filter(x => x.dualGroup === b.dualGroup).map(x => x.program).join('<br>')
+      : b.program;
+    const color = DE_COLOR[b.eventType] || '#888';
+    const label = DE_LABEL[b.eventType] || b.eventType;
+    return `<div class="de-row${isDual?' de-dual':''}">
+      <span class="de-date">${b.startDate}</span>
+      <span class="de-type" style="color:${color}">${label}</span>
+      <span class="de-prog">${prog}</span>
+      <span class="de-name">${b.event}</span>
+    </div>`;
+  }).join('');
+
+  const expandRow = document.createElement('tr');
+  expandRow.className = 'drill-expand-row';
+  expandRow.innerHTML = `<td colspan="6"><div class="de-inner">${rowsHtml}</div></td>`;
+  trainerRow.after(expandRow);
+  trainerRow.classList.add('dt-expanded');
+}
+
+function wireFilter(id, key) {
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    document.querySelectorAll('#'+id+' .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state[key] = btn.dataset.val;
+    refreshDrill();
+  });
+}
+function wireMultiFilter(id, key) {
+  const allBtn = () => document.querySelector('#'+id+' .filter-btn[data-val="All"]');
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    const val = btn.dataset.val;
+    if (val === 'All') {
+      state[key] = [];
+      document.querySelectorAll('#'+id+' .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    } else {
+      allBtn().classList.remove('active');
+      const idx = state[key].indexOf(val);
+      if (idx > -1) { state[key].splice(idx, 1); btn.classList.remove('active'); if (state[key].length === 0) allBtn().classList.add('active'); }
+      else { state[key].push(val); btn.classList.add('active'); }
+    }
+    refreshDrill();
+  });
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  Object.assign(state, { fy:'All', q:'All', type:[], region:'All', selectedPrograms:[], drillRegion:'All' });
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.val==='All'));
+  document.getElementById('drillBody').innerHTML = '<div class="drill-empty">Select a program above to view distribution</div>';
+  renderProgPills();
+});
+
+wireFilter('fyFilters','fy');
+wireFilter('qFilters','q');
+wireMultiFilter('typeFilters','type');
+wireFilter('regionFilters','region');
+</script>
+</body>
+</html>
