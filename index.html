@@ -61,7 +61,27 @@
   .header-title em { color: var(--accent); font-style: normal; }
   .header-sub { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 3px; }
   .header-spacer { flex: 1; }
-  .header-badge { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(0,255,99,0.25); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1px; padding: 5px 14px; border-radius: 20px; text-transform: uppercase; }
+  .nav-btn {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px;
+    letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.85);
+    text-decoration: none; padding: 7px 16px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 6px; transition: all 0.2s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .nav-btn:hover {
+    color: var(--accent); background: rgba(255,255,255,0.13);
+    border-color: rgba(0,255,99,0.5);
+    box-shadow: 0 0 14px rgba(0,255,99,0.18), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .header-badge {
+    background: rgba(0,255,99,0.12); color: var(--accent);
+    border: 1px solid rgba(0,255,99,0.35);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px;
+    letter-spacing: 1.5px; padding: 7px 16px; border-radius: 6px; text-transform: uppercase;
+    box-shadow: 0 0 18px rgba(0,255,99,0.12);
+  }
 
   main { max-width: 1400px; margin: 0 auto; padding: 28px 32px 48px; }
 
@@ -73,12 +93,12 @@
   .filter-label { font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
   .filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
   .filter-btn {
-    background: var(--bg-subtle); border: 1px solid var(--border); color: var(--muted);
+    background: var(--bg-subtle); border: 1.5px solid #AAAAAA; color: var(--text);
     font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px;
     letter-spacing: 0.5px; padding: 4px 12px; cursor: pointer; border-radius: 20px;
     transition: all 0.15s; white-space: nowrap;
   }
-  .filter-btn:hover { border-color: var(--border-mid); color: var(--text); }
+  .filter-btn:hover { border-color: #666; color: var(--text); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
   .filter-checkbox {
     display: flex; align-items: center; gap: 6px; cursor: pointer;
@@ -155,11 +175,11 @@
   .td-num.ws-col   { color: var(--accent2); }
   .td-num.zero { color: var(--border-mid); }
   .region-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1px solid; }
-  .rb-east         { color: var(--lm-green); border-color: rgba(26,122,60,0.25); background: rgba(26,122,60,0.08); }
-  .rb-midwest      { color: var(--lm-amber); border-color: rgba(184,92,0,0.25); background: rgba(184,92,0,0.08); }
+  .rb-east         { color: var(--accent); border-color: rgba(0,255,99,0.4); background: rgba(0,255,99,0.08); }
+  .rb-midwest      { color: #0ea5e9; border-color: rgba(14,165,233,0.25); background: rgba(14,165,233,0.08); }
   .rb-southcentral { color: var(--accent2); border-color: rgba(255,98,62,0.25); background: rgba(255,98,62,0.08); }
-  .rb-central      { color: var(--lm-blue); border-color: rgba(26,82,128,0.25); background: rgba(26,82,128,0.08); }
-  .rb-west         { color: var(--lm-gold); border-color: rgba(155,111,0,0.25); background: rgba(155,111,0,0.08); }
+  .rb-central      { color: #FACC15; border-color: rgba(250,204,21,0.6); background: rgba(250,204,21,0.08); font-weight: 900; box-shadow: 0 0 0 1px rgba(250,204,21,0.4); }
+  .rb-west         { color: #a855f7; border-color: rgba(168,85,247,0.25); background: rgba(168,85,247,0.08); }
 
   .expand-row td { padding: 0; background: rgba(0,255,99,0.03); border-bottom: 1px solid var(--border); }
   .expand-inner { padding: 12px 24px 16px; animation: slideDown 0.15s ease; }
@@ -169,21 +189,65 @@
   .expand-item:hover { background: var(--bg-sunken); }
   .expand-item.dual-pair { background: rgba(107,47,160,0.04); border-left: 2px solid rgba(107,47,160,0.3); padding-left: 10px; }
   .ei-id   { font-size: 9px; font-family: monospace; color: var(--muted); }
-  .ei-date { font-size: 10px; color: var(--ink-mid); font-weight: 500; }
-  .ei-type { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .ei-date { font-size: 11px; color: var(--text); font-weight: 600; }
+  .ei-type { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
   .ei-type.it    { color: var(--lm-green); }
   .ei-type.oit   { color: var(--lm-teal); }
   .ei-type.dual  { color: var(--lm-purple); }
   .ei-type.adv   { color: var(--lm-amber); }
   .ei-type.ws    { color: var(--accent2); }
-  .ei-prog { font-size: 10px; color: var(--muted); line-height: 1.5; }
-  .ei-name { color: var(--ink-mid); line-height: 1.3; white-space: normal; }
+  .ei-prog { font-size: 11px; color: #333; font-weight: 500; line-height: 1.5; }
+  .ei-name { color: #111; font-weight: 400; font-size: 12px; line-height: 1.3; white-space: normal; }
   .dual-badge { display: inline-block; background: rgba(107,47,160,0.1); color: var(--lm-purple); font-size: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
   .empty-state { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg-subtle); }
   ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+  /* ── Region Directory Panel ── */
+  .region-dir-panel {
+    display: none;
+    align-items: center; gap: 0;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    margin: 12px 0; height: 44px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    animation: rdpIn 0.18s ease;
+  }
+  @keyframes rdpIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+  .region-dir-panel.visible { display: flex; }
+  .rdp-label {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 16px; border-right: 1px solid var(--border);
+    height: 100%; flex-shrink: 0;
+    font-size: 8px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted);
+    white-space: nowrap;
+  }
+  .rdp-label::before { content:''; width:3px; height:14px; background:var(--accent); border-radius:2px; flex-shrink:0; }
+  .rdp-region-tag {
+    display: flex; align-items: center; gap: 7px;
+    padding: 0 18px; border-right: 1px solid var(--border);
+    height: 100%; flex-shrink: 0;
+  }
+  .rdp-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .rdp-region-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; }
+  .rdp-people { display: flex; align-items: center; gap: 0; flex: 1; overflow: hidden; }
+  .rdp-person {
+    display: flex; align-items: center; gap: 9px;
+    padding: 0 20px; height: 100%; border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+  .rdp-person:last-child { border-right: none; }
+  .rdp-chip {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 4px; flex-shrink: 0;
+  }
+  .rdp-chip.cxm { background: rgba(26,82,128,0.1); color: var(--lm-blue); border: 1px solid rgba(26,82,128,0.25); }
+  .rdp-chip.cxs { background: rgba(26,122,60,0.1); color: var(--lm-green); border: 1px solid rgba(26,122,60,0.25); }
+  .rdp-chip.rc  { background: rgba(255,98,62,0.1); color: var(--accent2); border: 1px solid rgba(255,98,62,0.25); }
+  .rdp-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ── Load Bar ── */
   .load-bar-cell { padding: 10px 14px; vertical-align: middle; }
@@ -250,8 +314,8 @@
     <div class="header-sub">TRAINER TEAM</div>
   </div>
   <div class="header-spacer"></div>
-  <a href="regional-ops.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:6px 14px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;transition:all 0.15s;margin-right:4px;" onmouseover="this.style.color='#00FF63';this.style.borderColor='rgba(0,255,99,0.4)'" onmouseout="this.style.color='rgba(255,255,255,0.55)';this.style.borderColor='rgba(255,255,255,0.15)'">Regional Ops</a>
-  <a href="map.html" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:6px 14px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;transition:all 0.15s;margin-right:12px;" onmouseover="this.style.color='#00FF63';this.style.borderColor='rgba(0,255,99,0.4)'" onmouseout="this.style.color='rgba(255,255,255,0.55)';this.style.borderColor='rgba(255,255,255,0.15)'">Map View</a>
+  <a href="regional-ops.html" class="nav-btn">Regional Ops</a>
+  <a href="map.html" class="nav-btn">Map View</a>
   <div class="header-badge" id="totalBadge">&#8212; bookings</div>
 </header>
 
@@ -329,6 +393,9 @@
     </div>
   </div>
 
+  <!-- Region Directory Panel -->
+  <div class="region-dir-panel" id="regionDirPanel"></div>
+
   <!-- Trainer Table -->
   <div class="table-card">
     <div class="table-header-bar">
@@ -365,8 +432,8 @@
       <div class="chart-wrap"><canvas id="quarterChart"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="chart-title">By Program</div>
-      <div class="chart-wrap tall" id="programWrap"><canvas id="programChart"></canvas></div>
+      <div class="chart-title">Instructor Workshop by Region</div>
+      <div class="chart-wrap" id="programWrap"><canvas id="programChart"></canvas></div>
     </div>
   </div>
 </main>
@@ -400,6 +467,17 @@ const ALL_MONTHS = (() => {
   return months;
 })();
 const MAX_DOTS = 4;
+
+const CXM_CXS = [
+  { region:'East Coast',    cxm:'Shelby Saylor',          cxs:'Chelsea Savage',    rc:'Jaime Terrell' },
+  { region:'Mid West',      cxm:'Alice Apfelbach',        cxs:'Cassandra Testyon', rc:'Dan Maroun' },
+  { region:'South Central', cxm:'Kelsey Gutenson',        cxs:'Claire Martin',     rc:'Sarah Gruba' },
+  { region:'Central',       cxm:'Jeni Morrison Thompson', cxs:'Cassandra Testyon', rc:'Trae Tripoli' },
+  { region:'West Coast',    cxm:'Jessica Lopez',          cxs:'Claire Martin',     rc:'Karen Torrell' },
+];
+const REGION_DOT_COLORS = {
+  'East Coast':'#00FF63','Mid West':'#0ea5e9','South Central':'#FF623E','Central':'#FACC15','West Coast':'#a855f7'
+};
 
 const state = {
   fy: 'All', q: 'All', type: [], region: 'All',
@@ -470,12 +548,12 @@ function initCharts() {
 
   programChart = new Chart(document.getElementById('programChart'), {
     type: 'bar',
-    data: { labels: [], datasets: [{ data: [], backgroundColor: '#1A5280', borderRadius: 4, barPercentage: 0.65 }] },
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4, barPercentage: 0.65 }] },
     options: {
       ...CDEFS, indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       scales: {
         x: { grid: { color: gc }, ticks: { color: tc, font: { family: "'Inter'", size: 9 } } },
-        y: { grid: { display: false }, ticks: { color: '#444', font: { family: "'Barlow Condensed'", size: 10, weight: '600' } } }
+        y: { grid: { display: false }, ticks: { color: '#888', font: { family: "'Barlow Condensed'", size: 11, weight: '700' } } }
       }
     }
   });
@@ -483,9 +561,33 @@ function initCharts() {
   // Drill-down charts (initialized with empty data)
 }
 
+function renderRegionDir() {
+  const panel = document.getElementById('regionDirPanel');
+  if (state.region === 'All') { panel.classList.remove('visible'); return; }
+  const entries = CXM_CXS.filter(e => e.region === state.region);
+  if (!entries.length) { panel.classList.remove('visible'); return; }
+  const color = REGION_DOT_COLORS[state.region] || '#888';
+  panel.innerHTML = `
+    <div class="rdp-label">CXM / CXS</div>
+    ${entries.map(({ region, cxm, cxs, rc }) => `
+      <div class="rdp-region-tag">
+        <span class="rdp-dot" style="background:${color}"></span>
+        <span class="rdp-region-name" style="color:${color}">${region}</span>
+      </div>
+      <div class="rdp-people">
+        <div class="rdp-person"><span class="rdp-chip cxm">CXM</span><span class="rdp-name">${cxm}</span></div>
+        <div class="rdp-person"><span class="rdp-chip cxs">CXS</span><span class="rdp-name">${cxs}</span></div>
+        <div class="rdp-person"><span class="rdp-chip rc">RC</span><span class="rdp-name">${rc}</span></div>
+      </div>
+    `).join('')}
+  `;
+  panel.classList.add('visible');
+}
+
 function render() {
   const filtered = getFiltered();
   document.getElementById('totalBadge').textContent = filtered.length + ' bookings';
+  renderRegionDir();
 
   // Stat counts
   const it     = filtered.filter(b => b.eventType === 'Initial Training').length;
@@ -516,7 +618,7 @@ function render() {
 
 function updateCharts(filtered) {
   const regions = ['East Coast','Mid West','South Central','Central','West Coast'];
-  const regionColors = { 'East Coast':'#1A7A3C','Mid West':'#B85C00','South Central':'#FF623E','Central':'#1A5280','West Coast':'#9B6F00' };
+  const regionColors = { 'East Coast':'#00FF63','Mid West':'#0ea5e9','South Central':'#FF623E','Central':'#FACC15','West Coast':'#a855f7' };
   regionChart.data.labels = regions;
   regionChart.data.datasets[0].data = regions.map(r => filtered.filter(b => b.region === r).length);
   regionChart.data.datasets[0].backgroundColor = regions.map(r => regionColors[r]);
@@ -529,13 +631,13 @@ function updateCharts(filtered) {
   });
   quarterChart.update();
 
-  const pc = {};
-  filtered.filter(b => b.program !== 'Other').forEach(b => { pc[b.program] = (pc[b.program]||0) + 1; });
-  const ps = Object.entries(pc).sort((a,b) => b[1]-a[1]);
-  programChart.data.labels = ps.map(p => p[0]);
-  programChart.data.datasets[0].data = ps.map(p => p[1]);
-  const h = Math.max(220, ps.length * 22 + 40);
-  document.getElementById('programWrap').style.height = h + 'px';
+  const wsRegions = ['East Coast','Mid West','South Central','Central','West Coast'];
+  const wsCounts = wsRegions.map(r => filtered.filter(b => b.region === r && b.eventType === 'Instructor Workshop').length);
+  const wsColors = ['#00FF63','#0ea5e9','#FF623E','#FACC15','#a855f7'];
+  programChart.data.labels = wsRegions;
+  programChart.data.datasets[0].data = wsCounts;
+  programChart.data.datasets[0].backgroundColor = wsColors;
+  document.getElementById('programWrap').style.height = '220px';
   programChart.update();
 }
 
@@ -676,9 +778,10 @@ function expandRow(r) {
           return true;
         }).map(e => {
           const isDual = e.eventType === 'Dual Training' && e.dualGroup;
+          const shortProg = p => p.replace(/^LES MILLS /i, 'LM ');
           const prog = isDual
-            ? evs.filter(b => b.dualGroup === e.dualGroup).map(b => b.program).join('<br>')
-            : e.program;
+            ? evs.filter(b => b.dualGroup === e.dualGroup).map(b => shortProg(b.program)).join('<br>')
+            : shortProg(e.program);
           const tk = TYPE_KEY[e.eventType] || '';
           return `<li class="expand-item${isDual?' dual-pair':''}" style="grid-template-columns:90px 100px 130px 1fr">
             <span class="ei-date">${e.startDate}</span>

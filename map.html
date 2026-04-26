@@ -190,12 +190,23 @@
   .list-empty { padding: 32px 20px; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 
   /* ── LEAFLET OVERRIDES ──────────────────────────────────────── */
-  .leaflet-container { background: #e8eef4; }
-  .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); font-family: 'Inter', sans-serif; }
-  .leaflet-popup-content { margin: 12px 16px; font-size: 12px; line-height: 1.6; }
-  .popup-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-  .popup-loc { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
-  .popup-programs { font-size: 10px; color: var(--ink-mid); }
+  .leaflet-container { background: #181c24; }
+  .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.6); font-family: 'Inter', sans-serif; background: #1e222c !important; border: 1px solid #2a3042 !important; }
+  .leaflet-popup-content { margin: 12px 16px; font-size: 12px; line-height: 1.6; color: #cdd3e0; }
+  .leaflet-popup-tip { background: #1e222c !important; }
+  .leaflet-popup-close-button { color: #666 !important; }
+  .popup-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #fff; }
+  .popup-loc { color: rgba(255,255,255,0.45); font-size: 11px; margin-bottom: 8px; }
+  .popup-programs { font-size: 10px; color: rgba(255,255,255,0.55); }
+
+  /* ── CXM/CXS PANEL ──────────────────────────────────────────── */
+  .cxm-group { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .cxm-group:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .cxm-cxs-name { font-weight: 700; font-size: 12px; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .cxs-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; background: rgba(0,255,99,0.1); color: #1A7A3C; border: 1px solid rgba(0,255,99,0.25); padding: 1px 6px; border-radius: 20px; }
+  .cxm-item { font-size: 11px; color: var(--ink-mid); padding: 2px 0 2px 10px; display: flex; align-items: center; gap: 6px; }
+  .cxm-badge-inline { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 8px; letter-spacing: 1px; text-transform: uppercase; background: rgba(26,82,128,0.1); color: #1A5280; border: 1px solid rgba(26,82,128,0.2); padding: 1px 5px; border-radius: 10px; flex-shrink: 0; }
+  .badge-rc { background: rgba(224,112,64,0.12); color: #c05820; border: 1px solid rgba(224,112,64,0.3); }
 </style>
 </head>
 <body>
@@ -276,6 +287,14 @@
         <div id="trainer-list"></div>
       </div>
 
+      <!-- CXM / CXS DIRECTORY -->
+      <div class="panel" id="cxm-panel">
+        <div class="panel-header">
+          <div class="panel-title">CXM / CXS Directory</div>
+        </div>
+        <div class="panel-body" id="cxm-list"></div>
+      </div>
+
     </div><!-- /sidebar -->
   </div><!-- /map-container -->
 </div><!-- /app -->
@@ -288,60 +307,60 @@ const BOOKINGS_KEY = 'lmus_bookings_csv';
 // ── TRAINER DATA ──────────────────────────────────────────────
 // Coordinates are approximate city-center values; refine from PDF roster if needed.
 const TRAINERS = [
-  { name:'Alyx Sparrow',         city:'Littleton',      state:'CO', lat:39.5936,  lng:-105.0172, region:'Central',      trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS FUNCTIONAL STRENGTH'], advancedPrograms:[] },
-  { name:'Amy Fisher',           city:'Chicago',        state:'IL', lat:41.8781,  lng:-87.6298,  region:'Mid West',     trainerPrograms:['BODYBALANCE','BODYPUMP'], advancedPrograms:[] },
-  { name:'Amy Russo',            city:'New York',       state:'NY', lat:40.7128,  lng:-74.0060,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','BODYPUMP'], advancedPrograms:[] },
-  { name:'Ana Malvaez',          city:'Los Angeles',    state:'CA', lat:34.0522,  lng:-118.2437, region:'West Coast',   trainerPrograms:['BODYCOMBAT','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Andres Camargo',       city:'Miami',          state:'FL', lat:25.7617,  lng:-80.1918,  region:'East Coast',   trainerPrograms:['BODYBALANCE','LES MILLS CORE','LES MILLS SHAPES','LES MILLS THRIVE'], advancedPrograms:['BODYBALANCE','LES MILLS CORE','LES MILLS SHAPES','LES MILLS THRIVE'] },
-  { name:'Andrew Aleman',        city:'San Francisco',  state:'CA', lat:37.7749,  lng:-122.4194, region:'West Coast',   trainerPrograms:['LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:[] },
-  { name:'Andy Parrish',         city:'Richmond',       state:'VA', lat:37.5407,  lng:-77.4360,  region:'East Coast',   trainerPrograms:['BODYATTACK','BODYPUMP','BODYPUMP HEAVY','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CONQUER','LES MILLS CORE','LES MILLS GRIT','RPM'], advancedPrograms:['BODYATTACK','BODYPUMP','BODYPUMP HEAVY','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CONQUER','LES MILLS CORE','LES MILLS GRIT','RPM'] },
-  { name:'Ann McArthur',         city:'Denver',         state:'CO', lat:39.7392,  lng:-104.9903, region:'Central',      trainerPrograms:['LES MILLS CORE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Annette Perkins',      city:'Salt Lake City', state:'UT', lat:40.7608,  lng:-111.8910, region:'Central',      trainerPrograms:['BODYPUMP HEAVY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Ashley Lyon',          city:'Denver',         state:'CO', lat:39.7200,  lng:-104.9700, region:'Central',      trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CEREMONY','LES MILLS CORE','LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CEREMONY','LES MILLS CORE','LES MILLS PILATES','LES MILLS SHAPES'] },
-  { name:'Ashley McCallum',      city:'Charlotte',      state:'NC', lat:35.2271,  lng:-80.8431,  region:'East Coast',   trainerPrograms:['BODYATTACK','BODYCOMBAT'], advancedPrograms:[] },
-  { name:'Barb Knutson',         city:'Minneapolis',    state:'MN', lat:44.9778,  lng:-93.2650,  region:'Mid West',     trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS THRIVE'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS THRIVE'] },
-  { name:'Bethany Entrekin',     city:'Atlanta',        state:'GA', lat:33.7490,  lng:-84.3880,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES','RPM'], advancedPrograms:[] },
-  { name:'Colleen King',         city:'Kansas City',    state:'MO', lat:39.0997,  lng:-94.5786,  region:'Central',      trainerPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS DANCE','LES MILLS PILATES'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS DANCE','LES MILLS PILATES'] },
-  { name:'Dan Maroun',           city:'Chicago',        state:'IL', lat:41.8950,  lng:-87.6200,  region:'Mid West',     trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE','LES MILLS DANCE','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE','LES MILLS DANCE','LES MILLS SHAPES','STRENGTH DEVELOPMENT'] },
-  { name:'Danielle Kirk-Bagley', city:'Boston',         state:'MA', lat:42.3601,  lng:-71.0589,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Deidre Douglas',       city:'Washington',     state:'DC', lat:38.9072,  lng:-77.0369,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS PILATES','LES MILLS YOGA'], advancedPrograms:[] },
-  { name:'Elena Kohler',         city:'Columbus',       state:'OH', lat:39.9612,  lng:-82.9988,  region:'Mid West',     trainerPrograms:['BODYBALANCE','LES MILLS CEREMONY','LES MILLS CORE','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS YOGA'], advancedPrograms:[] },
-  { name:'Hope Bowie',           city:'Dallas',         state:'TX', lat:32.7767,  lng:-96.7970,  region:'South Central',trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY STUDIO','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Jaime Terrell',        city:'Philadelphia',   state:'PA', lat:39.9526,  lng:-75.1652,  region:'East Coast',   trainerPrograms:['BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:['BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS SHAPES'] },
-  { name:'Jake Pesquira',        city:'Baltimore',      state:'MD', lat:39.2904,  lng:-76.6122,  region:'East Coast',   trainerPrograms:['BODYBALANCE','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS YOGA'], advancedPrograms:[] },
-  { name:'Jamila Greene',        city:'Houston',        state:'TX', lat:29.7604,  lng:-95.3698,  region:'South Central',trainerPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS SPRINT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Janice Years',         city:'New York',       state:'NY', lat:40.7200,  lng:-74.0100,  region:'East Coast',   trainerPrograms:['LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Jen Parrish',          city:'Richmond',       state:'VA', lat:37.5500,  lng:-77.4500,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS SPRINT','RPM'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS SPRINT','RPM'] },
-  { name:'Jennifer Pontarelli',  city:'Hoboken',        state:'NJ', lat:40.7440,  lng:-74.0324,  region:'East Coast',   trainerPrograms:['BODYSTEP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES'], advancedPrograms:[] },
-  { name:'Jessica Shallock',     city:'Omaha',          state:'NE', lat:41.2565,  lng:-95.9345,  region:'Central',      trainerPrograms:['BODYPUMP','LES MILLS FUNCTIONAL STRENGTH','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Jessica Wong',         city:'New York',       state:'NY', lat:40.7300,  lng:-73.9950,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS SHAPES','LES MILLS YOGA','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Judson MacDonald',     city:'Boston',         state:'MA', lat:42.3700,  lng:-71.0700,  region:'East Coast',   trainerPrograms:['BODYATTACK','BODYBALANCE','BODYPUMP','BODYPUMP HEAVY','BODYSTEP'], advancedPrograms:[] },
-  { name:'Justine Collado',      city:'New York',       state:'NY', lat:40.7050,  lng:-74.0100,  region:'East Coast',   trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Kamesha Myers',        city:'Washington',     state:'DC', lat:38.9150,  lng:-77.0300,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS GRIT','LES MILLS SHAPES','LES MILLS THRIVE'], advancedPrograms:[] },
-  { name:'Karen Torrell',        city:'Seattle',        state:'WA', lat:47.6062,  lng:-122.3321, region:'West Coast',   trainerPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS CEREMONY STUDIO','LES MILLS THRIVE','LES MILLS TONE','LES MILLS YOGA','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','LES MILLS CEREMONY STUDIO','LES MILLS THRIVE','LES MILLS TONE','LES MILLS YOGA','STRENGTH DEVELOPMENT'] },
-  { name:'Katie Kneupper',       city:'Austin',         state:'TX', lat:30.2672,  lng:-97.7431,  region:'South Central',trainerPrograms:['BODYCOMBAT','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO'], advancedPrograms:[] },
-  { name:'Keri Ball',            city:'New York',       state:'NY', lat:40.7400,  lng:-74.0050,  region:'East Coast',   trainerPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE'], advancedPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CORE'] },
-  { name:'Lauren Hodoval',       city:'Chicago',        state:'IL', lat:41.8850,  lng:-87.6150,  region:'Mid West',     trainerPrograms:['LES MILLS GRIT'], advancedPrograms:[] },
-  { name:'Lauren Vibbert',       city:'Washington',     state:'DC', lat:38.9000,  lng:-77.0500,  region:'East Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS SPRINT','LES MILLS TONE'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS PILATES','LES MILLS SHAPES','LES MILLS SPRINT','LES MILLS TONE'] },
-  { name:'Luca Callini',         city:'San Antonio',    state:'TX', lat:29.4241,  lng:-98.4936,  region:'South Central',trainerPrograms:['BODYBALANCE','LES MILLS CEREMONY STUDIO','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','LES MILLS CEREMONY STUDIO','LES MILLS YOGA'] },
-  { name:'Lucy Xu',              city:'Dallas',         state:'TX', lat:32.7900,  lng:-96.8100,  region:'South Central',trainerPrograms:['BODYCOMBAT'], advancedPrograms:[] },
-  { name:'Lula Slaughter',       city:'Atlanta',        state:'GA', lat:33.7600,  lng:-84.4000,  region:'East Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CEREMONY STUDIO','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Marcus Zomphier',      city:'Washington',     state:'DC', lat:38.9200,  lng:-77.0200,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYSTEP','LES MILLS DANCE'], advancedPrograms:[] },
-  { name:'Megan Cloe',           city:'Portland',       state:'OR', lat:45.5051,  lng:-122.6750, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS SPRINT','RPM'], advancedPrograms:[] },
-  { name:'Melissa Schimmel',     city:'Los Angeles',    state:'CA', lat:34.0700,  lng:-118.2600, region:'West Coast',   trainerPrograms:['LES MILLS YOGA'], advancedPrograms:[] },
-  { name:'Mohamed Bounaim',      city:'New York',       state:'NY', lat:40.7600,  lng:-73.9800,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','BODYPUMP','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'] },
-  { name:'Nichola Smiles',       city:'Houston',        state:'TX', lat:29.7700,  lng:-95.3800,  region:'South Central',trainerPrograms:['BODYCOMBAT','BODYPUMP'], advancedPrograms:[] },
-  { name:'Nikki Snow-Ybe',       city:'Portland',       state:'OR', lat:45.5051,  lng:-122.6800, region:'West Coast',   trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS SHAPES'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS SHAPES'] },
-  { name:'Nicholas Castro',      city:'San Diego',      state:'CA', lat:32.7157,  lng:-117.1611, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES'], advancedPrograms:[] },
-  { name:'Paula Thomas',         city:'Pittsburgh',     state:'PA', lat:40.4406,  lng:-79.9959,  region:'East Coast',   trainerPrograms:['BODYPUMP','LES MILLS SPRINT','RPM','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Sanna Ronkko',         city:'San Francisco',  state:'CA', lat:37.7800,  lng:-122.4100, region:'West Coast',   trainerPrograms:['BODYPUMP','LES MILLS PILATES','LES MILLS SPRINT','RPM'], advancedPrograms:['BODYPUMP','LES MILLS PILATES','LES MILLS SPRINT','RPM'] },
-  { name:'Sarah Gruba',          city:'Oklahoma City',  state:'OK', lat:35.4676,  lng:-97.5164,  region:'South Central',trainerPrograms:['LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS CONQUER','LES MILLS GRIT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Shelby Schrader',      city:'Denver',         state:'CO', lat:39.7100,  lng:-104.9600, region:'Central',      trainerPrograms:['LES MILLS FUNCTIONAL STRENGTH','LES MILLS SHAPES','LES MILLS SPRINT','RPM'], advancedPrograms:[] },
-  { name:'Stacy Dee Rathborne',  city:'New York',       state:'NY', lat:40.7150,  lng:-74.0000,  region:'East Coast',   trainerPrograms:['BODYBALANCE','BODYCOMBAT','BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS YOGA'], advancedPrograms:['BODYBALANCE','BODYCOMBAT','BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS PILATES','LES MILLS YOGA'] },
-  { name:'Sydnee Weinberg',      city:'New York',       state:'NY', lat:40.7250,  lng:-73.9900,  region:'East Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS GRIT','LES MILLS PILATES','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS GRIT','LES MILLS PILATES','LES MILLS SHAPES','STRENGTH DEVELOPMENT'] },
-  { name:'Trae Tripoli',         city:'Colorado Springs',state:'CO',lat:38.8339,  lng:-104.8214, region:'Central',      trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CEREMONY','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES','LES MILLS SPRINT','LES MILLS TONE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
-  { name:'Vivian Gill',          city:'New Orleans',    state:'LA', lat:29.9511,  lng:-90.0715,  region:'South Central',trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS SHAPES','LES MILLS YOGA'], advancedPrograms:[] },
-  { name:'Will Lee',             city:'Seattle',        state:'WA', lat:47.6200,  lng:-122.3400, region:'West Coast',   trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Alyx Sparrow',         city:'Littleton',        state:'CO', lat:39.6133,  lng:-105.0166, region:'North Central', trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS DANCE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Amy Fisher',           city:'Richland',         state:'MI', lat:42.3762,  lng:-85.4550,  region:'Midwest',       trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Amy Russo',            city:'Branchburg',       state:'NJ', lat:40.5688,  lng:-74.7003,  region:'Mid East',      trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY'], advancedPrograms:[] },
+  { name:'Ana Malvaez',          city:'Carlsbad',         state:'CA', lat:33.1581,  lng:-117.3506, region:'West Coast',    trainerPrograms:['BODYCOMBAT','LES MILLS GRIT','LES MILLS CEREMONY STUDIO','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Andres Camargo',       city:'Tampa',            state:'FL', lat:27.9450,  lng:-82.4583,  region:'Southeast',     trainerPrograms:['BODYATTACK','BODYSTEP','LES MILLS CORE','LES MILLS SHAPES','LES MILLS PILATES','LES MILLS THRIVE'], advancedPrograms:['BODYATTACK','BODYSTEP','LES MILLS CORE','LES MILLS SHAPES','LES MILLS PILATES','LES MILLS THRIVE'] },
+  { name:'Andrew Aleman',        city:'Santa Barbara',    state:'CA', lat:34.4221,  lng:-119.7027, region:'West Coast',    trainerPrograms:['LES MILLS PILATES','LES MILLS SHAPES'], advancedPrograms:[] },
+  { name:'Andy Parrish',         city:'Lakeland',         state:'FL', lat:28.0395,  lng:-81.9498,  region:'Southeast',     trainerPrograms:['BODYATTACK','BODYPUMP','LES MILLS CORE','LES MILLS GRIT','RPM','LES MILLS CEREMONY'], advancedPrograms:['BODYATTACK','BODYPUMP','LES MILLS CORE','LES MILLS GRIT','RPM','LES MILLS CEREMONY'] },
+  { name:'Ann McArthur',         city:'Albuquerque',      state:'NM', lat:35.0841,  lng:-106.6510, region:'South Central', trainerPrograms:['LES MILLS CORE','LES MILLS GRIT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Annette Perkins',      city:'Lehi',             state:'UT', lat:40.3881,  lng:-111.8486, region:'West Coast',    trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS GRIT','STRENGTH DEVELOPMENT','LES MILLS PILATES'], advancedPrograms:[] },
+  { name:'Ashley Lyon',          city:'Martell',          state:'NE', lat:40.6375,  lng:-96.7586,  region:'North Central', trainerPrograms:['BODYBALANCE','BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS SHAPES','LES MILLS PILATES'], advancedPrograms:['BODYBALANCE','BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS SHAPES','LES MILLS PILATES'] },
+  { name:'Ashley McCallum',      city:'Fredericksburg',   state:'VA', lat:38.3032,  lng:-77.4605,  region:'East Coast',    trainerPrograms:['BODYATTACK','BODYCOMBAT','BODYPUMP'], advancedPrograms:[] },
+  { name:'Barb Knutson',         city:'Jackson',          state:'WI', lat:44.3017,  lng:-90.8085,  region:'Midwest',       trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS THRIVE'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS THRIVE'] },
+  { name:'Bethany Entrekin',     city:'Canton',           state:'GA', lat:34.2368,  lng:-84.4908,  region:'Southeast',     trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','RPM','LES MILLS PILATES'], advancedPrograms:[] },
+  { name:'Colleen King',         city:'Lakewood',         state:'CO', lat:39.7086,  lng:-105.0847, region:'North Central', trainerPrograms:['BODYCOMBAT','BODYBALANCE','BODYJAM','LES MILLS DANCE','LES MILLS SHAPES','LES MILLS PILATES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYCOMBAT','BODYBALANCE','BODYJAM','LES MILLS DANCE','LES MILLS SHAPES','LES MILLS PILATES','STRENGTH DEVELOPMENT'] },
+  { name:'Dan Maroun',           city:'Savoy',            state:'IL', lat:40.0548,  lng:-88.2517,  region:'Midwest',       trainerPrograms:['BODYATTACK','BODYCOMBAT','BODYPUMP','BODYSTEP','LES MILLS CORE','LES MILLS DANCE','LES MILLS CEREMONY','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYATTACK','BODYCOMBAT','BODYPUMP','BODYSTEP','LES MILLS CORE','LES MILLS DANCE','LES MILLS CEREMONY','LES MILLS SHAPES','STRENGTH DEVELOPMENT'] },
+  { name:'Danielle Kirk-Bagley', city:'Yeadon',           state:'PA', lat:39.9390,  lng:-75.2555,  region:'Mid East',      trainerPrograms:['BODYCOMBAT','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Deidre Douglas',       city:'Altavista',        state:'VA', lat:37.1118,  lng:-79.2856,  region:'East Coast',    trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS CORE','LES MILLS PILATES','LES MILLS YOGA','LES MILLS CEREMONY'], advancedPrograms:[] },
+  { name:'Elena Kohler',         city:'St. Peters',       state:'MO', lat:38.7916,  lng:-90.5958,  region:'Midwest',       trainerPrograms:['BODYBALANCE','LES MILLS YOGA','LES MILLS SHAPES','LES MILLS PILATES'], advancedPrograms:[] },
+  { name:'Hope Bowie',           city:'Allen',            state:'TX', lat:33.1031,  lng:-96.6706,  region:'South Central', trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Jaime Terrell',        city:'Edgewater',        state:'MD', lat:38.9358,  lng:-76.5530,  region:'Mid Atlantic',  trainerPrograms:['BODYJAM','LES MILLS DANCE','LES MILLS YOGA','LES MILLS SHAPES','LES MILLS PILATES'], advancedPrograms:['BODYJAM','LES MILLS DANCE','LES MILLS YOGA','LES MILLS SHAPES','LES MILLS PILATES'] },
+  { name:'Jake Pesquira',        city:'North Brunswick',  state:'NJ', lat:40.4539,  lng:-74.4765,  region:'Mid East',      trainerPrograms:['BODYBALANCE','BODYJAM','LES MILLS DANCE','LES MILLS PILATES'], advancedPrograms:[] },
+  { name:'Jamila Greene',        city:'Calera',           state:'AL', lat:33.1035,  lng:-86.7506,  region:'Southeast',     trainerPrograms:['LES MILLS SPRINT','LES MILLS CEREMONY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Janice Years',         city:'Fairfax',          state:'VA', lat:38.8462,  lng:-77.3063,  region:'East Coast',    trainerPrograms:['BODYATTACK','BODYSTEP','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Jen Parrish',          city:'Lakeland',         state:'FL', lat:28.0395,  lng:-81.9500,  region:'Southeast',     trainerPrograms:['BODYCOMBAT','BODYPUMP','RPM','LES MILLS SPRINT'], advancedPrograms:['BODYCOMBAT','BODYPUMP','RPM','LES MILLS SPRINT'] },
+  { name:'Jennifer Pontarelli',  city:'Voorhees',         state:'NJ', lat:39.8512,  lng:-74.9620,  region:'Mid East',      trainerPrograms:['BODYPUMP','BODYSTEP','LES MILLS CEREMONY','LES MILLS SHAPES'], advancedPrograms:[] },
+  { name:'Jessica Shallock',     city:'Polson',           state:'MT', lat:47.6905,  lng:-114.1638, region:'North Central', trainerPrograms:['BODYPUMP','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Jessica Wong',         city:'New York',         state:'NY', lat:40.7127,  lng:-74.0060,  region:'Mid East',      trainerPrograms:['BODYCOMBAT','BODYBALANCE','BODYPUMP','LES MILLS YOGA','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Judson MacDonald',     city:'Durham',           state:'NC', lat:35.9967,  lng:-78.9018,  region:'East Coast',    trainerPrograms:['BODYATTACK','BODYPUMP','BODYSTEP'], advancedPrograms:[] },
+  { name:'Justine Collado',      city:'Dover',            state:'NJ', lat:40.8840,  lng:-74.5621,  region:'Mid East',      trainerPrograms:['BODYCOMBAT','BODYPUMP','LES MILLS CORE','LES MILLS CEREMONY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Kamesha Myers',        city:'Rockville',        state:'MD', lat:39.0818,  lng:-77.1517,  region:'Mid Atlantic',  trainerPrograms:['BODYPUMP','LES MILLS GRIT','LES MILLS SHAPES','LES MILLS THRIVE'], advancedPrograms:[] },
+  { name:'Karen Torrell',        city:'Fullerton',        state:'CA', lat:33.8708,  lng:-117.9294, region:'West Coast',    trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS YOGA','LES MILLS TONE','LES MILLS THRIVE','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYBALANCE','BODYPUMP','LES MILLS YOGA','LES MILLS TONE','LES MILLS THRIVE','LES MILLS SHAPES','STRENGTH DEVELOPMENT'] },
+  { name:'Katie Kneupper',       city:'Austin',           state:'TX', lat:30.2711,  lng:-97.7437,  region:'South Central', trainerPrograms:['BODYCOMBAT','LES MILLS TONE','LES MILLS CEREMONY'], advancedPrograms:[] },
+  { name:'Keri Ball',            city:'Annapolis',        state:'MD', lat:38.9786,  lng:-76.4928,  region:'Mid Atlantic',  trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS CEREMONY'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS CORE','LES MILLS CEREMONY'] },
+  { name:'Lauren Hodoval',       city:'Indianapolis',     state:'IN', lat:39.7683,  lng:-86.1584,  region:'Midwest',       trainerPrograms:['LES MILLS CORE','LES MILLS GRIT'], advancedPrograms:[] },
+  { name:'Lauren Vibbert',       city:'Lakeland',         state:'FL', lat:28.0395,  lng:-81.9502,  region:'Southeast',     trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS TONE','LES MILLS SPRINT','LES MILLS SHAPES','LES MILLS PILATES'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS TONE','LES MILLS SPRINT','LES MILLS SHAPES','LES MILLS PILATES'] },
+  { name:'Luca Callini',         city:'Seabrook',         state:'TX', lat:29.5633,  lng:-95.0197,  region:'South Central', trainerPrograms:['BODYBALANCE','BODYPUMP','BODYPUMP HEAVY','LES MILLS YOGA','LES MILLS PILATES'], advancedPrograms:['BODYBALANCE','BODYPUMP','BODYPUMP HEAVY','LES MILLS YOGA','LES MILLS PILATES'] },
+  { name:'Lucy Xu',              city:'Spring',           state:'TX', lat:30.0710,  lng:-95.4013,  region:'South Central', trainerPrograms:['BODYCOMBAT','LES MILLS CONQUER'], advancedPrograms:[] },
+  { name:'Lula Slaughter',       city:'Somerville',       state:'NJ', lat:40.5743,  lng:-74.6099,  region:'Mid East',      trainerPrograms:['BODYCOMBAT','BODYPUMP','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Marcus Zomphier',      city:'Tampa',            state:'FL', lat:27.9450,  lng:-82.4585,  region:'Southeast',     trainerPrograms:['BODYBALANCE','BODYJAM','BODYSTEP','LES MILLS DANCE'], advancedPrograms:[] },
+  { name:'Megan Cloe',           city:'Los Angeles',      state:'CA', lat:34.0537,  lng:-118.2428, region:'West Coast',    trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','RPM','LES MILLS SPRINT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Melissa Schimmel',     city:'Oxnard',           state:'CA', lat:34.1976,  lng:-119.1804, region:'West Coast',    trainerPrograms:['LES MILLS YOGA','LES MILLS CEREMONY'], advancedPrograms:[] },
+  { name:'Mohamed Bounaim',      city:'St. Petersburg',   state:'FL', lat:27.7713,  lng:-82.6340,  region:'Southeast',     trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'], advancedPrograms:['BODYPUMP','BODYPUMP HEAVY','BODYSTEP','LES MILLS TONE','LES MILLS YOGA'] },
+  { name:'Nichola Smiles',       city:'Richmond',         state:'TX', lat:29.5822,  lng:-95.7608,  region:'South Central', trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY'], advancedPrograms:[] },
+  { name:'Nikki Snow-Ybe',       city:'Chicago',          state:'IL', lat:41.8756,  lng:-87.6244,  region:'Midwest',       trainerPrograms:['BODYATTACK','BODYPUMP','BODYPUMP HEAVY','LES MILLS GRIT','LES MILLS SPRINT'], advancedPrograms:['BODYATTACK','BODYPUMP','BODYPUMP HEAVY','LES MILLS GRIT','LES MILLS SPRINT'] },
+  { name:'Nicholas Castro',      city:'Garden Grove',     state:'CA', lat:33.7746,  lng:-117.9464, region:'West Coast',    trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS PILATES'], advancedPrograms:[] },
+  { name:'Paula Thomas',         city:'Augusta',          state:'GA', lat:33.4710,  lng:-81.9748,  region:'Southeast',     trainerPrograms:['BODYPUMP','RPM','LES MILLS SPRINT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Sanna Ronkko',         city:'Santa Ana',        state:'CA', lat:33.7495,  lng:-117.8732, region:'West Coast',    trainerPrograms:['BODYPUMP','RPM','LES MILLS SPRINT','LES MILLS CONQUER','LES MILLS PILATES'], advancedPrograms:['BODYPUMP','RPM','LES MILLS SPRINT','LES MILLS CONQUER','LES MILLS PILATES'] },
+  { name:'Sarah Gruba',          city:'Magnolia',         state:'TX', lat:30.2096,  lng:-95.7508,  region:'South Central', trainerPrograms:['LES MILLS GRIT','LES MILLS CEREMONY','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Shelby Schrader',      city:'Gilbert',          state:'AZ', lat:33.3528,  lng:-111.7890, region:'West Coast',    trainerPrograms:['LES MILLS GRIT','RPM','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Stacy Dee Rathborne',  city:'Clermont',         state:'FL', lat:28.5552,  lng:-81.7669,  region:'Southeast',     trainerPrograms:['BODYBALANCE','BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS YOGA','LES MILLS PILATES'], advancedPrograms:['BODYBALANCE','BODYJAM','BODYPUMP','LES MILLS DANCE','LES MILLS YOGA','LES MILLS PILATES'] },
+  { name:'Sydnee Weinberg',      city:'Somerset',         state:'NJ', lat:40.5675,  lng:-74.6190,  region:'Mid East',      trainerPrograms:['BODYATTACK','BODYPUMP','LES MILLS CORE','LES MILLS GRIT','LES MILLS SHAPES','LES MILLS PILATES','STRENGTH DEVELOPMENT'], advancedPrograms:['BODYATTACK','BODYPUMP','LES MILLS CORE','LES MILLS GRIT','LES MILLS SHAPES','LES MILLS PILATES','STRENGTH DEVELOPMENT'] },
+  { name:'Trae Tripoli',         city:'Grand Junction',   state:'CO', lat:39.0673,  lng:-108.5645, region:'North Central', trainerPrograms:['BODYCOMBAT','BODYPUMP','BODYPUMP HEAVY','LES MILLS TONE','LES MILLS SPRINT','LES MILLS CEREMONY','LES MILLS SHAPES','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
+  { name:'Vivian Gill',          city:'Hendersonville',   state:'TN', lat:36.3049,  lng:-86.6214,  region:'Southeast',     trainerPrograms:['BODYBALANCE','BODYPUMP','LES MILLS TONE','LES MILLS YOGA','STRENGTH DEVELOPMENT','LES MILLS SHAPES','LES MILLS THRIVE'], advancedPrograms:[] },
+  { name:'Will Lee',             city:'Chino',            state:'CA', lat:34.0134,  lng:-117.6901, region:'West Coast',    trainerPrograms:['BODYPUMP','BODYPUMP HEAVY','LES MILLS GRIT','STRENGTH DEVELOPMENT'], advancedPrograms:[] },
 ];
 
 // Advanced Trainer names for fast lookup (names match TRAINERS array exactly)
@@ -351,6 +370,33 @@ const AT_NAMES = new Set([
   'Lauren Vibbert','Luca Callini','Mohamed Bounaim','Nikki Snow-Ybe','Sanna Ronkko',
   'Stacy Dee Rathborne','Sydnee Weinberg'
 ]);
+
+// Region Coach names
+const RC_NAMES = new Set([
+  'Karen Torrell',       // West Coast
+  'Sarah Gruba',         // South Central
+  'Trae Tripoli',        // North Central
+  'Dan Maroun',          // Midwest
+  'Justine Collado',     // Mid East
+  'Jaime Terrell',       // East Coast
+  'Keri Ball',           // Mid Atlantic
+  'Stacy Dee Rathborne', // Southeast
+]);
+
+// Regional structure: 8 regions, each with CXM, CXS, and RC
+const CXM_CXS = [
+  { region:'West Coast',    cxm:'Jessica Lopez',          cxs:'Claire Martin',     rc:'Karen Torrell' },
+  { region:'South Central', cxm:'Kelsey Gutenson',        cxs:'Claire Martin',     rc:'Sarah Gruba' },
+  { region:'North Central', cxm:'Jeni Morrison Thompson', cxs:'Cassandra Testyon', rc:'Trae Tripoli' },
+  { region:'Midwest',       cxm:'Alice Apfelbach',        cxs:'Cassandra Testyon', rc:'Dan Maroun' },
+  { region:'Mid East',      cxm:'Jessica Young',          cxs:'Chelsea Savage',    rc:'Justine Collado' },
+  { region:'East Coast',    cxm:'Shelby Saylor',          cxs:'Chelsea Savage',    rc:'Jaime Terrell' },
+  { region:'Mid Atlantic',  cxm:'Herschel Elder',         cxs:'Alison Salermo',    rc:'Keri Ball' },
+  { region:'Southeast',     cxm:'Adam Farino',            cxs:'Alison Salermo',    rc:'Stacy Dee Rathborne' },
+];
+
+// Additional CXM coaches (cover all states)
+const ADDITIONAL_COACHES = ['Andrew Aleman', 'Heather Biddle'];
 
 // All unique programs across all trainers (for autocomplete)
 const ALL_PROGRAMS = [...new Set(TRAINERS.flatMap(t => t.trainerPrograms))].sort();
@@ -381,25 +427,39 @@ document.getElementById('signout-btn').addEventListener('click', () => {
   localStorage.removeItem(AUTH_KEY);
   location.reload();
 });
-checkAuth();
 
-// ── REGION CONFIG ─────────────────────────────────────────────
+// ── REGION CONFIG (8 regions) ─────────────────────────────────
 const REGION_CONFIG = {
-  'East Coast':    { color: '#c8b400', bounds: [[24.5,-81],[47.5,-66]] },
-  'Mid West':      { color: '#c0392b', bounds: [[36,-104],[49,-81]] },
-  'South Central': { color: '#27ae60', bounds: [[25,-106],[37,-80]] },
-  'Central':       { color: '#1a6fd4', bounds: [[25,-116],[49,-96]] },
-  'West Coast':    { color: '#e07040', bounds: [[24,-125],[49,-114]] },
+  'West Coast':    { color: '#4a90d9' },
+  'South Central': { color: '#27ae60' },
+  'North Central': { color: '#f39c12' },
+  'Midwest':       { color: '#c0392b' },
+  'Mid East':      { color: '#8e44ad' },
+  'East Coast':    { color: '#16a085' },
+  'Mid Atlantic':  { color: '#d4ac0d' },
+  'Southeast':     { color: '#e07040' },
 };
 
-// Region GeoJSON polygons (simple rectangles)
-function regionGeoJSON(bounds) {
-  const [[s,w],[n,e]] = bounds;
-  return {
-    type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [[[w,s],[e,s],[e,n],[w,n],[w,s]]] },
-  };
-}
+// US state name → region mapping
+const STATE_REGIONS = {
+  'Washington':'West Coast','Oregon':'West Coast','California':'West Coast',
+  'Nevada':'West Coast','Idaho':'West Coast','Arizona':'West Coast','Utah':'West Coast',
+  'Alaska':'West Coast','Hawaii':'West Coast',
+  'New Mexico':'South Central','Texas':'South Central','Oklahoma':'South Central',
+  'Arkansas':'South Central','Louisiana':'South Central',
+  'Montana':'North Central','Wyoming':'North Central','Colorado':'North Central',
+  'North Dakota':'North Central','South Dakota':'North Central',
+  'Nebraska':'North Central','Iowa':'North Central','Minnesota':'North Central',
+  'Wisconsin':'Midwest','Michigan':'Midwest','Illinois':'Midwest',
+  'Indiana':'Midwest','Ohio':'Midwest','Missouri':'Midwest','Kansas':'Midwest',
+  'Maine':'Mid East','New Hampshire':'Mid East','Vermont':'Mid East',
+  'Massachusetts':'Mid East','Connecticut':'Mid East','Rhode Island':'Mid East',
+  'New York':'Mid East','New Jersey':'Mid East','Pennsylvania':'Mid East',
+  'Virginia':'East Coast','North Carolina':'East Coast','South Carolina':'East Coast',
+  'Maryland':'Mid Atlantic','Delaware':'Mid Atlantic','West Virginia':'Mid Atlantic',
+  'Florida':'Southeast','Georgia':'Southeast','Alabama':'Southeast',
+  'Mississippi':'Southeast','Tennessee':'Southeast','Kentucky':'Southeast',
+};
 
 // ── APP STATE ─────────────────────────────────────────────────
 let map, trainerMarkers = [], regionLayers = {};
@@ -416,35 +476,72 @@ function initApp() {
   loadBookingsFromStorage();
   initMap();
   renderTrainerList();
+  renderCxmPanel();
   initFinder();
   initUpload();
 }
 
-function initMap() {
-  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([38, -96], 4);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, attribution: '© OpenStreetMap contributors'
+function renderCxmPanel() {
+  const container = document.getElementById('cxm-list');
+  container.innerHTML = CXM_CXS.map(({ region, cxm, cxs, rc }) => {
+    const color = REGION_CONFIG[region]?.color || '#888';
+    return `
+    <div class="cxm-group">
+      <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+        <span style="color:${color};">${region}</span>
+      </div>
+      <div class="cxm-item"><span class="cxm-badge-inline">CXM</span> ${cxm}</div>
+      <div class="cxm-item"><span class="cxs-badge">CXS</span> ${cxs}</div>
+      <div class="cxm-item"><span class="badge badge-rc" style="font-size:8px;padding:1px 5px;">RC</span> ${rc}</div>
+    </div>`;
+  }).join('') + `
+    <div class="cxm-group" style="border-top:1px solid var(--border);margin-top:4px;padding-top:14px;">
+      <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">All Regions</div>
+      ${ADDITIONAL_COACHES.map(c => `<div class="cxm-item"><span class="badge badge-rc" style="font-size:8px;padding:1px 5px;">RC</span> ${c}</div>`).join('')}
+    </div>`;
+}
+
+async function initMap() {
+  const US_BOUNDS = [[17, -170], [72, -65]];
+  map = L.map('map', {
+    zoomControl: true,
+    attributionControl: false,
+    maxBounds: US_BOUNDS,
+    maxBoundsViscosity: 0.9,
+    minZoom: 3,
+  }).setView([38, -96], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 18,
   }).addTo(map);
 
-  // Region polygons
-  Object.entries(REGION_CONFIG).forEach(([name, cfg]) => {
-    const layer = L.geoJSON(regionGeoJSON(cfg.bounds), {
-      style: {
-        color: cfg.color, weight: 1.5, opacity: 0.5,
-        fillColor: cfg.color, fillOpacity: 0.08,
-      }
-    }).addTo(map);
-    layer.on('click', () => selectRegion(name));
-    regionLayers[name] = layer;
-  });
+  // Load real US state boundaries and group by region
+  try {
+    const resp = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
+    const statesData = await resp.json();
+    const regionFeatures = {};
+    Object.keys(REGION_CONFIG).forEach(r => { regionFeatures[r] = []; });
+    statesData.features.forEach(f => {
+      const region = STATE_REGIONS[f.properties.name];
+      if (region) regionFeatures[region].push(f);
+    });
+    Object.entries(regionFeatures).forEach(([rName, features]) => {
+      if (!features.length) return;
+      const cfg = REGION_CONFIG[rName];
+      const layer = L.geoJSON({ type: 'FeatureCollection', features }, {
+        style: { color: cfg.color, weight: 1.5, opacity: 0.6, fillColor: cfg.color, fillOpacity: 0.18 }
+      }).addTo(map);
+      layer.on('click', e => { L.DomEvent.stopPropagation(e); selectRegion(rName); });
+      regionLayers[rName] = layer;
+    });
+  } catch (err) {
+    console.warn('State GeoJSON load failed:', err);
+  }
 
   // Click map background → deselect region
-  map.on('click', e => {
-    if (!e.originalEvent._fromRegion) selectRegion(null);
-  });
-  Object.values(regionLayers).forEach(l => {
-    l.on('click', e => { e.originalEvent._fromRegion = true; });
-  });
+  map.on('click', () => selectRegion(null));
 
   addTrainerPins();
 }
@@ -453,13 +550,12 @@ function selectRegion(name) {
   activeRegion = name;
   Object.entries(regionLayers).forEach(([rName, layer]) => {
     layer.setStyle({
-      fillOpacity: (!name || rName === name) ? 0.18 : 0.04,
-      opacity:     (!name || rName === name) ? 0.8 : 0.3,
+      fillOpacity: (!name || rName === name) ? 0.28 : 0.10,
+      opacity:     (!name || rName === name) ? 0.85 : 0.35,
     });
   });
-  if (name) {
-    const cfg = REGION_CONFIG[name];
-    map.fitBounds(cfg.bounds, { padding: [40, 40], maxZoom: 7 });
+  if (name && regionLayers[name]) {
+    map.fitBounds(regionLayers[name].getBounds(), { padding: [40, 40], maxZoom: 7 });
   }
   renderTrainerList();
 }
@@ -476,6 +572,7 @@ function trainerBookingCount(trainerName) {
 function addTrainerPins() {
   trainerMarkers = TRAINERS.map(t => {
     const isAT = AT_NAMES.has(t.name);
+    const isRC = RC_NAMES.has(t.name);
     const bookingCount = trainerBookingCount(t.name);
     const progList = t.trainerPrograms.join(', ') || '—';
     const marker = L.circleMarker([t.lat, t.lng], {
@@ -486,8 +583,12 @@ function addTrainerPins() {
       fillOpacity: 0.9,
     });
     marker.trainerData = t;
+    const badges = [
+      isRC ? '<span style="font-size:10px;background:rgba(224,112,64,0.18);color:#c05820;border:1px solid rgba(224,112,64,0.35);border-radius:3px;padding:1px 5px;font-weight:700;">RC</span>' : '',
+      isAT ? '<span style="font-size:10px;background:rgba(26,82,128,0.18);color:#1A5280;border:1px solid rgba(26,82,128,0.3);border-radius:3px;padding:1px 5px;font-weight:700;">AT</span>' : '',
+    ].filter(Boolean).join(' ');
     marker.bindPopup(`
-      <div class="popup-name">${t.name}${isAT ? ' <span style="font-size:10px;background:#e8f0fb;color:#1A5280;border-radius:3px;padding:1px 5px;font-weight:700;">AT</span>' : ''}</div>
+      <div class="popup-name">${t.name}${badges ? ' ' + badges : ''}</div>
       <div class="popup-loc">${t.city}, ${t.state} · ${t.region}</div>
       <div class="popup-programs"><strong>Programs:</strong> ${progList}</div>
       <div class="popup-programs" style="margin-top:4px;"><strong>Bookings:</strong> ${bookingCount}</div>
@@ -778,16 +879,21 @@ function renderTrainerList() {
 
   container.innerHTML = list.map(t => {
     const isAT = AT_NAMES.has(t.name);
+    const isRC = RC_NAMES.has(t.name);
     const regionColor = REGION_CONFIG[t.region]?.color || '#888';
     const progs = t.trainerPrograms;
     const shown = progs.slice(0, 4);
     const more = progs.length - 4;
     const tags = shown.map(p => `<span class="prog-tag">${p}</span>`).join('') +
       (more > 0 ? `<span class="prog-tag" style="color:var(--muted)">+${more}</span>` : '');
+    const roleBadges = [
+      isRC ? '<span class="badge badge-rc" style="font-size:9px;padding:1px 5px;">RC</span>' : '',
+      isAT ? '<span class="badge badge-at" style="font-size:9px;padding:1px 5px;">AT</span>' : '',
+    ].filter(Boolean).join(' ');
     return `
       <div class="trainer-row" data-name="${t.name}">
         <div style="flex:1;min-width:0">
-          <div class="trainer-name">${t.name}${isAT ? ' <span class="badge badge-at" style="font-size:9px;padding:1px 5px;">AT</span>' : ''}</div>
+          <div class="trainer-name">${t.name}${roleBadges ? ' ' + roleBadges : ''}</div>
           <div class="trainer-loc">${t.city}, ${t.state}</div>
           <div class="prog-tags">${tags}</div>
         </div>
@@ -894,6 +1000,8 @@ function setUploadMsg(msg, isError = false) {
   el.textContent = msg;
   el.style.color = isError ? 'var(--accent2)' : 'var(--muted)';
 }
+
+checkAuth();
 </script>
 </body>
 </html>
