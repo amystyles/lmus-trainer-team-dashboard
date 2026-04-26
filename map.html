@@ -382,7 +382,94 @@ document.getElementById('signout-btn').addEventListener('click', () => {
 });
 checkAuth();
 
-function initApp() { /* populated by Tasks 2–9 */ }
+// ── REGION CONFIG ─────────────────────────────────────────────
+const REGION_CONFIG = {
+  'East Coast':    { color: '#c8b400', bounds: [[24.5,-81],[47.5,-66]] },
+  'Mid West':      { color: '#c0392b', bounds: [[36,-104],[49,-81]] },
+  'South Central': { color: '#27ae60', bounds: [[25,-106],[37,-80]] },
+  'Central':       { color: '#1a6fd4', bounds: [[25,-116],[49,-96]] },
+  'West Coast':    { color: '#e07040', bounds: [[24,-125],[49,-114]] },
+};
+
+// Region GeoJSON polygons (simple rectangles)
+function regionGeoJSON(bounds) {
+  const [[s,w],[n,e]] = bounds;
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [[[w,s],[e,s],[e,n],[w,n],[w,s]]] },
+  };
+}
+
+// ── APP STATE ─────────────────────────────────────────────────
+let map, trainerMarkers = [], regionLayers = {};
+let activeRegion = null;
+let activeProgram = null;
+let activeBookings = null;
+
+function getBookings() {
+  return activeBookings || BOOKINGS;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function initApp() {
+  loadBookingsFromStorage();
+  initMap();
+  renderTrainerList();
+  initFinder();
+  initUpload();
+}
+
+function initMap() {
+  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([38, -96], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Region polygons
+  Object.entries(REGION_CONFIG).forEach(([name, cfg]) => {
+    const layer = L.geoJSON(regionGeoJSON(cfg.bounds), {
+      style: {
+        color: cfg.color, weight: 1.5, opacity: 0.5,
+        fillColor: cfg.color, fillOpacity: 0.08,
+      }
+    }).addTo(map);
+    layer.on('click', () => selectRegion(name));
+    regionLayers[name] = layer;
+  });
+
+  // Click map background → deselect region
+  map.on('click', e => {
+    if (!e.originalEvent._fromRegion) selectRegion(null);
+  });
+  Object.values(regionLayers).forEach(l => {
+    l.on('click', e => { e.originalEvent._fromRegion = true; });
+  });
+
+  addTrainerPins();
+}
+
+function selectRegion(name) {
+  activeRegion = name;
+  Object.entries(regionLayers).forEach(([rName, layer]) => {
+    layer.setStyle({
+      fillOpacity: (!name || rName === name) ? 0.18 : 0.04,
+      opacity:     (!name || rName === name) ? 0.8 : 0.3,
+    });
+  });
+  if (name) {
+    const cfg = REGION_CONFIG[name];
+    map.fitBounds(cfg.bounds, { padding: [40, 40], maxZoom: 7 });
+  }
+  renderTrainerList();
+}
+
+// Stubs — replaced by Tasks 4–8
+function addTrainerPins() {}
+function updatePinVisibility() {}
+function renderTrainerList() {}
+function initFinder() {}
+function initUpload() {}
+function loadBookingsFromStorage() {}
 </script>
 </body>
 </html>
