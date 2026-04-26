@@ -748,8 +748,57 @@ function resultRowHTML(r) {
   `;
 }
 
+// ── TRAINER LIST ──────────────────────────────────────────────
+function renderTrainerList() {
+  const container = document.getElementById('trainer-list');
+  const countEl = document.getElementById('list-count');
+
+  let list = TRAINERS.slice().sort((a, b) => a.name.localeCompare(b.name));
+
+  if (activeRegion) list = list.filter(t => t.region === activeRegion);
+  if (activeProgram) list = list.filter(t => t.trainerPrograms.includes(activeProgram));
+
+  countEl.textContent = `${list.length} trainer${list.length !== 1 ? 's' : ''}`;
+
+  if (!list.length) {
+    container.innerHTML = `<div class="list-empty">No trainers match current filters</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(t => {
+    const isAT = AT_NAMES.has(t.name);
+    const regionColor = REGION_CONFIG[t.region]?.color || '#888';
+    const progs = t.trainerPrograms;
+    const shown = progs.slice(0, 4);
+    const more = progs.length - 4;
+    const tags = shown.map(p => `<span class="prog-tag">${p}</span>`).join('') +
+      (more > 0 ? `<span class="prog-tag" style="color:var(--muted)">+${more}</span>` : '');
+    return `
+      <div class="trainer-row" data-name="${t.name}">
+        <div style="flex:1;min-width:0">
+          <div class="trainer-name">${t.name}${isAT ? ' <span class="badge badge-at" style="font-size:9px;padding:1px 5px;">AT</span>' : ''}</div>
+          <div class="trainer-loc">${t.city}, ${t.state}</div>
+          <div class="prog-tags">${tags}</div>
+        </div>
+        <span class="region-badge" style="background:${regionColor}22;color:${regionColor};border:1px solid ${regionColor}44;flex-shrink:0;">${t.region}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Attach click → fly to pin + open popup
+  container.querySelectorAll('.trainer-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const name = row.dataset.name;
+      const marker = trainerMarkers.find(m => m.trainerData.name === name);
+      if (marker) {
+        map.flyTo(marker.getLatLng(), 10, { duration: 0.8 });
+        marker.openPopup();
+      }
+    });
+  });
+}
+
 // Stubs — replaced by Tasks 4–8
-function renderTrainerList() {}
 function initUpload() {}
 function loadBookingsFromStorage() {}
 </script>
