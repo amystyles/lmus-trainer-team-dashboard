@@ -647,6 +647,21 @@ const LEGACY_TO_MAP_REGION = {
     const legacy = b.region.slice('__pending__:'.length);
     b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
   });
+  // Trainer home region (RC pins + most-common booking region)
+  const RC_HOME_REGION = {
+    'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
+    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
+    'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
+  };
+  window.TRAINER_HOME_REGION = {};
+  Object.keys(trainerPrimary).forEach(t => {
+    window.TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || trainerPrimary[t];
+  });
+  BOOKINGS.forEach(b => {
+    if (!window.TRAINER_HOME_REGION[b.trainer]) {
+      window.TRAINER_HOME_REGION[b.trainer] = RC_HOME_REGION[b.trainer] || b.region;
+    }
+  });
 })();
 
 // ── DARK MODE ──────────────────────────────────────────────────
@@ -936,7 +951,7 @@ function renderTable(filtered) {
   const tm = {};
   filtered.forEach(b => {
     const t = b.trainer;
-    if (!tm[t]) tm[t] = { trainer:t, region:b.region, q4fy26:0, q1fy27:0, total:0, it:0, dual:0, onlineIT:0, adv:0, ws:0, nextEvent:Infinity, events:[] };
+    if (!tm[t]) tm[t] = { trainer:t, region: window.TRAINER_HOME_REGION?.[t] || b.region, q4fy26:0, q1fy27:0, total:0, it:0, dual:0, onlineIT:0, adv:0, ws:0, nextEvent:Infinity, events:[] };
     const r = tm[t];
     r.total++;
     if (b.fiscalYear==='FY2026' && b.fiscalQuarter==='Q4') r.q4fy26++;

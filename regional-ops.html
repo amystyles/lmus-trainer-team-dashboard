@@ -832,6 +832,186 @@
   .sbs-date-input:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,0.12); }
   .sbs-loc-input:focus  { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
   body.dark-mode .sbs-select     { background:#1a1a20; color:#EFEFEF; border-color: rgba(0,255,99,0.6); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300FF63' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  /* Custom calendar (replaces native <input type="date"> for smoother month nav) */
+  .cal-dd { position: relative; width: 100%; }
+  .cal-dd-btn {
+    width: 100%; background: #FFFFFF; color: #111;
+    border: 1.5px solid rgba(8,145,178,0.5); border-radius: 8px;
+    padding: 8px 30px 8px 10px;
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+    text-align: left; cursor: pointer; outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .cal-dd-btn[data-empty="true"] { color: #888; }
+  body.dark-mode .cal-dd-btn { background: var(--bg); color: var(--text); border-color: rgba(34,211,238,0.4); }
+  .cal-dd.open .cal-dd-btn { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,0.15); }
+  body.dark-mode .cal-dd.open .cal-dd-btn { box-shadow: 0 0 0 3px rgba(34,211,238,0.2), 0 0 16px rgba(34,211,238,0.12); }
+
+  .cal-dd-pop {
+    position: fixed; top: 0; left: 0;
+    width: 312px; z-index: 1000;
+    background: #FFFFFF; border: 1px solid rgba(34,211,238,0.35);
+    border-radius: 12px;
+    box-shadow: 0 22px 52px rgba(0,0,0,0.18), 0 0 0 1px rgba(34,211,238,0.06);
+    padding: 14px; display: none;
+    user-select: none;
+  }
+  body.dark-mode .cal-dd-pop {
+    background: #15151a; border-color: rgba(34,211,238,0.3);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(34,211,238,0.15);
+  }
+  .cal-dd.open .cal-dd-pop { display: block; animation: calddIn 0.18s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes calddIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .cal-head {
+    display: grid; grid-template-columns: 32px 1fr 32px;
+    gap: 6px; align-items: center; margin-bottom: 12px;
+  }
+  .cal-nav-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.18);
+    color: #22d3ee; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+  }
+  body.dark-mode .cal-nav-btn { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.25); }
+  .cal-nav-btn:hover { background: rgba(34,211,238,0.18); transform: scale(1.06); }
+  .cal-nav-btn:active { transform: scale(0.95); }
+  .cal-title-btn {
+    background: transparent; border: 1px solid transparent; border-radius: 8px;
+    padding: 6px 10px; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text); width: 100%; text-align: center;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  body.dark-mode .cal-title-btn { color: #fff; }
+  .cal-title-btn:hover { background: rgba(34,211,238,0.06); border-color: rgba(34,211,238,0.2); color: #22d3ee; }
+  .cal-title-btn .cal-title-yr {
+    font-family: 'DM Mono', monospace; font-weight: 500; font-size: 12px;
+    color: var(--muted); letter-spacing: 0.5px;
+  }
+
+  .cal-dow-row {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+    margin-bottom: 4px;
+  }
+  .cal-dow {
+    font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); text-align: center; padding: 4px 0;
+  }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+  }
+  .cal-cell {
+    aspect-ratio: 1; min-height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--text); border-radius: 7px; cursor: pointer;
+    background: transparent; border: 1px solid transparent;
+    transition: background 0.12s, color 0.12s, border-color 0.12s, transform 0.08s;
+  }
+  body.dark-mode .cal-cell { color: rgba(255,255,255,0.85); }
+  .cal-cell:hover { background: rgba(34,211,238,0.1); color: #22d3ee; }
+  .cal-cell.outside { color: var(--border-mid); opacity: 0.5; }
+  body.dark-mode .cal-cell.outside { color: rgba(255,255,255,0.18); }
+  .cal-cell.today {
+    color: #22d3ee; font-weight: 800;
+    border-color: rgba(34,211,238,0.45);
+  }
+  .cal-cell.weekend { color: var(--accent2); }
+  body.dark-mode .cal-cell.weekend { color: #fb923c; }
+  .cal-cell.outside.weekend { opacity: 0.35; }
+  .cal-cell.selected {
+    background: var(--accent); color: #000; font-weight: 800;
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(0,255,99,0.35);
+    transform: scale(1.04);
+  }
+  .cal-cell.selected:hover { background: var(--accent); color: #000; }
+
+  /* Year/month picker view */
+  .cal-yr-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  }
+  .cal-yr-cell {
+    padding: 12px 8px; border-radius: 8px;
+    background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.12);
+    color: var(--text); cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px;
+    letter-spacing: 1.2px; text-transform: uppercase; text-align: center;
+    transition: background 0.15s, border-color 0.15s, transform 0.08s;
+  }
+  body.dark-mode .cal-yr-cell { background: rgba(34,211,238,0.06); color: #fff; border-color: rgba(34,211,238,0.18); }
+  .cal-yr-cell:hover { background: rgba(34,211,238,0.18); border-color: rgba(34,211,238,0.5); transform: translateY(-1px); }
+  .cal-yr-cell.current { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 0 14px rgba(0,255,99,0.3); }
+
+  .cal-foot {
+    display: flex; gap: 4px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  body.dark-mode .cal-foot { border-top-color: rgba(255,255,255,0.08); }
+  .cal-foot-btn {
+    flex: 1; padding: 6px 10px; border-radius: 6px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--ink-mid); cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    transition: all 0.12s;
+  }
+  body.dark-mode .cal-foot-btn { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+  .cal-foot-btn:hover {
+    background: rgba(0,255,99,0.08); color: var(--accent);
+    border-color: rgba(0,255,99,0.3);
+  }
+
+  /* Custom program dropdown (native option styling is unreliable) */
+  .prog-dd { position: relative; width: 100%; }
+  .prog-dd-btn {
+    width: 100%; background: #FFFFFF; color: #111;
+    border: 1.5px solid rgba(0,200,80,0.6); border-radius: 8px;
+    padding: 8px 30px 8px 10px;
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+    text-align: left; cursor: pointer; outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300C850' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .prog-dd-btn[data-empty="true"] { color: #888; }
+  body.dark-mode .prog-dd-btn { background: #1a1a20; color: #EFEFEF; border-color: rgba(0,255,99,0.6); }
+  .prog-dd.open .prog-dd-btn { border-color: #00C850; box-shadow: 0 0 0 3px rgba(0,200,80,0.15); }
+  body.dark-mode .prog-dd.open .prog-dd-btn { box-shadow: 0 0 0 3px rgba(0,255,99,0.2), 0 0 16px rgba(0,255,99,0.1); }
+  .prog-dd-menu {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+    max-height: 320px; overflow-y: auto;
+    background: #FFFFFF; border: 1.5px solid rgba(0,200,80,0.4);
+    border-radius: 10px; box-shadow: 0 18px 48px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,200,80,0.08);
+    display: none; padding: 4px;
+  }
+  body.dark-mode .prog-dd-menu {
+    background: #FFFFFF; border-color: rgba(0,200,80,0.4);
+    box-shadow: 0 22px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,255,99,0.12);
+  }
+  .prog-dd.open .prog-dd-menu { display: block; animation: progddIn 0.16s ease; }
+  @keyframes progddIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .prog-dd-opt {
+    padding: 8px 14px; cursor: pointer; border-radius: 6px;
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; color: #111;
+    transition: background 0.08s, color 0.08s;
+  }
+  .prog-dd-opt:hover, .prog-dd-opt.focused {
+    background: #00FF63; color: #000; font-weight: 800;
+  }
+  .prog-dd-opt.selected {
+    background: #00FF63; color: #000; font-weight: 800;
+    box-shadow: inset 0 0 0 1px rgba(0,180,70,0.5);
+  }
+  .prog-dd-opt.placeholder { color: #999; font-style: italic; }
+  .prog-dd-opt.placeholder:hover { background: #f0f0f0; color: #555; font-weight: 600; }
   body.dark-mode .sbs-date-input { background:var(--bg); color:var(--text); border-color: rgba(34,211,238,0.35); }
   body.dark-mode .sbs-loc-input  { background:var(--bg); color:var(--text); border-color: rgba(251,146,60,0.35); }
   body.dark-mode .sbs-select:focus     { box-shadow: 0 0 0 3px rgba(0,255,99,0.2), 0 0 16px rgba(0,255,99,0.1); }
@@ -846,7 +1026,9 @@
     filter: invert(85%) sepia(60%) saturate(500%) hue-rotate(155deg) brightness(1.1);
   }
   .sbs-loc-input { cursor:text; }
-  .sbs-loc-tag { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--accent); position:absolute; bottom:-16px; left:0; }
+  .sbs-loc-tag { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--accent); position:absolute; bottom:-16px; left:0; transition: color 0.15s; }
+  .sbs-loc-tag[data-status="ok"]   { color: var(--accent); }
+  .sbs-loc-tag[data-status="miss"] { color: var(--accent2); letter-spacing: 0.5px; text-transform: none; }
   .sbs-type-wrap { display:flex; flex-direction:column; gap:5px; }
   .sbs-type-btns { display:flex; gap:6px; align-items:center; }
   .sbs-type-btn { background:var(--bg); border:1.5px solid var(--border-mid); color:var(--ink-mid); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; padding:6px 10px; border-radius:7px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
@@ -864,20 +1046,143 @@
   .sbs-col-heads { display:grid; grid-template-columns:36px 1fr 160px 100px 70px; gap:10px; padding:0 16px 10px; }
   .sbs-ch { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
   .sbs-list { display:flex; flex-direction:column; gap:6px; }
-  .sbs-row { display:grid; grid-template-columns:36px 1fr 160px 100px 70px; gap:10px; align-items:center; padding:13px 16px; background:var(--bg); border:1px solid var(--border); border-radius:10px; transition:border-color 0.15s; }
-  .sbs-row:hover { border-color:var(--border-mid); }
-  .sbs-row.unavail { opacity:0.35; }
-  .sbs-row.top1 { border-color:rgba(0,255,99,0.4); background:rgba(0,255,99,0.025); }
+  .sbs-row {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; overflow: hidden; position: relative;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+  }
+  .sbs-row-head {
+    display: grid; grid-template-columns: 36px 1fr 180px 110px 78px 28px;
+    gap: 10px; align-items: center; padding: 13px 16px;
+  }
+  .sbs-row:hover { border-color: var(--border-mid); }
+  body.dark-mode .sbs-row:hover { border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.02); }
+  .sbs-row.expanded {
+    border-color: var(--border-mid);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+  }
+  body.dark-mode .sbs-row.expanded { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); }
+  .sbs-row.tier-closest.expanded  { border-color: rgba(0,255,99,0.45);  box-shadow: 0 0 0 1px rgba(0,255,99,0.15), 0 8px 28px rgba(0,255,99,0.1); }
+  .sbs-row.tier-neighbor.expanded { border-color: rgba(14,165,233,0.45); box-shadow: 0 0 0 1px rgba(14,165,233,0.15), 0 8px 28px rgba(14,165,233,0.08); }
+  .sbs-row.unavail { opacity: 0.4; }
+  .sbs-row.unavail:hover { opacity: 0.7; }
+  .sbs-row.top1 { border-color: rgba(0,255,99,0.4); background: rgba(0,255,99,0.025); }
+
+  .sbs-gap-cell { display: flex; flex-direction: column; align-items: flex-start; }
+  .sbs-chev {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-sunken); color: var(--muted);
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), background 0.18s, color 0.18s;
+    margin-left: auto;
+  }
+  body.dark-mode .sbs-chev { background: rgba(255,255,255,0.06); }
+  .sbs-row:hover .sbs-chev { background: rgba(0,255,99,0.1); color: var(--accent); }
+  .sbs-row.expanded .sbs-chev { transform: rotate(180deg); background: rgba(0,255,99,0.14); color: var(--accent); }
+
+  .sbs-detail {
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.34s cubic-bezier(0.16,1,0.3,1), opacity 0.2s;
+  }
+  .sbs-row.expanded .sbs-detail { max-height: 600px; opacity: 1; }
+  .sbs-detail-inner {
+    padding: 14px 22px 18px;
+    margin: 0 16px 4px;
+    border-top: 1px dashed var(--border);
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  body.dark-mode .sbs-detail-inner { border-top-color: rgba(255,255,255,0.08); }
+  .sbs-d-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
+  }
+  .sbs-d-label::before {
+    content: ''; width: 4px; height: 12px; background: var(--accent); border-radius: 2px;
+    box-shadow: 0 0 6px rgba(0,255,99,0.4);
+  }
+  .sbs-d-event-name {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 17px; line-height: 1.2; color: var(--text);
+    margin-bottom: 9px; letter-spacing: -0.2px;
+  }
+  .sbs-d-event-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sbs-d-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 12px;
+    background: var(--bg-sunken); color: var(--ink-mid);
+    border: 1px solid var(--border);
+  }
+  body.dark-mode .sbs-d-pill { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+  .sbs-d-pill.mono { font-family: 'DM Mono', monospace; font-weight: 500; letter-spacing: 0.5px; text-transform: none; }
+  .sbs-d-empty { color: var(--muted); font-family: 'Rajdhani', sans-serif; font-size: 12px; padding: 6px 0; }
+  .sbs-d-up-list { display: flex; flex-direction: column; gap: 4px; }
+  .sbs-d-up-row {
+    display: grid; grid-template-columns: 70px 90px 90px 1fr; gap: 12px; align-items: center;
+    padding: 6px 10px; border-radius: 6px;
+    background: var(--bg-subtle);
+    font-size: 12px;
+  }
+  body.dark-mode .sbs-d-up-row { background: rgba(255,255,255,0.025); }
+  .sbs-d-up-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-mid); }
+  .sbs-d-up-q {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px;
+    letter-spacing: 1px; color: var(--muted);
+  }
+  .sbs-d-up-type {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 11px;
+    letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .sbs-d-up-name {
+    font-size: 12px; color: var(--text); font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .sbs-rank { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:var(--border-mid); line-height:1; }
   .sbs-row.top1 .sbs-rank { color:var(--accent); }
   .sbs-row.top2 .sbs-rank, .sbs-row.top3 .sbs-rank { color:var(--ink-mid); }
   .sbs-name { font-weight:700; font-size:13px; color:var(--text); line-height:1.2; }
   .sbs-rgn  { font-size:10px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:4px; }
   .sbs-rgn-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-  .sbs-closest-tag { font-size:9px; font-weight:700; letter-spacing:0.5px; color:var(--accent); margin-left:4px; }
-  .sbs-divider { display:flex; align-items:center; gap:10px; margin:12px 0 8px; }
-  .sbs-divider-line { flex:1; height:1px; background:var(--border); }
-  .sbs-divider-label { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .sbs-region-tag {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 9px;
+    letter-spacing: 1.5px; padding: 1px 7px; border-radius: 10px;
+    margin-left: 8px; border: 1px solid;
+  }
+  .sbs-region-tag.closest  { color: var(--accent); border-color: rgba(0,255,99,0.45); background: rgba(0,255,99,0.12); box-shadow: 0 0 10px rgba(0,255,99,0.18); }
+  .sbs-region-tag.neighbor { color: #0ea5e9; border-color: rgba(14,165,233,0.45); background: rgba(14,165,233,0.12); }
+
+  .sbs-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 18px 4px 10px; padding: 0;
+    --sd-accent: var(--accent);
+  }
+  .sbs-divider-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--sd-accent) 40%, transparent), transparent);
+  }
+  .sbs-divider-label {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 10px;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--sd-accent); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 12px; border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--sd-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--sd-accent) 8%, transparent);
+  }
+  .sbs-divider-count {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 11px;
+    letter-spacing: 0.5px;
+    background: color-mix(in srgb, var(--sd-accent) 18%, transparent);
+    color: var(--sd-accent);
+    padding: 0 7px; border-radius: 8px;
+  }
+
+  /* Tier-specific row accent (left edge stripe to reinforce hierarchy) */
+  .sbs-row.tier-closest  { box-shadow: inset 4px 0 0 rgba(0,255,99,0.5); }
+  .sbs-row.tier-neighbor { box-shadow: inset 4px 0 0 rgba(14,165,233,0.45); }
+  .sbs-row.tier-other    { box-shadow: inset 4px 0 0 rgba(255,255,255,0.05); }
   .sbs-gap-val { font-size:13px; font-weight:700; line-height:1; }
   .sbs-gap-sub { font-size:10px; color:var(--muted); margin-top:2px; }
   .sbs-gap-val.long   { color:var(--lm-green); }
@@ -890,12 +1195,108 @@
   .sbs-qcount { text-align:center; }
   .sbs-qcount-val { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:22px; line-height:1; color:var(--text); }
   .sbs-qcount-sub { font-size:9px; color:var(--muted); margin-top:2px; letter-spacing:0.5px; }
-  .sbs-prog-summary { margin-top:16px; padding:14px 16px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:10px; }
-  .sbs-ps-title { font-size:9px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-  .sbs-ps-title::before { content:''; display:block; width:3px; height:12px; background:var(--accent); border-radius:2px; }
-  .sbs-ps-grid { display:flex; gap:28px; flex-wrap:wrap; }
-  .sbs-ps-val { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:24px; color:var(--text); line-height:1; }
-  .sbs-ps-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+  /* Program Overview — dark HUD console */
+  .sbs-prog-summary {
+    margin-top: 16px;
+    background: #0d0d10;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; overflow: hidden; position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .sbs-prog-summary-top { margin-top: 0; margin-bottom: 16px; }
+  .sbs-prog-summary::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.85;
+  }
+  .sbs-prog-summary::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, transparent 50%, var(--accent) 50%);
+    opacity: 0.10; pointer-events: none;
+  }
+
+  .sbs-ps-head {
+    padding: 14px 22px 10px;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sbs-ps-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.55); margin: 0;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .sbs-ps-title::before {
+    content: ''; display: inline-block; width: 3px; height: 14px;
+    background: var(--accent); border-radius: 2px;
+    box-shadow: 0 0 10px rgba(0,255,99,0.5);
+  }
+  .sbs-ps-title strong {
+    color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 14px; letter-spacing: 1.5px;
+  }
+  .sbs-ps-tag {
+    margin-left: auto;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 12px;
+    background: rgba(0,255,99,0.12); color: var(--accent);
+    border: 1px solid rgba(0,255,99,0.3);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .sbs-ps-tag::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px var(--accent);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+
+  .sbs-ps-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0; padding: 0;
+  }
+  .sbs-ps-card {
+    padding: 18px 22px 20px;
+    border-right: 1px dashed rgba(255,255,255,0.06);
+    position: relative;
+    transition: background 0.15s;
+  }
+  .sbs-ps-card:last-child { border-right: none; }
+  .sbs-ps-card:hover { background: rgba(255,255,255,0.02); }
+  .sbs-ps-card-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .sbs-ps-card-label::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ps-c, var(--accent));
+    box-shadow: 0 0 8px var(--ps-c, var(--accent));
+  }
+  .sbs-ps-val {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    font-size: 36px; line-height: 0.95; color: var(--ps-c, #fff);
+    letter-spacing: -1px;
+    text-shadow: 0 0 20px color-mix(in srgb, var(--ps-c, var(--accent)) 25%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+  .sbs-ps-val.is-date { font-size: 22px; letter-spacing: -0.3px; line-height: 1.05; }
+  .sbs-ps-sub {
+    font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 500;
+    color: rgba(255,255,255,0.45); margin-top: 6px;
+  }
+  .sbs-ps-meta {
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: rgba(255,255,255,0.3); letter-spacing: 0.4px;
+  }
+
+  @media (max-width: 880px) {
+    .sbs-ps-grid { grid-template-columns: repeat(2, 1fr); }
+    .sbs-ps-card { border-right: none; border-bottom: 1px dashed rgba(255,255,255,0.06); }
+    .sbs-ps-card:nth-child(2n) { border-right: none; }
+    .sbs-ps-card:nth-last-child(-n+2) { border-bottom: none; }
+  }
 </style>
 </head>
 <body>
@@ -1012,7 +1413,11 @@
         <div class="sbs-inputs">
           <div class="sbs-field">
             <label class="sbs-label">Program</label>
-            <select class="sbs-select" id="sbsProgram">
+            <div class="prog-dd" id="progDD">
+              <button type="button" class="prog-dd-btn" id="progDDBtn" data-empty="true">Select program…</button>
+              <div class="prog-dd-menu" id="progDDMenu" role="listbox"></div>
+            </div>
+            <select id="sbsProgram" style="display:none">
               <option value="">Select program…</option>
               <option>BODYATTACK</option><option>BODYBALANCE</option><option>BODYCOMBAT</option>
               <option>BODYJAM</option><option>BODYPUMP</option><option>BODYPUMP HEAVY</option>
@@ -1028,7 +1433,11 @@
           </div>
           <div class="sbs-field">
             <label class="sbs-label">Event Date</label>
-            <input class="sbs-date-input" type="date" id="sbsDate" />
+            <div class="cal-dd" id="calDD">
+              <button type="button" class="cal-dd-btn" id="calDDBtn" data-empty="true">Pick a date…</button>
+              <div class="cal-dd-pop" id="calDDPop"></div>
+            </div>
+            <input type="hidden" id="sbsDate" />
           </div>
           <div class="sbs-field">
             <label class="sbs-label">Event Location</label>
@@ -1092,6 +1501,21 @@ const LEGACY_TO_MAP_REGION = {
   'Central':'North Central','West Coast':'West Coast'
 };
 
+// Pinned home regions for the 8 Regional Coaches (authoritative — overrides booking-derived).
+const RC_HOME_REGION = {
+  'Karen Torrell':       'West Coast',
+  'Sarah Gruba':         'South Central',
+  'Trae Tripoli':        'North Central',
+  'Dan Maroun':          'Midwest',
+  'Justine Collado':     'Mid East',
+  'Jaime Terrell':       'East Coast',
+  'Keri Ball':           'Mid Atlantic',
+  'Stacy Dee Rathborne': 'Southeast'
+};
+// Trainer → home region. Populated by remapBookingsToMapRegions(). Use this for
+// "where is this trainer based?" — NOT each booking's per-event region.
+var TRAINER_HOME_REGION = {};
+
 function remapBookingsToMapRegions() {
   // Pass 1: parse state from event name (e.g. "...Littleton, CO")
   BOOKINGS.forEach(b => {
@@ -1114,6 +1538,17 @@ function remapBookingsToMapRegions() {
     if (!b.region.startsWith('__pending__:')) return;
     const legacy = b.region.slice('__pending__:'.length);
     b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
+  });
+  // Pass 4: build the trainer→home-region authoritative map (RC pins win)
+  TRAINER_HOME_REGION = {};
+  Object.keys(trainerPrimary).forEach(t => {
+    TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || trainerPrimary[t];
+  });
+  // Catch trainers that only have unparseable bookings (no entry in trainerPrimary)
+  BOOKINGS.forEach(b => {
+    if (!TRAINER_HOME_REGION[b.trainer]) {
+      TRAINER_HOME_REGION[b.trainer] = RC_HOME_REGION[b.trainer] || b.region;
+    }
   });
 }
 
@@ -1144,10 +1579,12 @@ function showTab(tab) {
 
 function renderDirectory() {
   const grid = document.getElementById('dirGrid');
+  // Build region rosters by HOME region (RC-pinned + most-common), not per-event location
   const regionTrainers = {};
   BOOKINGS.forEach(b => {
-    if (!regionTrainers[b.region]) regionTrainers[b.region] = {};
-    regionTrainers[b.region][b.trainer] = (regionTrainers[b.region][b.trainer] || 0) + 1;
+    const home = TRAINER_HOME_REGION[b.trainer] || b.region;
+    if (!regionTrainers[home]) regionTrainers[home] = {};
+    regionTrainers[home][b.trainer] = (regionTrainers[home][b.trainer] || 0) + 1;
   });
   grid.innerHTML = CXM_CXS.map(({ region, cxm, cxs, rc }) => {
     const color = REGION_COLORS[region] || '#888';
@@ -1416,7 +1853,7 @@ function renderDrill(filtered) {
 
   const trainerMap = {};
   progData.forEach(b => {
-    if (!trainerMap[b.trainer]) trainerMap[b.trainer] = { trainer:b.trainer, region:b.region, total:0, q4fy26:0, q1fy27:0 };
+    if (!trainerMap[b.trainer]) trainerMap[b.trainer] = { trainer:b.trainer, region: TRAINER_HOME_REGION[b.trainer] || b.region, total:0, q4fy26:0, q1fy27:0 };
     trainerMap[b.trainer].total++;
     if (b.fiscalYear==='FY2026' && b.fiscalQuarter==='Q4') trainerMap[b.trainer].q4fy26++;
     if (b.fiscalYear==='FY2027' && b.fiscalQuarter==='Q1') trainerMap[b.trainer].q1fy27++;
@@ -1624,7 +2061,7 @@ function computeIntelligence() {
   const today = new Date();
   const grouped = {};
   BOOKINGS.forEach(b => {
-    if (!grouped[b.trainer]) grouped[b.trainer] = { trainer:b.trainer, region:b.region, items:[] };
+    if (!grouped[b.trainer]) grouped[b.trainer] = { trainer:b.trainer, region: TRAINER_HOME_REGION[b.trainer] || b.region, items:[] };
     grouped[b.trainer].items.push(b);
   });
   const trainers = Object.values(grouped).map(g => {
@@ -2106,17 +2543,295 @@ function wireMultiFilter(id, key) {
   });
 }
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-  Object.assign(state, { fy:'All', q:'All', type:[], region:'All', selectedPrograms:[], drillRegion:'All' });
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.val==='All'));
-  document.getElementById('drillBody').innerHTML = '<div class="drill-empty">Select a program above to view distribution</div>';
-  renderProgPills();
-});
+// (resetBtn / fy / q / type / region filters were moved to index.html — no-ops here)
 
-wireFilter('fyFilters','fy');
-wireFilter('qFilters','q');
-wireMultiFilter('typeFilters','type');
-wireFilter('regionFilters','region');
+// ── Custom calendar (replaces native date input) ──────────────
+(function initCalendar() {
+  const dd  = document.getElementById('calDD');
+  const btn = document.getElementById('calDDBtn');
+  const pop = document.getElementById('calDDPop');
+  const hidden = document.getElementById('sbsDate');
+  if (!dd || !btn || !pop || !hidden) return;
+
+  const MONTHS  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const M_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DOW     = ['S','M','T','W','T','F','S'];
+
+  let view = new Date(); view.setDate(1);     // first day of current view-month
+  let selected = null;
+  let mode = 'days';                          // 'days' | 'months' | 'years'
+  let yearPage = view.getFullYear();          // start year for the year-grid
+
+  function fmtBtn(d) {
+    return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+  }
+  function isoDate(d) {
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+  function sameDay(a, b) {
+    return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+
+  function setSelected(d) {
+    selected = d;
+    btn.textContent = fmtBtn(d);
+    btn.dataset.empty = 'false';
+    hidden.value = isoDate(d);
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function render() {
+    if (mode === 'days')        renderDays();
+    else if (mode === 'months') renderMonths();
+    else                        renderYears();
+  }
+
+  function renderDays() {
+    const y = view.getFullYear(), m = view.getMonth();
+    const first = new Date(y, m, 1);
+    const startDow = first.getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const prevDays   = new Date(y, m, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    const cells = [];
+    // Leading days from prev month
+    for (let i = startDow - 1; i >= 0; i--) {
+      cells.push({ day: prevDays - i, outside: true, date: new Date(y, m-1, prevDays - i) });
+    }
+    // Current month
+    for (let d = 1; d <= daysInMonth; d++) {
+      cells.push({ day: d, outside: false, date: new Date(y, m, d) });
+    }
+    // Trailing — fill to 6 rows (42 cells) for consistent height
+    let trail = 1;
+    while (cells.length < 42) {
+      cells.push({ day: trail, outside: true, date: new Date(y, m+1, trail) });
+      trail++;
+    }
+
+    pop.innerHTML = `
+      <div class="cal-head">
+        <button type="button" class="cal-nav-btn" data-nav="prev" title="Previous month">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="cal-title-btn" data-action="title">
+          ${MONTHS[m]} <span class="cal-title-yr">${y}</span>
+        </button>
+        <button type="button" class="cal-nav-btn" data-nav="next" title="Next month">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="cal-dow-row">${DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}</div>
+      <div class="cal-grid">
+        ${cells.map((c, i) => {
+          const cls = ['cal-cell'];
+          if (c.outside) cls.push('outside');
+          if (sameDay(c.date, today)) cls.push('today');
+          if (sameDay(c.date, selected)) cls.push('selected');
+          const dow = c.date.getDay();
+          if (dow === 0 || dow === 6) cls.push('weekend');
+          return `<button type="button" class="${cls.join(' ')}" data-i="${i}">${c.day}</button>`;
+        }).join('')}
+      </div>
+      <div class="cal-foot">
+        <button type="button" class="cal-foot-btn" data-action="today">Today</button>
+        <button type="button" class="cal-foot-btn" data-action="next-weekend">Next Weekend</button>
+        <button type="button" class="cal-foot-btn" data-action="clear">Clear</button>
+      </div>`;
+
+    // Wire cells
+    [...pop.querySelectorAll('.cal-cell')].forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const c = cells[+el.dataset.i];
+        setSelected(c.date);
+        if (c.outside) { view = new Date(c.date.getFullYear(), c.date.getMonth(), 1); }
+        render();
+        setTimeout(close, 80);
+      });
+    });
+  }
+
+  function renderMonths() {
+    const y = view.getFullYear();
+    pop.innerHTML = `
+      <div class="cal-head">
+        <button type="button" class="cal-nav-btn" data-nav="prev-yr" title="Previous year">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="cal-title-btn" data-action="title">${y}</button>
+        <button type="button" class="cal-nav-btn" data-nav="next-yr" title="Next year">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="cal-yr-grid">
+        ${M_SHORT.map((m, i) => {
+          const isCurrent = view.getMonth() === i;
+          return `<button type="button" class="cal-yr-cell${isCurrent?' current':''}" data-month="${i}">${m}</button>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function renderYears() {
+    const start = Math.floor(yearPage / 12) * 12;
+    const years = Array.from({ length: 12 }, (_, i) => start + i);
+    pop.innerHTML = `
+      <div class="cal-head">
+        <button type="button" class="cal-nav-btn" data-nav="prev-yr-page" title="Earlier">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button type="button" class="cal-title-btn">${start} – ${start + 11}</button>
+        <button type="button" class="cal-nav-btn" data-nav="next-yr-page" title="Later">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="cal-yr-grid">
+        ${years.map(y => {
+          const isCurrent = view.getFullYear() === y;
+          return `<button type="button" class="cal-yr-cell${isCurrent?' current':''}" data-year="${y}">${y}</button>`;
+        }).join('')}
+      </div>`;
+  }
+
+  pop.addEventListener('click', e => {
+    e.stopPropagation();
+    const navBtn = e.target.closest('[data-nav]');
+    if (navBtn) {
+      const n = navBtn.dataset.nav;
+      if (n === 'prev')         view.setMonth(view.getMonth() - 1);
+      else if (n === 'next')    view.setMonth(view.getMonth() + 1);
+      else if (n === 'prev-yr') view.setFullYear(view.getFullYear() - 1);
+      else if (n === 'next-yr') view.setFullYear(view.getFullYear() + 1);
+      else if (n === 'prev-yr-page') yearPage -= 12;
+      else if (n === 'next-yr-page') yearPage += 12;
+      render();
+      return;
+    }
+    const action = e.target.closest('[data-action]')?.dataset.action;
+    if (action === 'title') {
+      mode = mode === 'days' ? 'months' : mode === 'months' ? 'years' : 'days';
+      yearPage = view.getFullYear();
+      render();
+      return;
+    }
+    if (action === 'today') {
+      const t = new Date(); t.setHours(0,0,0,0);
+      view = new Date(t.getFullYear(), t.getMonth(), 1);
+      setSelected(t);
+      mode = 'days'; render();
+      setTimeout(close, 80);
+      return;
+    }
+    if (action === 'next-weekend') {
+      const t = new Date(); t.setHours(0,0,0,0);
+      const dow = t.getDay();
+      const sat = new Date(t); sat.setDate(t.getDate() + (dow === 0 ? 6 : 6 - dow));
+      view = new Date(sat.getFullYear(), sat.getMonth(), 1);
+      setSelected(sat);
+      mode = 'days'; render();
+      setTimeout(close, 80);
+      return;
+    }
+    if (action === 'clear') {
+      selected = null; hidden.value = '';
+      btn.textContent = 'Pick a date…'; btn.dataset.empty = 'true';
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    const monthCell = e.target.closest('[data-month]');
+    if (monthCell) {
+      view.setMonth(+monthCell.dataset.month);
+      mode = 'days'; render();
+      return;
+    }
+    const yearCell = e.target.closest('[data-year]');
+    if (yearCell) {
+      view.setFullYear(+yearCell.dataset.year);
+      mode = 'months'; render();
+      return;
+    }
+  });
+
+  function positionPopup() {
+    const r = btn.getBoundingClientRect();
+    const popW = 312, popH = pop.offsetHeight || 360;
+    const margin = 8;
+    let left = r.left;
+    if (left + popW > window.innerWidth - margin) left = window.innerWidth - popW - margin;
+    if (left < margin) left = margin;
+    let top = r.bottom + 6;
+    if (top + popH > window.innerHeight - margin) top = Math.max(margin, r.top - popH - 6);
+    pop.style.left = left + 'px';
+    pop.style.top  = top  + 'px';
+  }
+
+  function open()  { mode = 'days'; render(); dd.classList.add('open'); positionPopup(); }
+  function close() { dd.classList.remove('open'); }
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (dd.classList.contains('open')) close(); else open();
+  });
+  document.addEventListener('click', e => { if (!dd.contains(e.target) && !pop.contains(e.target)) close(); });
+  window.addEventListener('resize', () => { if (dd.classList.contains('open')) positionPopup(); });
+  window.addEventListener('scroll', () => { if (dd.classList.contains('open')) positionPopup(); }, true);
+  document.addEventListener('keydown', e => {
+    if (!dd.classList.contains('open')) return;
+    if (e.key === 'Escape') close();
+    else if (mode === 'days') {
+      if (e.key === 'ArrowLeft')  { view.setMonth(view.getMonth() - 1); render(); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { view.setMonth(view.getMonth() + 1); render(); e.preventDefault(); }
+    }
+  });
+})();
+
+// ── Custom program dropdown ───────────────────────────────────
+(function initProgDD() {
+  const dd   = document.getElementById('progDD');
+  const btn  = document.getElementById('progDDBtn');
+  const menu = document.getElementById('progDDMenu');
+  const sel  = document.getElementById('sbsProgram');
+  if (!dd || !btn || !menu || !sel) return;
+
+  // Build menu options from the hidden select
+  menu.innerHTML = [...sel.options].map((opt, i) => {
+    const cls = opt.value === '' ? 'prog-dd-opt placeholder' : 'prog-dd-opt';
+    return `<div class="${cls}" role="option" data-val="${opt.value.replace(/"/g,'&quot;')}" data-i="${i}">${opt.textContent}</div>`;
+  }).join('');
+
+  function setValue(v, label) {
+    sel.value = v;
+    btn.textContent = label;
+    btn.dataset.empty = v === '' ? 'true' : 'false';
+    [...menu.querySelectorAll('.prog-dd-opt')].forEach(o => o.classList.toggle('selected', o.dataset.val === v));
+    // Notify any listeners that read sel.value
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  function open()  { dd.classList.add('open'); }
+  function close() { dd.classList.remove('open'); }
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    dd.classList.toggle('open');
+  });
+  menu.addEventListener('click', e => {
+    const opt = e.target.closest('.prog-dd-opt');
+    if (!opt) return;
+    setValue(opt.dataset.val, opt.textContent);
+    close();
+  });
+  document.addEventListener('click', e => { if (!dd.contains(e.target)) close(); });
+  // Keyboard: Esc to close
+  btn.addEventListener('keydown', e => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dd.classList.toggle('open'); }
+  });
+
+  // Init selected = current select value
+  setValue(sel.value, sel.options[sel.selectedIndex]?.textContent || 'Select program…');
+})();
 
 /* ═══════════════════════════════════════════════
    SMART BOOKING SUGGESTER
@@ -2126,7 +2841,67 @@ const SBS_REGION_COLORS = {
   'Midwest':'#0ea5e9','Mid East':'#e879f9','East Coast':'#00FF63',
   'Mid Atlantic':'#38bdf8','Southeast':'#fb923c'
 };
+
+// Type colors / labels for the SBS expand-panel detail
+const TYPE_COLORS_DARK = {
+  'Initial Training':'#4ade80','Online IT':'#22d3ee','Dual Training':'#a855f7',
+  'Advanced Training':'#f59e0b','Online Advanced Training':'#fb923c','Instructor Workshop':'#ff8a6e'
+};
+const TYPE_LABEL_SBS = {
+  'Initial Training':'IT','Online IT':'Online IT','Dual Training':'Dual',
+  'Advanced Training':'Adv','Online Advanced Training':'Online Adv','Instructor Workshop':'Workshop'
+};
+
+function toggleSbsRow(el) { el.classList.toggle('expanded'); }
+
+// Adjacent-region map (powers "next closest" sort tier)
+const SBS_NEIGHBORS = {
+  'West Coast':    ['North Central','South Central'],
+  'North Central': ['West Coast','Midwest','South Central'],
+  'South Central': ['West Coast','North Central','Southeast'],
+  'Midwest':       ['North Central','Mid East','Mid Atlantic','Southeast'],
+  'Mid East':      ['Midwest','Mid Atlantic','East Coast'],
+  'Mid Atlantic':  ['Mid East','Midwest','East Coast','Southeast'],
+  'East Coast':    ['Mid East','Mid Atlantic','Southeast'],
+  'Southeast':     ['East Coast','Mid Atlantic','Midwest','South Central']
+};
 const SBS_STATE_REGION = Object.assign({}, STATE_TO_MAP_REGION, { DC:'Mid Atlantic' });
+
+// Full state name → 2-letter code (powers "Texas" / "California" detection)
+const SBS_STATE_NAMES = {
+  alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',colorado:'CO',connecticut:'CT',
+  delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',
+  kansas:'KS',kentucky:'KY',louisiana:'LA',maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',
+  minnesota:'MN',mississippi:'MS',missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV',
+  'new hampshire':'NH','new jersey':'NJ','new mexico':'NM','new york':'NY','north carolina':'NC',
+  'north dakota':'ND',ohio:'OH',oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI',
+  'south carolina':'SC','south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',
+  virginia:'VA',washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY','washington dc':'DC'
+};
+
+// Common-city → 2-letter state lookup (covers ~80% of typed-in events)
+const SBS_CITY_STATE = {
+  // West Coast
+  'los angeles':'CA','san francisco':'CA','san diego':'CA','sacramento':'CA','san jose':'CA','oakland':'CA','fresno':'CA','long beach':'CA','anaheim':'CA','irvine':'CA','santa monica':'CA','pasadena':'CA','la mesa':'CA','concord':'CA','berkeley':'CA',
+  seattle:'WA','portland':'OR','las vegas':'NV','reno':'NV',phoenix:'AZ','tucson:':'AZ',mesa:'AZ',scottsdale:'AZ',chandler:'AZ',laveen:'AZ',
+  honolulu:'HI',anchorage:'AK','salt lake city':'UT','sandy':'UT',boise:'ID',
+  // South Central
+  houston:'TX',austin:'TX',dallas:'TX','san antonio':'TX','fort worth':'TX','el paso':'TX','rio rancho':'NM',albuquerque:'NM','santa fe':'NM',
+  'oklahoma city':'OK',tulsa:'OK','little rock':'AR','new orleans':'LA','baton rouge':'LA',
+  // North Central
+  denver:'CO','colorado springs':'CO',boulder:'CO',littleton:'CO','des moines':'IA','iowa city':'IA',minneapolis:'MN','st paul':'MN',omaha:'NE','sioux falls':'SD',
+  cheyenne:'WY',billings:'MT',
+  // Midwest
+  chicago:'IL','northbrook':'IL',evanston:'IL',detroit:'MI','grand rapids':'MI',milwaukee:'WI',madison:'WI',cleveland:'OH',columbus:'OH',cincinnati:'OH',youngsville:'OH',indianapolis:'IN','st louis':'MO','kansas city':'MO',wichita:'KS',
+  // Mid East
+  'new york':'NY','new york city':'NY',nyc:'NY',brooklyn:'NY',manhattan:'NY',queens:'NY',buffalo:'NY','jersey city':'NJ',newark:'NJ',philadelphia:'PA',pittsburgh:'PA',boston:'MA',cambridge:'MA',hartford:'CT',providence:'RI',portland_me:'ME',burlington:'VT','manchester nh':'NH',
+  // East Coast
+  richmond:'VA','virginia beach':'VA',norfolk:'VA',charlotte:'NC',raleigh:'NC',durham:'NC','chapel hill':'NC',charleston:'SC',columbia:'SC',
+  // Mid Atlantic
+  baltimore:'MD',annapolis:'MD',wilmington:'DE',dover:'DE','charleston wv':'WV',washington:'DC',
+  // Southeast
+  miami:'FL',orlando:'FL',tampa:'FL',jacksonville:'FL','fort lauderdale':'FL',atlanta:'GA',savannah:'GA','augusta ga':'GA',birmingham:'AL',montgomery:'AL',huntsville:'AL',jackson:'MS',nashville:'TN',memphis:'TN',knoxville:'TN',louisville:'KY',lexington:'KY',murfreesboro:'TN'
+};
 
 const RC_NAMES = new Set([
   'Karen Torrell','Sarah Gruba','Trae Tripoli','Dan Maroun',
@@ -2138,20 +2913,58 @@ let sbsTypeFilter = null;
 function sbsDetectRegion() {
   const str = document.getElementById('sbsLocation').value.trim();
   const tag = document.getElementById('sbsLocTag');
-  if (!str) { tag.textContent = ''; return null; }
+  if (!str) { tag.textContent = ''; tag.removeAttribute('data-status'); return null; }
+
+  const lower = str.toLowerCase();
+
+  // 1. Direct region name in input
+  for (const r of ['East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast']) {
+    if (lower.includes(r.toLowerCase())) {
+      tag.textContent = '→ ' + r;
+      tag.dataset.status = 'ok';
+      return r;
+    }
+  }
+
+  // 2. Full state name (e.g. "Texas", "New York")
+  for (const [name, code] of Object.entries(SBS_STATE_NAMES)) {
+    if (lower.includes(name)) {
+      const r = SBS_STATE_REGION[code];
+      if (r) {
+        tag.textContent = '→ ' + r + ' (' + code + ')';
+        tag.dataset.status = 'ok';
+        return r;
+      }
+    }
+  }
+
+  // 3. Common city — check multi-word phrases first
+  const cityKeys = Object.keys(SBS_CITY_STATE).sort((a,b) => b.length - a.length);
+  for (const city of cityKeys) {
+    if (lower.includes(city)) {
+      const code = SBS_CITY_STATE[city];
+      const r = SBS_STATE_REGION[code];
+      if (r) {
+        tag.textContent = '→ ' + r + ' (via ' + city.replace(/\b\w/g, c => c.toUpperCase()) + ', ' + code + ')';
+        tag.dataset.status = 'ok';
+        return r;
+      }
+    }
+  }
+
+  // 4. 2-letter state code (last token preferred)
   const tokens = str.toUpperCase().replace(/[^A-Z\s]/g,' ').split(/\s+/).filter(Boolean);
   for (let i = tokens.length - 1; i >= 0; i--) {
     if (SBS_STATE_REGION[tokens[i]]) {
       const r = SBS_STATE_REGION[tokens[i]];
-      tag.textContent = '→ ' + r;
+      tag.textContent = '→ ' + r + ' (' + tokens[i] + ')';
+      tag.dataset.status = 'ok';
       return r;
     }
   }
-  const lower = str.toLowerCase();
-  for (const r of ['East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast']) {
-    if (lower.includes(r.toLowerCase())) { tag.textContent = '→ ' + r; return r; }
-  }
-  tag.textContent = 'Region not detected';
+
+  tag.textContent = 'Region not detected — try state code, full state name, or city';
+  tag.dataset.status = 'miss';
   return null;
 }
 
@@ -2197,7 +3010,11 @@ function runSBS() {
 
   const map = {};
   BOOKINGS.forEach(b => {
-    if (!map[b.trainer]) map[b.trainer] = { name:b.trainer, region:b.region, all:[], prog:[] };
+    if (!map[b.trainer]) map[b.trainer] = {
+      name: b.trainer,
+      region: TRAINER_HOME_REGION[b.trainer] || b.region,  // home region (RC-pinned, then most-common)
+      all: [], prog: []
+    };
     map[b.trainer].all.push(b);
     if (b.program === program) map[b.trainer].prog.push(b);
   });
@@ -2223,9 +3040,22 @@ function runSBS() {
       const bd = new Date(b.startDate);
       return !isNaN(bd) && (bd.getTime() === weekend.sat.getTime() || bd.getTime() === weekend.sun.getTime());
     });
-    const pastDates = t.prog.map(b => new Date(b.startDate)).filter(d => !isNaN(d) && d < targetDate).sort((a,b) => b-a);
-    const lastDate      = pastDates[0] || null;
-    const daysSinceLast = lastDate ? Math.round((targetDate - lastDate) / 86400000) : null;
+    // Days-since-last-booked is measured from TODAY (not the target event date)
+    // so the "freshness" reflects real elapsed time, not the gap to a hypothetical future event.
+    const today = new Date(); today.setHours(0,0,0,0);
+    const pastBookings = t.prog
+      .map(b => ({ b, d: new Date(b.startDate) }))
+      .filter(x => !isNaN(x.d) && x.d <= today)
+      .sort((a, b) => b.d - a.d);
+    const lastBooking   = pastBookings[0] || null;
+    const lastDate      = lastBooking ? lastBooking.d : null;
+    const daysSinceLast = lastDate ? Math.round((today - lastDate) / 86400000) : null;
+    // Pre-compute upcoming bookings for this program (used in the expand panel)
+    const upcomingProg  = t.prog
+      .map(b => ({ b, d: new Date(b.startDate) }))
+      .filter(x => !isNaN(x.d) && x.d > today)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 3);
     const qCount = t.all.filter(b => {
       const bd = new Date(b.startDate);
       if (isNaN(bd)) return false;
@@ -2233,19 +3063,28 @@ function runSBS() {
       return bfq.fy === fq.fy && bfq.q === fq.q;
     }).length;
 
-    const inRegion = detectedReg ? t.region === detectedReg : null;
+    // Region tiers: closest (same region) > neighbor (adjacent) > other
+    let regionTier = 'other';
+    if (detectedReg) {
+      if (t.region === detectedReg) regionTier = 'closest';
+      else if ((SBS_NEIGHBORS[detectedReg] || []).includes(t.region)) regionTier = 'neighbor';
+    }
+    const inRegion = regionTier === 'closest';
+
     let score = 0;
-    if (inRegion) score += 30;
+    if (regionTier === 'closest')  score += 30;
+    if (regionTier === 'neighbor') score += 15;
     score += daysSinceLast === null ? 25 : Math.min(daysSinceLast / 10, 25);
     score -= qCount * 2;
 
-    results.push({ name:t.name, region:t.region, inRegion, isAvailable, daysSinceLast, lastDate, qCount, score });
+    results.push({ name:t.name, region:t.region, regionTier, inRegion, isAvailable, daysSinceLast, lastDate, lastBooking, upcomingProg, qCount, score });
   });
 
-  // Sort: available first; within available, in-region first; then by score desc
+  // Sort: available first; within available, by region tier; then score
+  const tierRank = { closest: 0, neighbor: 1, other: 2 };
   results.sort((a, b) => {
     if (a.isAvailable !== b.isAvailable) return a.isAvailable ? -1 : 1;
-    if (detectedReg && a.inRegion !== b.inRegion) return a.inRegion ? -1 : 1;
+    if (detectedReg && a.regionTier !== b.regionTier) return tierRank[a.regionTier] - tierRank[b.regionTier];
     return b.score - a.score;
   });
 
@@ -2258,58 +3097,163 @@ function renderSBS(results, ctx) {
     body.innerHTML = '<div class="sbs-prompt"><strong>No Qualified Trainers</strong>No trainers have prior bookings for this program.</div>';
     return;
   }
-  const fmt = d => d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  const fmt      = d => d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+  const fmtShort = d => d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}) : '—';
 
-  // Split into in-region and other when location detected
-  const inRegion  = ctx.detectedReg ? results.filter(r => r.inRegion)  : results;
-  const otherReg  = ctx.detectedReg ? results.filter(r => !r.inRegion) : [];
+  // 3 tiers: closest → neighbor → other (when a region is detected)
+  const closest  = ctx.detectedReg ? results.filter(r => r.regionTier === 'closest')  : results;
+  const neighbor = ctx.detectedReg ? results.filter(r => r.regionTier === 'neighbor') : [];
+  const other    = ctx.detectedReg ? results.filter(r => r.regionTier === 'other')    : [];
 
   let globalRank = 0;
   function buildRow(r) {
     globalRank++;
     const rank = globalRank;
     const rowCls = r.isAvailable ? (rank <= 3 ? `top${rank}` : '') : 'unavail';
-    let gapVal, gapCls, gapSub;
-    if (r.daysSinceLast === null)    { gapVal='—';                    gapCls='first';  gapSub='No prior booking'; }
-    else if (r.daysSinceLast > 90)   { gapVal=`${r.daysSinceLast}d`; gapCls='long';   gapSub='since last booking'; }
-    else if (r.daysSinceLast > 45)   { gapVal=`${r.daysSinceLast}d`; gapCls='mid';    gapSub='since last booking'; }
-    else                             { gapVal=`${r.daysSinceLast}d`; gapCls='recent'; gapSub='since last booking'; }
-    const rdot    = SBS_REGION_COLORS[r.region] || '#888';
-    const closest = r.inRegion ? '<span class="sbs-closest-tag">CLOSEST</span>' : '';
-    return `<div class="sbs-row ${rowCls}">
-      <div class="sbs-rank">${rank}</div>
-      <div><div class="sbs-name">${r.name}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${closest}</div></div>
-      <div><div class="sbs-gap-val ${gapCls}">${gapVal}</div><div class="sbs-gap-sub">${gapSub}</div></div>
-      <div><span class="sbs-avail-badge ${r.isAvailable?'yes':'no'}">${r.isAvailable?'&#x2713; Available':'&#x2717; Booked'}</span></div>
-      <div class="sbs-qcount"><div class="sbs-qcount-val">${r.qCount}</div><div class="sbs-qcount-sub">${ctx.fq.q} bookings</div></div>
+    let gapVal, gapCls, gapMonth, gapQ, gapSub;
+    if (r.daysSinceLast === null) {
+      gapVal = '—'; gapCls = 'first'; gapMonth = ''; gapQ = ''; gapSub = 'No prior booking';
+    } else {
+      gapVal   = `${r.daysSinceLast}d`;
+      gapCls   = r.daysSinceLast > 90 ? 'long' : r.daysSinceLast > 45 ? 'mid' : 'recent';
+      const fq = sbsFQ(r.lastDate);
+      gapMonth = r.lastDate.toLocaleString('en-US', { month: 'short' }) + " '" + String(r.lastDate.getFullYear()).slice(2);
+      gapQ     = `${fq.q} ${fq.fy}`;
+      gapSub   = `${gapMonth} · ${gapQ}`;
+    }
+    const rdot = SBS_REGION_COLORS[r.region] || '#888';
+    let regionTag = '';
+    if (r.regionTier === 'closest')       regionTag = '<span class="sbs-region-tag closest">CLOSEST</span>';
+    else if (r.regionTier === 'neighbor') regionTag = '<span class="sbs-region-tag neighbor">NEIGHBOR</span>';
+
+    // Expand panel content
+    let detailHtml = '';
+    if (r.lastBooking) {
+      const lb = r.lastBooking.b;
+      const tColor = TYPE_COLORS_DARK[lb.eventType] || '#888';
+      const upcoming = r.upcomingProg.map(({b, d}) => {
+        const ufq = sbsFQ(d);
+        return `<div class="sbs-d-up-row">
+          <span class="sbs-d-up-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})}</span>
+          <span class="sbs-d-up-q">${ufq.q} ${ufq.fy}</span>
+          <span class="sbs-d-up-type" style="color:${TYPE_COLORS_DARK[b.eventType] || '#888'}">${TYPE_LABEL_SBS[b.eventType] || b.eventType}</span>
+          <span class="sbs-d-up-name" title="${b.event.replace(/"/g,'&quot;')}">${b.event}</span>
+        </div>`;
+      }).join('');
+      detailHtml = `
+        <div class="sbs-detail">
+          <div class="sbs-detail-inner">
+            <div class="sbs-d-section">
+              <div class="sbs-d-label">Last Event for ${ctx.program}</div>
+              <div class="sbs-d-event">
+                <div class="sbs-d-event-name">${lb.event}</div>
+                <div class="sbs-d-event-meta">
+                  <span class="sbs-d-pill" style="color:${tColor};border-color:${tColor}55;background:${tColor}1a">${lb.eventType}</span>
+                  <span class="sbs-d-pill">${r.lastDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+                  <span class="sbs-d-pill">${gapQ}</span>
+                  ${lb.bookingId ? `<span class="sbs-d-pill mono">${lb.bookingId}</span>` : ''}
+                  <span class="sbs-d-pill">${lb.region}</span>
+                </div>
+              </div>
+            </div>
+            ${upcoming ? `
+              <div class="sbs-d-section">
+                <div class="sbs-d-label">Upcoming · ${ctx.program} (${r.upcomingProg.length})</div>
+                <div class="sbs-d-up-list">${upcoming}</div>
+              </div>` : ''}
+          </div>
+        </div>`;
+    } else {
+      detailHtml = `
+        <div class="sbs-detail">
+          <div class="sbs-detail-inner">
+            <div class="sbs-d-empty">No prior bookings for ${ctx.program}.</div>
+          </div>
+        </div>`;
+    }
+
+    return `<div class="sbs-row ${rowCls} tier-${r.regionTier}" onclick="toggleSbsRow(this)">
+      <div class="sbs-row-head">
+        <div class="sbs-rank">${rank}</div>
+        <div><div class="sbs-name">${r.name}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div></div>
+        <div class="sbs-gap-cell">
+          <div class="sbs-gap-val ${gapCls}">${gapVal}</div>
+          <div class="sbs-gap-sub">${gapSub}</div>
+        </div>
+        <div><span class="sbs-avail-badge ${r.isAvailable?'yes':'no'}">${r.isAvailable?'&#x2713; Available':'&#x2717; Booked'}</span></div>
+        <div class="sbs-qcount"><div class="sbs-qcount-val">${r.qCount}</div><div class="sbs-qcount-sub">${ctx.fq.q} bookings</div></div>
+        <div class="sbs-chev">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      ${detailHtml}
     </div>`;
   }
 
-  const inRows    = inRegion.map(buildRow).join('');
-  const divider   = otherReg.length
-    ? `<div class="sbs-divider"><div class="sbs-divider-line"></div><div class="sbs-divider-label">Other Regions</div><div class="sbs-divider-line"></div></div>`
+  function divider(label, count, accent) {
+    return `<div class="sbs-divider" style="--sd-accent:${accent}">
+      <div class="sbs-divider-line"></div>
+      <div class="sbs-divider-label">${label}<span class="sbs-divider-count">${count}</span></div>
+      <div class="sbs-divider-line"></div>
+    </div>`;
+  }
+
+  const closestRegionColor  = ctx.detectedReg ? (SBS_REGION_COLORS[ctx.detectedReg] || 'var(--accent)') : 'var(--accent)';
+  const closestRows  = closest.map(buildRow).join('');
+  const neighborRows = neighbor.length
+    ? divider(`Next Closest · Adjacent Regions`, neighbor.length, '#0ea5e9') + neighbor.map(buildRow).join('')
     : '';
-  const otherRows = otherReg.map(buildRow).join('');
+  const otherRows    = other.length
+    ? divider(`Other Regions`, other.length, 'var(--muted)') + other.map(buildRow).join('')
+    : '';
 
   const pastAll   = results.flatMap(r => r.lastDate ? [r.lastDate] : []).sort((a,b) => b-a);
   const available = results.filter(r => r.isAvailable).length;
 
+  // Quarter info for the date stats
+  const fqOf = d => d ? sbsFQ(d) : null;
+  const recentQ = fqOf(pastAll[0]);
+  const oldestQ = fqOf(pastAll[pastAll.length-1]);
+  const recentMeta = recentQ ? `${recentQ.q} ${recentQ.fy}` : '';
+  const oldestMeta = oldestQ ? `${oldestQ.q} ${oldestQ.fy}` : '';
+
   body.innerHTML = `
+    <div class="sbs-prog-summary sbs-prog-summary-top">
+      <div class="sbs-ps-head">
+        <h3 class="sbs-ps-title"><strong>${ctx.program}</strong> · Program Overview</h3>
+        <span class="sbs-ps-tag">Live</span>
+      </div>
+      <div class="sbs-ps-grid">
+        <div class="sbs-ps-card" style="--ps-c: #00FF63">
+          <div class="sbs-ps-card-label">Qualified Trainers</div>
+          <div class="sbs-ps-val">${results.length}</div>
+          <div class="sbs-ps-sub">trained &amp; ready for ${ctx.program}</div>
+        </div>
+        <div class="sbs-ps-card" style="--ps-c: #22d3ee">
+          <div class="sbs-ps-card-label">Available · This Weekend</div>
+          <div class="sbs-ps-val">${available}</div>
+          <div class="sbs-ps-sub">no conflict on Sat/Sun</div>
+        </div>
+        <div class="sbs-ps-card" style="--ps-c: #a855f7">
+          <div class="sbs-ps-card-label">Most Recent Booking</div>
+          <div class="sbs-ps-val is-date">${fmt(pastAll[0])}</div>
+          <div class="sbs-ps-sub">latest event on record</div>
+          ${recentMeta ? `<div class="sbs-ps-meta">${recentMeta}</div>` : ''}
+        </div>
+        <div class="sbs-ps-card" style="--ps-c: #f59e0b">
+          <div class="sbs-ps-card-label">Oldest On Record</div>
+          <div class="sbs-ps-val is-date">${fmt(pastAll[pastAll.length-1])}</div>
+          <div class="sbs-ps-sub">earliest tracked event</div>
+          ${oldestMeta ? `<div class="sbs-ps-meta">${oldestMeta}</div>` : ''}
+        </div>
+      </div>
+    </div>
     <div class="sbs-col-heads">
       <div class="sbs-ch">#</div><div class="sbs-ch">Trainer</div>
       <div class="sbs-ch">Last Booked</div>
       <div class="sbs-ch">Availability</div><div class="sbs-ch">Workload</div>
     </div>
-    <div class="sbs-list">${inRows}${divider}${otherRows}</div>
-    <div class="sbs-prog-summary">
-      <div class="sbs-ps-title">${ctx.program} — Program Overview</div>
-      <div class="sbs-ps-grid">
-        <div><div class="sbs-ps-val">${results.length}</div><div class="sbs-ps-sub">Qualified trainers</div></div>
-        <div><div class="sbs-ps-val">${available}</div><div class="sbs-ps-sub">Available this weekend</div></div>
-        <div><div class="sbs-ps-val">${fmt(pastAll[0])}</div><div class="sbs-ps-sub">Most recent booking</div></div>
-        <div><div class="sbs-ps-val">${fmt(pastAll[pastAll.length-1])}</div><div class="sbs-ps-sub">Oldest booking on record</div></div>
-      </div>
-    </div>`;
+    <div class="sbs-list">${closestRows}${neighborRows}${otherRows}</div>`;
 }
 </script>
 </body>

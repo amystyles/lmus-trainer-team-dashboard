@@ -933,6 +933,21 @@ const LEGACY_TO_MAP_REGION = {
     const legacy = b.region.slice('__pending__:'.length);
     b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
   });
+  // Trainer home region (authoritative for trainer display) — RC pins + most-common
+  const RC_HOME_REGION = {
+    'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
+    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
+    'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
+  };
+  window.TRAINER_HOME_REGION = {};
+  Object.keys(trainerPrimary).forEach(t => {
+    window.TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || trainerPrimary[t];
+  });
+  BOOKINGS.forEach(b => {
+    if (!window.TRAINER_HOME_REGION[b.trainer]) {
+      window.TRAINER_HOME_REGION[b.trainer] = RC_HOME_REGION[b.trainer] || b.region;
+    }
+  });
 })();
 
 const REGION_COLORS = {
@@ -1067,7 +1082,7 @@ function renderProfile() {
   const my = BOOKINGS.filter(b => b.trainer === t);
   if (!my.length) return;
 
-  const region = my[0].region;
+  const region = window.TRAINER_HOME_REGION?.[t] || my[0].region;
   const color = regionColor(region);
 
   // Hero
