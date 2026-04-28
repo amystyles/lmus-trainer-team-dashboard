@@ -320,6 +320,7 @@
   .drill-trainer-table tr:hover td { background: rgba(255,255,255,0.03); }
   .drill-trainer-table.hm-active tbody tr { opacity: 0.3; transition: opacity 0.1s; }
   .drill-trainer-table.hm-active tbody tr.hm-highlight { opacity: 1; background: rgba(0,255,99,0.05); }
+  .drill-trainer-table.hm-active tbody tr.drill-expand-row { opacity: 1; }
   .dtt-name { font-weight: 600; }
   .dtt-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; text-align: right; color: var(--lm-blue); }
   .dtt-num.zero { color: rgba(255,255,255,0.15); }
@@ -338,104 +339,120 @@
 
   .region-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1px solid; }
   .rb-east         { color: #16a34a; border-color: rgba(22,163,74,0.3); background: rgba(22,163,74,0.08); }
+  .rb-mideast      { color: #c026d3; border-color: rgba(192,38,211,0.3); background: rgba(192,38,211,0.08); }
+  .rb-midatlantic  { color: #0369a1; border-color: rgba(3,105,161,0.3); background: rgba(3,105,161,0.08); }
+  .rb-southeast    { color: #ea580c; border-color: rgba(234,88,12,0.3); background: rgba(234,88,12,0.08); }
   .rb-midwest      { color: #0284c7; border-color: rgba(2,132,199,0.3); background: rgba(2,132,199,0.08); }
-  .rb-southcentral { color: #dc2626; border-color: rgba(220,38,38,0.25); background: rgba(220,38,38,0.07); }
-  .rb-central      { color: #b45309; border-color: rgba(180,83,9,0.35); background: rgba(180,83,9,0.08); font-weight: 700; }
+  .rb-northcentral { color: #ca8a04; border-color: rgba(202,138,4,0.35); background: rgba(202,138,4,0.08); font-weight: 700; }
+  .rb-southcentral { color: #c2410c; border-color: rgba(194,65,12,0.3); background: rgba(194,65,12,0.07); }
   .rb-west         { color: #7c3aed; border-color: rgba(124,58,237,0.3); background: rgba(124,58,237,0.08); }
   body.dark-mode .rb-east         { color: var(--accent); border-color: rgba(0,255,99,0.35); background: rgba(0,255,99,0.08); }
-  body.dark-mode .rb-midwest      { color: #38bdf8; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
-  body.dark-mode .rb-southcentral { color: #fb7a5f; border-color: rgba(251,122,95,0.3); background: rgba(251,122,95,0.08); }
-  body.dark-mode .rb-central      { color: #fde047; border-color: rgba(253,224,71,0.4); background: rgba(253,224,71,0.08); }
+  body.dark-mode .rb-mideast      { color: #e879f9; border-color: rgba(232,121,249,0.3); background: rgba(232,121,249,0.08); }
+  body.dark-mode .rb-midatlantic  { color: #38bdf8; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
+  body.dark-mode .rb-southeast    { color: #fb923c; border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.08); }
+  body.dark-mode .rb-midwest      { color: #0ea5e9; border-color: rgba(14,165,233,0.3); background: rgba(14,165,233,0.08); }
+  body.dark-mode .rb-northcentral { color: #fde047; border-color: rgba(253,224,71,0.4); background: rgba(253,224,71,0.08); }
+  body.dark-mode .rb-southcentral { color: #FF623E; border-color: rgba(255,98,62,0.3); background: rgba(255,98,62,0.08); }
   body.dark-mode .rb-west         { color: #c084fc; border-color: rgba(192,132,252,0.3); background: rgba(192,132,252,0.08); }
 
-  /* ── PAGE TABS ───────────────────────────────────────────────── */
+  /* ── PAGE TABS — console switches ──────────────────────────── */
   .page-tabs {
-    display: flex; align-items: stretch; gap: 0;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border-mid);
-    margin-bottom: 20px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    background: transparent; margin-bottom: 22px;
     position: relative;
   }
-  .page-tabs::before {
-    content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
-    height: 1px; background: var(--border-mid); pointer-events: none;
-  }
-  body.dark-mode .page-tabs {
-    background: #0d0d10;
-    border-bottom-color: rgba(255,255,255,0.08);
-  }
   .page-tab {
-    flex: 1; background: none; border: none; cursor: pointer;
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
-    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-    color: var(--muted); padding: 0; border-radius: 0;
-    transition: color 0.18s, background 0.18s;
-    white-space: nowrap;
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    position: relative; overflow: hidden;
-    border-right: 1px solid var(--border);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; padding: 0; overflow: hidden; position: relative;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
   }
-  .page-tab:last-child { border-right: none; }
-  body.dark-mode .page-tab { border-right-color: rgba(255,255,255,0.06); }
-
+  body.dark-mode .page-tab {
+    background: #0d0d10; border-color: rgba(255,255,255,0.06);
+    box-shadow: 0 4px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
   .page-tab-inner {
-    display: flex; align-items: center; gap: 7px;
-    padding: 12px 20px 14px;
-    width: 100%; justify-content: center;
+    display: grid; grid-template-columns: auto 1fr auto;
+    align-items: center; gap: 14px;
+    padding: 14px 18px 16px;
   }
   .page-tab-index {
-    font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
-    letter-spacing: 0.5px; color: var(--muted); opacity: 0.6;
-    transition: opacity 0.18s, color 0.18s;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    font-size: 26px; line-height: 1; letter-spacing: -0.5px;
+    color: var(--border-mid); transition: color 0.2s;
+    font-variant-numeric: tabular-nums;
+  }
+  body.dark-mode .page-tab-index { color: rgba(255,255,255,0.14); }
+  .page-tab-label {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); transition: color 0.2s, letter-spacing 0.25s;
+    text-align: left; white-space: nowrap;
+  }
+  .page-tab-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border-mid); transition: all 0.2s;
     flex-shrink: 0;
   }
-  .page-tab-label { transition: letter-spacing 0.25s; }
-  .page-tab:hover { color: var(--text); background: var(--bg-sunken); }
-  body.dark-mode .page-tab:hover { background: rgba(255,255,255,0.03); }
-  .page-tab:hover .page-tab-label { letter-spacing: 3.5px; }
-  .page-tab:hover .page-tab-index { opacity: 1; }
+  body.dark-mode .page-tab-dot { background: rgba(255,255,255,0.18); }
+  .page-tab:hover { border-color: var(--border-mid); transform: translateY(-1px); }
+  body.dark-mode .page-tab:hover { border-color: rgba(255,255,255,0.14); background: #111115; }
+  .page-tab:hover .page-tab-label { color: var(--text); letter-spacing: 3px; }
+  .page-tab:hover .page-tab-index { color: var(--ink-mid); }
 
-  /* active indicator — thick top-edge stroke */
-  .page-tab::after {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 3px;
+  /* side accent stripe — left edge ribbon for active state */
+  .page-tab::before {
+    content: ''; position: absolute; top: 8px; bottom: 8px; left: 0;
+    width: 3px; border-radius: 0 3px 3px 0;
     background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
-    border-radius: 0 0 2px 2px;
+    transform: scaleY(0);
+    transform-origin: center;
+    transition: transform 0.32s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 0 10px rgba(0,255,99,0.5);
   }
-  .page-tab.active::after { transform: scaleX(1); }
+  .page-tab.active::before { transform: scaleY(1); }
+
+  /* diagonal scanline corner badge for active */
+  .page-tab::after {
+    content: ''; position: absolute; top: 0; right: 0; width: 28px; height: 28px;
+    background: linear-gradient(135deg, transparent 50%, var(--accent) 50%);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .page-tab.active::after { opacity: 0.18; }
+
   .page-tab.active {
-    color: var(--accent);
-    background: var(--accent-soft);
+    border-color: rgba(0,255,99,0.45);
+    background: linear-gradient(180deg, rgba(0,255,99,0.06) 0%, transparent 60%), var(--bg);
+    box-shadow: 0 0 0 1px rgba(0,255,99,0.18), 0 8px 28px rgba(0,255,99,0.08);
   }
   body.dark-mode .page-tab.active {
-    color: var(--accent);
-    background: rgba(0,255,99,0.06);
+    background: linear-gradient(180deg, rgba(0,255,99,0.08) 0%, rgba(0,255,99,0.02) 60%), #0d0d10;
+    border-color: rgba(0,255,99,0.4);
+    box-shadow: 0 0 0 1px rgba(0,255,99,0.18), 0 12px 40px rgba(0,255,99,0.12), inset 0 1px 0 rgba(0,255,99,0.08);
   }
-  .page-tab.active .page-tab-index { color: var(--accent); opacity: 0.7; }
-  .page-tab-dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: var(--accent); opacity: 0;
-    transition: opacity 0.18s;
-    flex-shrink: 0;
-    box-shadow: 0 0 6px var(--accent);
+  .page-tab.active .page-tab-label { color: var(--accent); letter-spacing: 3px; }
+  .page-tab.active .page-tab-index { color: var(--accent); opacity: 0.85; }
+  .page-tab.active .page-tab-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,255,99,0.18), 0 0 14px var(--accent);
+    animation: tabPulse 1.6s ease-in-out infinite;
   }
-  .page-tab.active .page-tab-dot { opacity: 1; }
+  @keyframes tabPulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(0,255,99,0.18), 0 0 14px var(--accent); }
+    50%      { box-shadow: 0 0 0 5px rgba(0,255,99,0.08), 0 0 20px var(--accent); }
+  }
   .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
+  .tab-panel.active { display: block; animation: tabReveal 0.35s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes tabReveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   /* ── CXM / CXS DIRECTORY ────────────────────────────────────── */
-  .dir-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-  .dir-region { padding: 20px 24px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .dir-region:nth-child(4n) { border-right: none; }
-  .dir-region:nth-last-child(-n+4) { border-bottom: none; }
+  .dir-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 20px 24px 24px; }
+  .dir-region { padding: 20px; border: 1px solid var(--border); border-radius: 10px; }
   .dir-region-name { font-size: 9px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
   .dir-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .dir-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; color: var(--ink-mid); border-bottom: 1px solid var(--border); }
-  .dir-row:last-child { border-bottom: none; }
   .dir-role { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 6px; border-radius: 20px; flex-shrink: 0; }
   .dir-role-cxm { background: rgba(37,99,235,0.08); color: #2563eb; border: 1px solid rgba(37,99,235,0.2); }
   .dir-role-cxs { background: rgba(22,163,74,0.08); color: #16a34a; border: 1px solid rgba(22,163,74,0.22); }
@@ -443,46 +460,74 @@
   body.dark-mode .dir-role-cxm { background: rgba(96,165,250,0.1);  color: #60a5fa; border-color: rgba(96,165,250,0.25); }
   body.dark-mode .dir-role-cxs { background: rgba(0,255,99,0.1);   color: var(--accent); border-color: rgba(0,255,99,0.25); }
   body.dark-mode .dir-role-rc  { background: rgba(251,146,60,0.12); color: #fb923c; border-color: rgba(251,146,60,0.3); }
-  .dir-all { padding: 20px 24px; grid-column: 1 / -1; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
-  .dir-all-label { font-size: 9px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); }
+  .dir-trainers-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .dir-trainers-label { font-size: 8px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+  .dir-trainer-badge { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; color: var(--text); background: var(--bg-subtle); padding: 0 6px; border-radius: 10px; border: 1px solid var(--border); }
+  .dir-trainers-list { display: flex; flex-direction: column; gap: 2px; }
+  .dir-trainer-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; border-radius: 6px; background: var(--bg-subtle); transition: background 0.1s; }
+  .dir-trainer-row:hover { background: var(--bg-sunken); }
+  .dir-trainer-row-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .dir-trainer-row-n { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; color: var(--muted); }
+  body.dark-mode .dir-trainer-row { background: rgba(255,255,255,0.03); }
+  body.dark-mode .dir-trainer-row:hover { background: rgba(255,255,255,0.06); }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg-subtle); }
   ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
 
   /* ── OPS QUARTER INTELLIGENCE STRIP ─────────────────────────── */
-  .ops-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+  .ops-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
   .ops-metric {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px 22px; position: relative; overflow: hidden;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px; position: relative; overflow: hidden;
     box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   }
-  .ops-metric:hover { border-color: var(--border-mid); box-shadow: 0 6px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07); }
+  .ops-metric:hover { border-color: var(--border-mid); box-shadow: 0 8px 36px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07); transform: translateY(-1px); }
   .ops-metric::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: var(--om-color, var(--accent)); opacity: 0.8;
+    background: var(--om-color, var(--accent)); opacity: 0.85;
+  }
+  /* corner sigil */
+  .ops-metric::after {
+    content: ''; position: absolute; top: 0; right: 0; width: 38px; height: 38px;
+    background: linear-gradient(135deg, transparent 50%, var(--om-color, var(--accent)) 50%);
+    opacity: 0.10; pointer-events: none;
   }
   .ops-metric-label {
     font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
-    letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ops-metric-label::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--om-color, var(--accent));
+    box-shadow: 0 0 8px var(--om-color, var(--accent));
   }
   .ops-metric-val {
     font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
-    font-size: 44px; line-height: 1; letter-spacing: -1px;
+    font-size: 64px; line-height: 0.9; letter-spacing: -2px;
     color: var(--om-color, #fff);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 30px color-mix(in srgb, var(--om-color, var(--accent)) 25%, transparent);
   }
   .ops-metric-sub {
     font-family: 'Rajdhani', sans-serif; font-size: 13px; color: var(--ink-mid);
     margin-top: 5px; font-weight: 500;
   }
-  .ops-metric-delta {
-    display: inline-flex; align-items: center; gap: 4px; margin-top: 10px;
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px;
-    letter-spacing: 0.5px; padding: 3px 9px; border-radius: 5px;
+  .ops-metric-hero-row {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
   }
-  .ops-metric-delta.up   { background: rgba(0,255,99,0.1);  color: var(--accent); border: 1px solid rgba(0,255,99,0.25); }
-  .ops-metric-delta.dn   { background: rgba(255,98,62,0.1); color: var(--accent2); border: 1px solid rgba(255,98,62,0.25); }
+  .ops-metric-hero-row .ops-metric-delta { margin-top: 0; margin-bottom: 8px; }
+  .ops-metric-delta {
+    display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px;
+    letter-spacing: 1px; padding: 5px 11px; border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .ops-metric-delta.up   { background: rgba(0,255,99,0.12);  color: var(--accent); border: 1px solid rgba(0,255,99,0.3); box-shadow: 0 0 14px rgba(0,255,99,0.12); }
+  .ops-metric-delta.dn   { background: rgba(255,98,62,0.12); color: var(--accent2); border: 1px solid rgba(255,98,62,0.3); box-shadow: 0 0 14px rgba(255,98,62,0.1); }
   .ops-metric-delta.flat { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.08); }
 
   .ops-type-bar { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -538,18 +583,78 @@
     line-height: 1; margin-left: auto;
   }
 
-  /* Q breakdown inside Total Bookings card */
-  .ops-q-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
-  .ops-q-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 8px; background: var(--bg-sunken); border: 1px solid var(--border); }
-  .ops-q-label { font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-  .ops-q-val { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; line-height: 1; color: var(--text); }
-  .ops-q-cell.active { background: var(--bg-dark); border-color: var(--bg-dark); }
-  .ops-q-cell.active .ops-q-label { color: var(--muted); }
+  /* Q breakdown inside Total Bookings card — fiscal year tracker */
+  .ops-q-track {
+    margin-top: 18px; padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    position: relative;
+  }
+  .ops-q-track-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .ops-q-track-label .ops-q-fy {
+    color: var(--accent); font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    letter-spacing: 1.5px; font-size: 11px;
+  }
+  .ops-q-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    position: relative;
+  }
+  /* connecting rail behind the cells */
+  .ops-q-grid::before {
+    content: ''; position: absolute; left: 8%; right: 8%; top: 18px;
+    height: 1px; background: var(--border); z-index: 0;
+  }
+  .ops-q-cell {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+    padding: 10px 8px 12px; border-radius: 10px;
+    background: var(--bg-sunken); border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .ops-q-node {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--bg-sunken); border: 2px solid var(--border-mid);
+    margin: 0 auto;
+    transition: all 0.25s;
+  }
+  .ops-q-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 800;
+    letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted);
+    text-align: center; line-height: 1;
+  }
+  .ops-q-val {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    font-size: 26px; line-height: 1; color: var(--text);
+    text-align: center; letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ops-q-cell.active {
+    background: linear-gradient(180deg, rgba(0,255,99,0.10) 0%, transparent 100%), var(--bg-dark);
+    border-color: rgba(0,255,99,0.4);
+    box-shadow: 0 0 0 1px rgba(0,255,99,0.18), 0 6px 20px rgba(0,255,99,0.12);
+  }
+  .ops-q-cell.active .ops-q-node {
+    background: var(--accent); border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(0,255,99,0.18), 0 0 12px var(--accent);
+    animation: tabPulse 1.6s ease-in-out infinite;
+  }
+  .ops-q-cell.active .ops-q-label { color: var(--accent); }
   .ops-q-cell.active .ops-q-val { color: var(--accent); }
-  body.dark-mode .ops-q-cell { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.07); }
-  body.dark-mode .ops-q-cell.active { background: rgba(0,255,99,0.08); border-color: rgba(0,255,99,0.3); }
-  .ops-q-cell.unplanned { opacity: 0.4; }
-  .ops-q-cell.unplanned .ops-q-val { color: var(--muted); font-size: 11px; }
+  body.dark-mode .ops-q-cell { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); }
+  body.dark-mode .ops-q-cell.active {
+    background: linear-gradient(180deg, rgba(0,255,99,0.10) 0%, rgba(0,255,99,0.02) 100%);
+    border-color: rgba(0,255,99,0.4);
+  }
+  body.dark-mode .ops-q-grid::before { background: rgba(255,255,255,0.08); }
+  .ops-q-cell.unplanned { opacity: 0.5; background: transparent; border-style: dashed; }
+  .ops-q-cell.unplanned .ops-q-val {
+    color: var(--border-mid); font-size: 14px; font-weight: 700;
+    letter-spacing: 2px;
+  }
+  body.dark-mode .ops-q-cell.unplanned .ops-q-val { color: rgba(255,255,255,0.18); }
 
   /* ── TRAINING BREAKDOWN PANEL ───────────────────────────────── */
   .breakdown-strip {
@@ -832,6 +937,7 @@
       <span class="upload-timestamp" id="upload-timestamp"></span>
     </div>
     <input type="file" id="csv-file" accept=".csv" style="display:none" />
+    <a href="trainer.html" class="back-link">Trainer Login</a>
     <a href="map.html" class="back-link">Trainer Map</a>
     <a href="index.html" class="back-link">← Dashboard</a>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
@@ -969,23 +1075,64 @@
 const ADMIN_PASSWORD = 'lmus-tap-2026';
 const AUTH_KEY = 'lmus_admin_auth';
 
+// ── 8-REGION MAP MAPPING (matches map.html) ───────────────────
+const STATE_TO_MAP_REGION = {
+  WA:'West Coast',OR:'West Coast',CA:'West Coast',NV:'West Coast',ID:'West Coast',AZ:'West Coast',UT:'West Coast',AK:'West Coast',HI:'West Coast',
+  NM:'South Central',TX:'South Central',OK:'South Central',AR:'South Central',LA:'South Central',
+  MT:'North Central',WY:'North Central',CO:'North Central',ND:'North Central',SD:'North Central',NE:'North Central',IA:'North Central',MN:'North Central',
+  WI:'Midwest',MI:'Midwest',IL:'Midwest',IN:'Midwest',OH:'Midwest',MO:'Midwest',KS:'Midwest',
+  ME:'Mid East',NH:'Mid East',VT:'Mid East',MA:'Mid East',CT:'Mid East',RI:'Mid East',NY:'Mid East',NJ:'Mid East',PA:'Mid East',
+  VA:'East Coast',NC:'East Coast',SC:'East Coast',
+  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',
+  FL:'Southeast',GA:'Southeast',AL:'Southeast',MS:'Southeast',TN:'Southeast',KY:'Southeast'
+};
+// Fallback for trainers whose only bookings are online (no state in event name)
+const LEGACY_TO_MAP_REGION = {
+  'East Coast':'Mid East','Mid West':'Midwest','South Central':'South Central',
+  'Central':'North Central','West Coast':'West Coast'
+};
+
+function remapBookingsToMapRegions() {
+  // Pass 1: parse state from event name (e.g. "...Littleton, CO")
+  BOOKINGS.forEach(b => {
+    const m = (b.event || '').match(/,\s*([A-Z]{2})\b/);
+    if (m && STATE_TO_MAP_REGION[m[1]]) b.region = STATE_TO_MAP_REGION[m[1]];
+    else b.region = '__pending__:' + b.region;
+  });
+  // Pass 2: derive each trainer's primary region from their resolved in-person bookings
+  const trainerPrimary = {};
+  BOOKINGS.forEach(b => {
+    if (b.region.startsWith('__pending__:')) return;
+    const c = (trainerPrimary[b.trainer] = trainerPrimary[b.trainer] || {});
+    c[b.region] = (c[b.region] || 0) + 1;
+  });
+  Object.keys(trainerPrimary).forEach(t => {
+    trainerPrimary[t] = Object.entries(trainerPrimary[t]).sort((a, b) => b[1] - a[1])[0][0];
+  });
+  // Pass 3: resolve online/unparseable using trainer primary, then legacy fallback
+  BOOKINGS.forEach(b => {
+    if (!b.region.startsWith('__pending__:')) return;
+    const legacy = b.region.slice('__pending__:'.length);
+    b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
+  });
+}
+
 // ── REGIONAL DIRECTORY DATA ───────────────────────────────────
 const REGION_COLORS = {
   'West Coast':'#a855f7','South Central':'#FF623E','North Central':'#FACC15',
   'Midwest':'#0ea5e9','Mid East':'#e879f9','East Coast':'#00FF63',
-  'Mid Atlantic':'#38bdf8','Southeast':'#fb923c',
+  'Mid Atlantic':'#38bdf8','Southeast':'#fb923c'
 };
 const CXM_CXS = [
-  { region:'West Coast',    cxm:'Jessica Lopez',          cxs:'Claire Martin',     rc:'Karen Torrell' },
-  { region:'South Central', cxm:'Kelsey Gutenson',        cxs:'Claire Martin',     rc:'Sarah Gruba' },
-  { region:'North Central', cxm:'Jeni Morrison Thompson', cxs:'Cassandra Testyon', rc:'Trae Tripoli' },
-  { region:'Midwest',       cxm:'Alice Apfelbach',        cxs:'Cassandra Testyon', rc:'Dan Maroun' },
-  { region:'Mid East',      cxm:'Jessica Young',          cxs:'Chelsea Savage',    rc:'Justine Collado' },
   { region:'East Coast',    cxm:'Shelby Saylor',          cxs:'Chelsea Savage',    rc:'Jaime Terrell' },
+  { region:'Mid East',      cxm:'Jessica Young',          cxs:'Chelsea Savage',    rc:'Justine Collado' },
   { region:'Mid Atlantic',  cxm:'Herschel Elder',         cxs:'Alison Salermo',    rc:'Keri Ball' },
   { region:'Southeast',     cxm:'Adam Farino',            cxs:'Alison Salermo',    rc:'Stacy Dee Rathborne' },
+  { region:'Midwest',       cxm:'Alice Apfelbach',        cxs:'Cassandra Testyon', rc:'Dan Maroun' },
+  { region:'North Central', cxm:'Jeni Morrison Thompson', cxs:'Cassandra Testyon', rc:'Trae Tripoli' },
+  { region:'South Central', cxm:'Kelsey Gutenson',        cxs:'Claire Martin',     rc:'Sarah Gruba' },
+  { region:'West Coast',    cxm:'Jessica Lopez',          cxs:'Claire Martin',     rc:'Karen Torrell' },
 ];
-const ADDITIONAL_COACHES = ['Andrew Aleman', 'Heather Biddle'];
 
 // ── TAB NAVIGATION ──────────────────────────────────────────────
 function showTab(tab) {
@@ -997,23 +1144,35 @@ function showTab(tab) {
 
 function renderDirectory() {
   const grid = document.getElementById('dirGrid');
+  const regionTrainers = {};
+  BOOKINGS.forEach(b => {
+    if (!regionTrainers[b.region]) regionTrainers[b.region] = {};
+    regionTrainers[b.region][b.trainer] = (regionTrainers[b.region][b.trainer] || 0) + 1;
+  });
   grid.innerHTML = CXM_CXS.map(({ region, cxm, cxs, rc }) => {
     const color = REGION_COLORS[region] || '#888';
+    const trainers = Object.entries(regionTrainers[region] || {}).sort((a, b) => b[1] - a[1]);
+    const trainerRows = trainers.map(([name, n]) =>
+      `<div class="dir-trainer-row">
+        <span class="dir-trainer-row-name">${name}</span>
+        <span class="dir-trainer-row-n">${n}</span>
+      </div>`
+    ).join('');
     return `
       <div class="dir-region">
         <div class="dir-region-name">
-          <span class="dir-dot" style="background:${color};"></span>
-          <span style="color:${color};">${region}</span>
+          <span class="dir-dot" style="background:${color}"></span>
+          <span style="color:${color}">${region}</span>
         </div>
         <div class="dir-row"><span class="dir-role dir-role-cxm">CXM</span> ${cxm}</div>
         <div class="dir-row"><span class="dir-role dir-role-cxs">CXS</span> ${cxs}</div>
         <div class="dir-row"><span class="dir-role dir-role-rc">RC</span> ${rc}</div>
+        <div class="dir-trainers-section">
+          <div class="dir-trainers-label">Trainer Team <span class="dir-trainer-badge">${trainers.length}</span></div>
+          <div class="dir-trainers-list">${trainerRows}</div>
+        </div>
       </div>`;
-  }).join('') + `
-    <div class="dir-all">
-      <span class="dir-all-label">All Regions</span>
-      ${ADDITIONAL_COACHES.map(c => `<span style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-mid);"><span class="dir-role dir-role-rc">RC</span>${c}</span>`).join('')}
-    </div>`;
+  }).join('');
 }
 
 // ── INTELLIGENCE LOOKUPS (must be before showApp) ────────────────────────
@@ -1028,7 +1187,7 @@ var PROG_COLORS = {
   'LES MILLS UNITED':'#6366f1','LES MILLS THRIVE':'#84cc16',
   'LES MILLS CONQUER':'#7c3aed','LES MILLS FUNCTIONAL STRENGTH':'#78716c',
 };
-var INTEL_RC = {'East Coast':'rb-east','Mid West':'rb-midwest','South Central':'rb-southcentral','Central':'rb-central','West Coast':'rb-west'};
+var INTEL_RC = {'East Coast':'rb-east','Mid East':'rb-mideast','Mid Atlantic':'rb-midatlantic','Southeast':'rb-southeast','Midwest':'rb-midwest','North Central':'rb-northcentral','South Central':'rb-southcentral','West Coast':'rb-west'};
 var intelData = null;
 var intelSort = 'tap';
 var intelWired = false;
@@ -1075,10 +1234,6 @@ function toggleTheme() {
     if (icon)  icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   }
 })();
-
-if (localStorage.getItem(AUTH_KEY) === '1') {
-  showApp();
-}
 
 document.getElementById('pw-btn').addEventListener('click', () => {
   const val = document.getElementById('pw-input').value;
@@ -1143,6 +1298,11 @@ function loadStoredBookings() {
 }
 
 loadStoredBookings();
+remapBookingsToMapRegions();
+
+if (localStorage.getItem(AUTH_KEY) === '1') {
+  showApp();
+}
 
 document.getElementById('upload-btn').addEventListener('click', () => {
   document.getElementById('csv-file').click();
@@ -1156,6 +1316,7 @@ document.getElementById('csv-file').addEventListener('change', function() {
     const parsed = parseCSV(e.target.result);
     if (parsed) {
       BOOKINGS = parsed;
+      remapBookingsToMapRegions();
       const ts = new Date().toISOString();
       localStorage.setItem(BOOKINGS_KEY, e.target.result);
       localStorage.setItem(BOOKINGS_TS_KEY, ts);
@@ -1196,7 +1357,7 @@ function renderProgPills() {
 }
 
 function renderDrillRegionFilters() {
-  const regions = ['All','East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const regions = ['All','East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast'];
   document.getElementById('drillRegionFilters').innerHTML = state.selectedPrograms.length ? regions.map(r =>
     `<button class="drf-btn${state.drillRegion===r?' active':''}" onclick="selectDrillRegion('${r}')">${r}</button>`
   ).join('') : '';
@@ -1205,11 +1366,16 @@ function renderDrillRegionFilters() {
 function selectProgram(prog) {
   state.selectedPrograms = state.selectedPrograms[0] === prog ? [] : [prog];
   renderProgPills();
+  renderTrainingBreakdown();
+  updateTotalsBadge();
   refreshDrill();
 }
 
 function selectDrillRegion(r) {
   state.drillRegion = r;
+  bdState.region = (r === 'All') ? 'all' : r;
+  renderTrainingBreakdown();
+  updateTotalsBadge();
   renderDrillRegionFilters();
   refreshDrill();
 }
@@ -1244,9 +1410,9 @@ function renderDrill(filtered) {
     return;
   }
 
-  const regions = ['East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
-  const regionColors = ['#00FF63','#0ea5e9','#FF623E','#FACC15','#a855f7','#facc15','#f472b6','#2dd4bf','#fb923c'];
-  const RC = {'East Coast':'rb-east','Mid West':'rb-midwest','South Central':'rb-southcentral','Central':'rb-central','West Coast':'rb-west','North Central':'rb-northcentral','Mid East':'rb-mideast','Mid Atlantic':'rb-midatlantic','Southeast':'rb-southeast'};
+  const regions = ['East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast'];
+  const regionColors = ['#00FF63','#e879f9','#38bdf8','#fb923c','#0ea5e9','#FACC15','#FF623E','#a855f7'];
+  const RC = {'East Coast':'rb-east','Mid East':'rb-mideast','Mid Atlantic':'rb-midatlantic','Southeast':'rb-southeast','Midwest':'rb-midwest','North Central':'rb-northcentral','South Central':'rb-southcentral','West Coast':'rb-west'};
 
   const trainerMap = {};
   progData.forEach(b => {
@@ -1309,14 +1475,14 @@ function renderDrill(filtered) {
           ${hmMonths.map(m => `<div class="hm-col-head">${m.label}<br><span style="font-size:7px;opacity:0.6">'${String(m.fy).slice(2)}</span></div>`).join('')}
           ${regions.map((r,ri) => {
             const rColor = regionColors[ri];
-            const rgbMap = ['0,255,99','14,165,233','215,52,28','250,204,21','168,85,247'];
+            const rgbMap = ['0,255,99','232,121,249','56,189,248','251,146,60','14,165,233','250,204,21','255,98,62','168,85,247'];
             return `<div class="hm-row-head" style="color:${rColor};font-weight:800;">${r}</div>
             ${hmMonths.map(m => {
               const cell = hmData[r][m.key];
               const cnt = cell.total, dCnt = cell.dual;
               const intensity = cnt / hmMax;
               const a = Math.max(0.32, 0.28 + intensity * 0.68);
-              const lightRegion = ri === 3; // Central (yellow) needs dark text at high intensity
+              const lightRegion = ri === 5; // North Central (yellow) needs dark text at high intensity
               const style = cnt ? `background:rgba(${rgbMap[ri]},${a});color:${intensity>0.42?(lightRegion?'#1a1a1a':'#fff'):rColor}` : '';
               const trainersJson = JSON.stringify([...cell.trainers]).replace(/"/g,'&quot;');
               return `<div class="hm-cell${cnt?'':' hm-cell-empty'}" style="${style}" data-hmkey="${r}|${m.key}" data-total="${cnt}" data-dual="${dCnt}" data-label="${r} · ${m.label} '${String(m.fy).slice(2)}" data-trainers="${trainersJson}" title="${r} · ${m.label}: ${cnt} booking${cnt!==1?'s':''}${dCnt?` · ${dCnt} dual`:''}">${cnt||'·'}</div>`;
@@ -1648,8 +1814,8 @@ function computeOpsMetrics() {
   const upcomingB = allB.filter(b => { const d = new Date(b.startDate); return !isNaN(d) && d > today; });
   const activeTrainers = new Set(allB.map(b => b.trainer)).size;
 
-  const RCOLORS = { 'East Coast':'#00FF63','Mid West':'#38bdf8','South Central':'#fb7a5f','Central':'#fde047','West Coast':'#c084fc','North Central':'#facc15','Mid East':'#f472b6','Mid Atlantic':'#2dd4bf','Southeast':'#fb923c' };
-  const regions = ['East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const RCOLORS = { 'East Coast':'#00FF63','Mid East':'#e879f9','Mid Atlantic':'#38bdf8','Southeast':'#fb923c','Midwest':'#0ea5e9','North Central':'#FACC15','South Central':'#FF623E','West Coast':'#a855f7' };
+  const regions = ['East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast'];
   const regionVols = regions.map(r => ({ r, n: allB.filter(b => b.region === r).length, color: RCOLORS[r] }))
     .sort((a, b) => a.n - b.n);
 
@@ -1687,14 +1853,20 @@ function renderOpsStrip() {
   const fy27 = BOOKINGS.filter(b => b.fiscalYear === 'FY2027');
   const qTotals27 = { Q1: 0, Q2: null, Q3: null, Q4: null };
   fy27.forEach(b => { if (b.fiscalQuarter === 'Q1') qTotals27.Q1++; });
-  const qGrid = Object.entries(qTotals27).map(([q, n]) => {
+  const qCells = Object.entries(qTotals27).map(([q, n]) => {
     const isActive = q === 'Q1';
     const isUnplanned = n === null;
     return `<div class="ops-q-cell${isActive ? ' active' : ''}${isUnplanned ? ' unplanned' : ''}">
+       <span class="ops-q-node"></span>
        <span class="ops-q-label">${q}</span>
        <span class="ops-q-val">${isUnplanned ? '—' : n}</span>
      </div>`;
   }).join('');
+  const qGrid = `
+    <div class="ops-q-track">
+      <div class="ops-q-track-label"><span>Fiscal Year Tracker</span><span class="ops-q-fy">FY2027</span></div>
+      <div class="ops-q-grid">${qCells}</div>
+    </div>`;
 
   const upcomingRows = Object.entries(m.upcomingByType).filter(([,n]) => n > 0).map(([k, n]) =>
     `<div class="ops-upcoming-item">
@@ -1718,11 +1890,13 @@ function renderOpsStrip() {
   }).join('');
 
   strip.innerHTML = `
-    <div class="ops-metric" style="--om-color:var(--accent)">
+    <div class="ops-metric ops-metric-hero" style="--om-color:var(--accent)">
       <div class="ops-metric-label">Total Bookings</div>
-      <div class="ops-metric-val">${m.total}</div>
-      ${deltaHtml}
-      <div class="ops-q-grid">${qGrid}</div>
+      <div class="ops-metric-hero-row">
+        <div class="ops-metric-val">${m.total}</div>
+        ${deltaHtml}
+      </div>
+      ${qGrid}
     </div>
     <div class="ops-metric" style="--om-color:var(--lm-teal)">
       <div class="ops-metric-label">Confirmed Pipeline</div>
@@ -1748,31 +1922,29 @@ function renderTrainingBreakdown() {
   const TYPE_COLORS_DARK = { IT: '#22d3ee', AT: '#f59e0b', DT: '#a855f7', WS: '#ff8a6e' };
   const REGION_COLORS_LIGHT = {
     'East Coast':    '#16a34a',
-    'Mid West':      '#0284c7',
-    'South Central': '#dc2626',
-    'Central':       '#b45309',
+    'Mid East':      '#c026d3',
+    'Mid Atlantic':  '#0369a1',
+    'Southeast':     '#ea580c',
+    'Midwest':       '#0284c7',
+    'North Central': '#ca8a04',
+    'South Central': '#c2410c',
     'West Coast':    '#7c3aed',
-    'North Central': '#a16207',
-    'Mid East':      '#be185d',
-    'Mid Atlantic':  '#0d9488',
-    'Southeast':     '#c2410c',
   };
   const REGION_COLORS_DARK = {
     'East Coast':    '#00FF63',
-    'Mid West':      '#38bdf8',
-    'South Central': '#fb7a5f',
-    'Central':       '#fde047',
-    'West Coast':    '#c084fc',
-    'North Central': '#facc15',
-    'Mid East':      '#f472b6',
-    'Mid Atlantic':  '#2dd4bf',
+    'Mid East':      '#e879f9',
+    'Mid Atlantic':  '#38bdf8',
     'Southeast':     '#fb923c',
+    'Midwest':       '#0ea5e9',
+    'North Central': '#FACC15',
+    'South Central': '#FF623E',
+    'West Coast':    '#a855f7',
   };
 
   const isDark = document.body.classList.contains('dark-mode');
   const RC = isDark ? REGION_COLORS_DARK : REGION_COLORS_LIGHT;
 
-  const regions = ['East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const regions = ['East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast'];
 
   const FULL_TYPES = [
     { key: 'all',                  label: 'All',               match: null },
@@ -1801,7 +1973,8 @@ function renderTrainingBreakdown() {
       const qMatch      = bdState.q      === 'all' || b.fiscalQuarter === bdState.q;
       const fyMatch     = bdState.fy     === 'all' || b.fiscalYear    === bdState.fy;
       const regionMatch = bdState.region === 'all' || b.region        === bdState.region;
-      return typeMatch && qMatch && fyMatch && regionMatch;
+      const progMatch   = !state.selectedPrograms.length || state.selectedPrograms.includes(b.program);
+      return typeMatch && qMatch && fyMatch && regionMatch && progMatch;
     });
   }
 
@@ -1829,7 +2002,7 @@ function renderTrainingBreakdown() {
     return `<button class="bd-btn${bdState.fy===fy?' active':''}" onclick="setBdFy('${fy}')">${label}</button>`;
   }).join('');
 
-  const REGION_LIST = ['all','East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const REGION_LIST = ['all','East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast'];
   const regionButtons = REGION_LIST.map(r => {
     const label = r === 'all' ? 'All' : r;
     const col = r !== 'all' ? RC[r] : null;
@@ -1894,7 +2067,14 @@ function updateTotalsBadge() {
 window.setBdType   = function(t) { bdState.type   = t; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
 window.setBdQ      = function(q) { bdState.q      = q; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
 window.setBdFy     = function(f) { bdState.fy     = f; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
-window.setBdRegion = function(r) { bdState.region = r; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
+window.setBdRegion = function(r) {
+  bdState.region = r;
+  state.drillRegion = (r === 'all') ? 'All' : r;
+  renderTrainingBreakdown();
+  updateTotalsBadge();
+  renderDrillRegionFilters();
+  if (state.selectedPrograms.length) refreshDrill();
+};
 
 function wireFilter(id, key) {
   document.getElementById(id).addEventListener('click', e => {
@@ -1942,19 +2122,11 @@ wireFilter('regionFilters','region');
    SMART BOOKING SUGGESTER
 ═══════════════════════════════════════════════ */
 const SBS_REGION_COLORS = {
-  'East Coast':'#00FF63','Mid West':'#0ea5e9','South Central':'#FF623E','Central':'#FACC15','West Coast':'#a855f7'
+  'West Coast':'#a855f7','South Central':'#FF623E','North Central':'#FACC15',
+  'Midwest':'#0ea5e9','Mid East':'#e879f9','East Coast':'#00FF63',
+  'Mid Atlantic':'#38bdf8','Southeast':'#fb923c'
 };
-const SBS_STATE_REGION = {
-  ME:'East Coast',NH:'East Coast',VT:'East Coast',MA:'East Coast',RI:'East Coast',CT:'East Coast',
-  NY:'East Coast',NJ:'East Coast',PA:'East Coast',DE:'East Coast',MD:'East Coast',DC:'East Coast',
-  VA:'East Coast',WV:'East Coast',NC:'East Coast',SC:'East Coast',GA:'East Coast',FL:'East Coast',
-  OH:'Mid West',MI:'Mid West',IN:'Mid West',IL:'Mid West',WI:'Mid West',MN:'Mid West',
-  IA:'Mid West',MO:'Mid West',ND:'Mid West',SD:'Mid West',NE:'Mid West',KS:'Mid West',
-  TX:'South Central',OK:'South Central',AR:'South Central',LA:'South Central',
-  MS:'South Central',AL:'South Central',TN:'South Central',KY:'South Central',
-  CO:'Central',WY:'Central',MT:'Central',ID:'Central',UT:'Central',NV:'Central',AZ:'Central',NM:'Central',
-  WA:'West Coast',OR:'West Coast',CA:'West Coast',AK:'West Coast',HI:'West Coast'
-};
+const SBS_STATE_REGION = Object.assign({}, STATE_TO_MAP_REGION, { DC:'Mid Atlantic' });
 
 const RC_NAMES = new Set([
   'Karen Torrell','Sarah Gruba','Trae Tripoli','Dan Maroun',
@@ -1976,7 +2148,7 @@ function sbsDetectRegion() {
     }
   }
   const lower = str.toLowerCase();
-  for (const r of ['East Coast','Mid West','South Central','Central','West Coast']) {
+  for (const r of ['East Coast','Mid East','Mid Atlantic','Southeast','Midwest','North Central','South Central','West Coast']) {
     if (lower.includes(r.toLowerCase())) { tag.textContent = '→ ' + r; return r; }
   }
   tag.textContent = 'Region not detected';
