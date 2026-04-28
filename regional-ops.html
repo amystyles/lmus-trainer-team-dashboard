@@ -4,63 +4,186 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LMUS TAP — Regional Ops</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&family=DM+Mono:wght@400;500&family=Share+Tech+Mono&display=swap');
 
   :root {
     --bg:           #FFFFFF;
-    --bg-subtle:    #F7F7F7;
-    --bg-sunken:    #F0F0F0;
+    --bg-subtle:    #F7F7F4;
+    --bg-sunken:    #EFEFEB;
     --bg-dark:      #0A0A0A;
     --card:         #FFFFFF;
     --accent:       #00FF63;
-    --accent-soft:  rgba(0,255,99,0.10);
-    --accent-mid:   rgba(0,255,99,0.20);
+    --accent-soft:  rgba(0,255,99,0.08);
+    --accent-mid:   rgba(0,255,99,0.16);
     --accent2:      #FF623E;
-    --lm-green:     #1A7A3C;
-    --lm-amber:     #B85C00;
-    --lm-blue:      #1A5280;
-    --lm-gold:      #9B6F00;
-    --lm-purple:    #6B2FA0;
-    --lm-teal:      #0E7490;
+    --lm-green:     #16A34A;
+    --lm-amber:     #D97706;
+    --lm-blue:      #2563EB;
+    --lm-gold:      #B45309;
+    --lm-purple:    #7C3AED;
+    --lm-teal:      #0891B2;
+    --lm-red:       #DC2626;
     --text:         #111111;
     --ink-mid:      #444444;
     --muted:        #888888;
-    --border:       #E5E5E5;
-    --border-mid:   #D0D0D0;
+    --border:       #E6E6E1;
+    --border-mid:   #D1D1C8;
+  }
+
+  body.dark-mode {
+    --bg:           #111115;
+    --bg-subtle:    #0B0B0E;
+    --bg-sunken:    #080809;
+    --bg-dark:      #000000;
+    --card:         #111115;
+    --lm-green:     #4ade80;
+    --lm-amber:     #f59e0b;
+    --lm-blue:      #60a5fa;
+    --lm-gold:      #fcd34d;
+    --lm-purple:    #a855f7;
+    --lm-teal:      #22d3ee;
+    --lm-red:       #f87171;
+    --text:         #EFEFEF;
+    --ink-mid:      #A0A0B0;
+    --muted:        #6A6A8A;
+    --border:       rgba(255,255,255,0.07);
+    --border-mid:   rgba(255,255,255,0.13);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg-subtle); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  body { background: var(--bg-subtle); color: var(--text); font-family: 'Rajdhani', -apple-system, sans-serif; font-size: 14px; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
   /* ── AUTH GATE ─────────────────────────────────────────────── */
   #auth-screen {
-    position: fixed; inset: 0; background: var(--bg-dark);
-    display: flex; align-items: center; justify-content: center; z-index: 9999;
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: #050708; overflow: hidden;
   }
+  #auth-screen::before {
+    content: '';
+    position: absolute; inset: -50%;
+    background-image: radial-gradient(circle, rgba(0,255,99,0.10) 1px, transparent 1px);
+    background-size: 28px 28px;
+    animation: gridDrift 25s linear infinite;
+  }
+  #auth-screen::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.10) 3px, rgba(0,0,0,0.10) 4px);
+    pointer-events: none;
+  }
+  @keyframes gridDrift { 0% { transform: translate(0,0); } 100% { transform: translate(28px,28px); } }
+
+  .auth-glow {
+    position: absolute; width: 560px; height: 560px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,99,0.07) 0%, transparent 68%);
+    animation: glowPulse 5s ease-in-out infinite;
+  }
+  @keyframes glowPulse { 0%,100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.2); opacity: 1; } }
+
   .auth-card {
-    background: #141414; border: 1px solid rgba(0,255,99,0.2); border-radius: 16px;
-    padding: 48px 40px; width: 360px; text-align: center;
+    position: relative; z-index: 1;
+    background: rgba(8,10,12,0.96);
+    border: 1px solid rgba(0,255,99,0.22);
+    border-radius: 3px;
+    padding: 52px 44px 40px;
+    width: 384px; text-align: center;
+    box-shadow: 0 0 80px rgba(0,255,99,0.06), 0 32px 64px rgba(0,0,0,0.6);
+    animation: cardReveal 0.7s cubic-bezier(0.16,1,0.3,1) both;
   }
-  .auth-logo { width: 3px; height: 32px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 16px var(--accent); margin: 0 auto 24px; }
-  .auth-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 3px; text-transform: uppercase; color: #fff; margin-bottom: 6px; }
+  @keyframes cardReveal { from { opacity:0; transform:translateY(18px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+
+  /* corner brackets */
+  .auth-card::before { content:''; position:absolute; top:-1px; left:-1px; width:18px; height:18px; border-top:2px solid rgba(0,255,99,0.7); border-left:2px solid rgba(0,255,99,0.7); border-radius:3px 0 0 0; }
+  .auth-card::after  { content:''; position:absolute; bottom:-1px; right:-1px; width:18px; height:18px; border-bottom:2px solid rgba(0,255,99,0.7); border-right:2px solid rgba(0,255,99,0.7); border-radius:0 0 3px 0; }
+  .auth-corners::before { content:''; position:absolute; top:-1px; right:-1px; width:18px; height:18px; border-top:2px solid rgba(0,255,99,0.7); border-right:2px solid rgba(0,255,99,0.7); border-radius:0 3px 0 0; }
+  .auth-corners::after  { content:''; position:absolute; bottom:-1px; left:-1px; width:18px; height:18px; border-bottom:2px solid rgba(0,255,99,0.7); border-left:2px solid rgba(0,255,99,0.7); border-radius:0 0 0 3px; }
+
+  .auth-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(0,255,99,0.05); border: 1px solid rgba(0,255,99,0.18);
+    border-radius: 2px; padding: 5px 11px; margin-bottom: 28px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: rgba(0,255,99,0.55);
+    animation: cardReveal 0.7s 0.08s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .auth-badge-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px var(--accent);
+    animation: blink 2.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.15;} }
+
+  .auth-title {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    font-size: 30px; letter-spacing: 5px; text-transform: uppercase; white-space: nowrap;
+    color: #fff; margin-bottom: 6px;
+    animation: cardReveal 0.7s 0.14s cubic-bezier(0.16,1,0.3,1) both;
+  }
   .auth-title em { color: var(--accent); font-style: normal; }
-  .auth-sub { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 32px; }
+
+  .auth-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.22); margin-bottom: 38px;
+    animation: cardReveal 0.7s 0.2s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  .auth-field {
+    position: relative; margin-bottom: 12px;
+    animation: cardReveal 0.7s 0.26s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .auth-field-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; opacity: 0.25; pointer-events: none;
+  }
   .auth-input {
-    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px; padding: 12px 16px; color: #fff; font-family: 'Inter', sans-serif;
-    font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color 0.15s;
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 2px;
+    padding: 14px 16px 14px 40px;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace; font-size: 14px; letter-spacing: 4px;
+    outline: none; transition: border-color 0.2s, background 0.2s;
   }
-  .auth-input:focus { border-color: rgba(0,255,99,0.4); }
+  .auth-input::placeholder { color: rgba(255,255,255,0.18); letter-spacing: 1px; font-size: 11px; font-family: 'Inter', sans-serif; }
+  .auth-input:focus { border-color: rgba(0,255,99,0.45); background: rgba(0,255,99,0.025); }
+
   .auth-btn {
-    width: 100%; background: var(--accent); color: #000; border: none;
-    border-radius: 8px; padding: 13px; font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800; font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer; transition: opacity 0.15s; margin-bottom: 12px;
+    width: 100%; position: relative; overflow: hidden;
+    background: transparent; border: 1px solid var(--accent);
+    border-radius: 2px; padding: 14px;
+    color: var(--accent);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 13px; letter-spacing: 3.5px; text-transform: uppercase;
+    cursor: pointer; transition: color 0.28s; margin-bottom: 16px;
+    animation: cardReveal 0.7s 0.32s cubic-bezier(0.16,1,0.3,1) both;
   }
-  .auth-btn:hover { opacity: 0.88; }
-  .auth-error { font-size: 11px; color: var(--accent2); font-weight: 600; letter-spacing: 0.5px; min-height: 16px; }
+  .auth-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--accent); transform: translateX(-102%);
+    transition: transform 0.32s cubic-bezier(0.16,1,0.3,1);
+  }
+  .auth-btn:hover { color: #000; }
+  .auth-btn:hover::before { transform: translateX(0); }
+  .auth-btn span { position: relative; z-index: 1; }
+
+  .auth-error {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: 1px; color: var(--accent2);
+    min-height: 16px;
+    animation: cardReveal 0.7s 0.38s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .auth-sep { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 20px 0 16px; }
+  .auth-footer {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.1);
+  }
 
   /* ── HEADER ─────────────────────────────────────────────────── */
   header {
@@ -117,6 +240,16 @@
   }
   .signout-btn:hover { color: var(--accent2); border-color: rgba(255,98,62,0.3); }
 
+  .theme-toggle {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 20px; padding: 5px 12px; cursor: pointer;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.35); }
+  .theme-toggle svg { width: 13px; height: 13px; flex-shrink: 0; }
+
   #app { display: none; }
   #app.visible { display: block; }
 
@@ -129,12 +262,16 @@
   .filter-label { font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
   .filter-btns { display: flex; gap: 4px; flex-wrap: wrap; }
   .filter-btn {
-    background: none; border: 1px solid var(--border); border-radius: 20px;
-    padding: 4px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px;
-    color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    background: var(--bg-sunken); border: 1.5px solid var(--border-mid); border-radius: 20px;
+    padding: 4px 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+    color: var(--ink-mid); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    font-family: 'Rajdhani', sans-serif;
   }
-  .filter-btn:hover { border-color: var(--border-mid); color: var(--text); }
+  .filter-btn:hover { border-color: var(--text); color: var(--text); background: var(--bg-subtle); }
   .filter-btn.active { background: var(--bg-dark); border-color: var(--bg-dark); color: var(--accent); font-weight: 700; }
+  body.dark-mode .filter-btn { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.09); }
+  body.dark-mode .filter-btn:hover { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.07); }
+  body.dark-mode .filter-btn.active { background: rgba(0,255,99,0.1); border-color: rgba(0,255,99,0.4); box-shadow: 0 0 12px rgba(0,255,99,0.12); }
   .filters-reset {
     margin-left: auto; background: transparent; border: 1px solid var(--border);
     color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 1px;
@@ -145,10 +282,11 @@
   /* ── CONTENT ─────────────────────────────────────────────────── */
   main { max-width: 1400px; margin: 0 auto; padding: 28px 32px 48px; }
 
-  .section-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .section-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .section-title { font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 10px; }
-  .section-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
+  .section-card { background: var(--bg); border: 1px solid var(--border-mid); border-radius: 12px; overflow: hidden; margin: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04); }
+  body.dark-mode .section-card { border-color: var(--border); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04); }
+  .section-header { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg-dark); }
+  .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 10px; }
+  .section-title::before { content: ''; display: inline-block; width: 3px; height: 16px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 6px var(--accent); }
 
   .prog-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding: 0 24px 16px; border-bottom: 1px solid var(--border); }
   .prog-pill { background: var(--bg-subtle); border: 1px solid var(--border); color: var(--ink-mid); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; padding: 5px 12px; cursor: pointer; border-radius: 20px; transition: all 0.15s; white-space: nowrap; }
@@ -176,15 +314,15 @@
   .hm-cell-empty { background:var(--bg-subtle); color:var(--border-mid); }
 
   .drill-trainer-table { width: 100%; border-collapse: collapse; }
-  .drill-trainer-table th { background: var(--bg-subtle); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .drill-trainer-table th { background: rgba(255,255,255,0.03); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; font-family: 'Rajdhani', sans-serif; }
   .drill-trainer-table td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid var(--border); }
   .drill-trainer-table tr:last-child td { border-bottom: none; }
-  .drill-trainer-table tr:hover td { background: var(--bg-subtle); }
+  .drill-trainer-table tr:hover td { background: rgba(255,255,255,0.03); }
   .drill-trainer-table.hm-active tbody tr { opacity: 0.3; transition: opacity 0.1s; }
   .drill-trainer-table.hm-active tbody tr.hm-highlight { opacity: 1; background: rgba(0,255,99,0.05); }
   .dtt-name { font-weight: 600; }
   .dtt-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; text-align: right; color: var(--lm-blue); }
-  .dtt-num.zero { color: var(--border-mid); }
+  .dtt-num.zero { color: rgba(255,255,255,0.15); }
   .drill-trainer-table tbody tr[data-trainer] { cursor: pointer; }
   .drill-trainer-table tbody tr.dt-expanded td { background: rgba(0,255,99,0.03); border-bottom: none; }
   .drill-expand-row td { padding: 0 !important; background: rgba(0,255,99,0.02) !important; border-bottom: 1px solid var(--border) !important; }
@@ -199,19 +337,95 @@
   .de-name { color: var(--ink-mid); font-size: 12px; }
 
   .region-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1px solid; }
-  .rb-east         { color: var(--accent); border-color: rgba(0,255,99,0.4); background: rgba(0,255,99,0.08); }
-  .rb-midwest      { color: #0ea5e9; border-color: rgba(14,165,233,0.25); background: rgba(14,165,233,0.08); }
-  .rb-southcentral { color: var(--accent2); border-color: rgba(255,98,62,0.25); background: rgba(255,98,62,0.08); }
-  .rb-central      { color: #FACC15; border-color: rgba(250,204,21,0.6); background: rgba(250,204,21,0.08); font-weight: 900; box-shadow: 0 0 0 1px rgba(250,204,21,0.4); }
-  .rb-west         { color: #a855f7; border-color: rgba(168,85,247,0.25); background: rgba(168,85,247,0.08); }
+  .rb-east         { color: #16a34a; border-color: rgba(22,163,74,0.3); background: rgba(22,163,74,0.08); }
+  .rb-midwest      { color: #0284c7; border-color: rgba(2,132,199,0.3); background: rgba(2,132,199,0.08); }
+  .rb-southcentral { color: #dc2626; border-color: rgba(220,38,38,0.25); background: rgba(220,38,38,0.07); }
+  .rb-central      { color: #b45309; border-color: rgba(180,83,9,0.35); background: rgba(180,83,9,0.08); font-weight: 700; }
+  .rb-west         { color: #7c3aed; border-color: rgba(124,58,237,0.3); background: rgba(124,58,237,0.08); }
+  body.dark-mode .rb-east         { color: var(--accent); border-color: rgba(0,255,99,0.35); background: rgba(0,255,99,0.08); }
+  body.dark-mode .rb-midwest      { color: #38bdf8; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
+  body.dark-mode .rb-southcentral { color: #fb7a5f; border-color: rgba(251,122,95,0.3); background: rgba(251,122,95,0.08); }
+  body.dark-mode .rb-central      { color: #fde047; border-color: rgba(253,224,71,0.4); background: rgba(253,224,71,0.08); }
+  body.dark-mode .rb-west         { color: #c084fc; border-color: rgba(192,132,252,0.3); background: rgba(192,132,252,0.08); }
 
-  /* ── CHARTS ──────────────────────────────────────────────────── */
-  .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 24px; }
-  .chart-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .chart-title { font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-  .chart-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
-  .chart-wrap { position: relative; height: 220px; }
-  .chart-wrap.tall { height: 340px; }
+  /* ── PAGE TABS ───────────────────────────────────────────────── */
+  .page-tabs {
+    display: flex; align-items: stretch; gap: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-mid);
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .page-tabs::before {
+    content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+    height: 1px; background: var(--border-mid); pointer-events: none;
+  }
+  body.dark-mode .page-tabs {
+    background: #0d0d10;
+    border-bottom-color: rgba(255,255,255,0.08);
+  }
+  .page-tab {
+    flex: 1; background: none; border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); padding: 0; border-radius: 0;
+    transition: color 0.18s, background 0.18s;
+    white-space: nowrap;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    position: relative; overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+  .page-tab:last-child { border-right: none; }
+  body.dark-mode .page-tab { border-right-color: rgba(255,255,255,0.06); }
+
+  .page-tab-inner {
+    display: flex; align-items: center; gap: 7px;
+    padding: 12px 20px 14px;
+    width: 100%; justify-content: center;
+  }
+  .page-tab-index {
+    font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500;
+    letter-spacing: 0.5px; color: var(--muted); opacity: 0.6;
+    transition: opacity 0.18s, color 0.18s;
+    flex-shrink: 0;
+  }
+  .page-tab-label { transition: letter-spacing 0.25s; }
+  .page-tab:hover { color: var(--text); background: var(--bg-sunken); }
+  body.dark-mode .page-tab:hover { background: rgba(255,255,255,0.03); }
+  .page-tab:hover .page-tab-label { letter-spacing: 3.5px; }
+  .page-tab:hover .page-tab-index { opacity: 1; }
+
+  /* active indicator — thick top-edge stroke */
+  .page-tab::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+    border-radius: 0 0 2px 2px;
+  }
+  .page-tab.active::after { transform: scaleX(1); }
+  .page-tab.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  body.dark-mode .page-tab.active {
+    color: var(--accent);
+    background: rgba(0,255,99,0.06);
+  }
+  .page-tab.active .page-tab-index { color: var(--accent); opacity: 0.7; }
+  .page-tab-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent); opacity: 0;
+    transition: opacity 0.18s;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--accent);
+  }
+  .page-tab.active .page-tab-dot { opacity: 1; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
 
   /* ── CXM / CXS DIRECTORY ────────────────────────────────────── */
   .dir-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
@@ -223,15 +437,197 @@
   .dir-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; color: var(--ink-mid); border-bottom: 1px solid var(--border); }
   .dir-row:last-child { border-bottom: none; }
   .dir-role { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 6px; border-radius: 20px; flex-shrink: 0; }
-  .dir-role-cxm { background: rgba(26,82,128,0.1); color: #1A5280; border: 1px solid rgba(26,82,128,0.2); }
-  .dir-role-cxs { background: rgba(0,255,99,0.1); color: #1A7A3C; border: 1px solid rgba(0,255,99,0.25); }
-  .dir-role-rc  { background: rgba(224,112,64,0.12); color: #c05820; border: 1px solid rgba(224,112,64,0.3); }
+  .dir-role-cxm { background: rgba(37,99,235,0.08); color: #2563eb; border: 1px solid rgba(37,99,235,0.2); }
+  .dir-role-cxs { background: rgba(22,163,74,0.08); color: #16a34a; border: 1px solid rgba(22,163,74,0.22); }
+  .dir-role-rc  { background: rgba(180,83,9,0.08);  color: #b45309; border: 1px solid rgba(180,83,9,0.22); }
+  body.dark-mode .dir-role-cxm { background: rgba(96,165,250,0.1);  color: #60a5fa; border-color: rgba(96,165,250,0.25); }
+  body.dark-mode .dir-role-cxs { background: rgba(0,255,99,0.1);   color: var(--accent); border-color: rgba(0,255,99,0.25); }
+  body.dark-mode .dir-role-rc  { background: rgba(251,146,60,0.12); color: #fb923c; border-color: rgba(251,146,60,0.3); }
   .dir-all { padding: 20px 24px; grid-column: 1 / -1; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
   .dir-all-label { font-size: 9px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg-subtle); }
   ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
+
+  /* ── OPS QUARTER INTELLIGENCE STRIP ─────────────────────────── */
+  .ops-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+  .ops-metric {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 22px; position: relative; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .ops-metric:hover { border-color: var(--border-mid); box-shadow: 0 6px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07); }
+  .ops-metric::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--om-color, var(--accent)); opacity: 0.8;
+  }
+  .ops-metric-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+  .ops-metric-val {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    font-size: 44px; line-height: 1; letter-spacing: -1px;
+    color: var(--om-color, #fff);
+  }
+  .ops-metric-sub {
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; color: var(--ink-mid);
+    margin-top: 5px; font-weight: 500;
+  }
+  .ops-metric-delta {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 10px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.5px; padding: 3px 9px; border-radius: 5px;
+  }
+  .ops-metric-delta.up   { background: rgba(0,255,99,0.1);  color: var(--accent); border: 1px solid rgba(0,255,99,0.25); }
+  .ops-metric-delta.dn   { background: rgba(255,98,62,0.1); color: var(--accent2); border: 1px solid rgba(255,98,62,0.25); }
+  .ops-metric-delta.flat { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+
+  .ops-type-bar { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .ops-type-row { display: flex; align-items: center; gap: 10px; }
+  .ops-type-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; width: 38px; flex-shrink: 0;
+  }
+  .ops-type-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .ops-type-fill { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+  .ops-type-num {
+    font-family: 'DM Mono', 'Barlow Condensed', monospace; font-weight: 500; font-size: 12px;
+    width: 32px; text-align: right; flex-shrink: 0;
+  }
+
+  .ops-region-list { margin-top: 8px; display: flex; flex-direction: column; gap: 0; }
+  .ops-region-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+  }
+  .ops-region-row:last-child { border-bottom: none; }
+  .ops-region-name {
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-mid);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .ops-region-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .ops-region-right { display: flex; align-items: center; gap: 8px; }
+  .ops-region-count {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px;
+    color: var(--text);
+  }
+  .ops-region-flag {
+    font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px;
+  }
+  .ops-region-flag.focus  { background: rgba(255,98,62,0.12); color: var(--accent2); border: 1px solid rgba(255,98,62,0.25); }
+  .ops-region-flag.mid    { background: rgba(253,224,71,0.1);  color: #fde047; border: 1px solid rgba(253,224,71,0.25); }
+  .ops-region-flag.strong { background: rgba(0,255,99,0.1);   color: var(--accent); border: 1px solid rgba(0,255,99,0.25); }
+
+  .ops-upcoming-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .ops-upcoming-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 7px; background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+  .ops-upcoming-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .ops-upcoming-type {
+    font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .ops-upcoming-count {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 16px;
+    line-height: 1; margin-left: auto;
+  }
+
+  /* Q breakdown inside Total Bookings card */
+  .ops-q-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .ops-q-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 8px; background: var(--bg-sunken); border: 1px solid var(--border); }
+  .ops-q-label { font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .ops-q-val { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; line-height: 1; color: var(--text); }
+  .ops-q-cell.active { background: var(--bg-dark); border-color: var(--bg-dark); }
+  .ops-q-cell.active .ops-q-label { color: var(--muted); }
+  .ops-q-cell.active .ops-q-val { color: var(--accent); }
+  body.dark-mode .ops-q-cell { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.07); }
+  body.dark-mode .ops-q-cell.active { background: rgba(0,255,99,0.08); border-color: rgba(0,255,99,0.3); }
+  .ops-q-cell.unplanned { opacity: 0.4; }
+  .ops-q-cell.unplanned .ops-q-val { color: var(--muted); font-size: 11px; }
+
+  /* ── TRAINING BREAKDOWN PANEL ───────────────────────────────── */
+  .breakdown-strip {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    padding: 0; margin-top: 12px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+  }
+  body.dark-mode .breakdown-strip { box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04); }
+  .breakdown-head {
+    display: flex; align-items: center; gap: 16px; padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap;
+    background: var(--bg-dark);
+  }
+  .breakdown-title {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 800;
+    letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.9);
+    display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  }
+  .breakdown-title::before { content:''; display:inline-block; width:3px; height:16px; background:var(--accent); border-radius:2px; box-shadow:0 0 6px var(--accent); }
+  .breakdown-filter-group { display: flex; align-items: center; gap: 5px; }
+  .breakdown-filter-label { font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); white-space: nowrap; }
+  .bd-btn {
+    font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 4px 11px; border-radius: 20px; cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55);
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .bd-btn:hover { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.12); }
+  .bd-btn.active { background: rgba(0,255,99,0.15); border-color: rgba(0,255,99,0.5); color: var(--accent); box-shadow: 0 0 10px rgba(0,255,99,0.1); }
+  .breakdown-body { padding: 0; display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+  .bd-region-block {
+    flex: 1; min-width: 110px;
+    padding: 14px 16px 16px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.18s;
+  }
+  .bd-region-block:last-child { border-right: none; }
+  body.dark-mode .bd-region-block { border-right-color: rgba(255,255,255,0.06); }
+  .bd-region-block:hover { background: var(--bg-subtle); }
+  body.dark-mode .bd-region-block:hover { background: rgba(255,255,255,0.025); }
+
+  /* colored top stroke per region */
+  .bd-region-block::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--bd-rc);
+    border-radius: 0;
+  }
+
+  .bd-region-name {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px; margin-top: 2px;
+  }
+  .bd-region-count {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900;
+    line-height: 1; margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .bd-region-count.zero { color: var(--muted) !important; font-size: 20px; opacity: 0.5; }
+
+  .bd-bar-row { margin-bottom: 0; }
+  .bd-bar-bg {
+    width: 100%; height: 5px;
+    background: var(--bg-sunken); border-radius: 2px; overflow: hidden;
+  }
+  body.dark-mode .bd-bar-bg { background: rgba(255,255,255,0.07); }
+  .bd-bar-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 0 6px var(--bd-rc);
+  }
+  .bd-bar-num { display: none; }
+  .bd-divider { display: none; }
+  .bd-total-col { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; padding-left: 12px; min-width: 90px; margin-left: auto; }
+  .bd-total-label { font-family: 'Rajdhani', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+  .bd-total-val { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 36px; line-height: 1; color: #fff; letter-spacing: -1px; }
 
   /* ── TRAINER INTELLIGENCE ─────────────────────────────────── */
   .intel-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); }
@@ -287,19 +683,137 @@
   .intel-row.low-volume { background:rgba(255,98,62,0.04); }
   .intel-row.low-volume:hover { background:rgba(255,98,62,0.08); }
   .intel-low-flag { font-size:8px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#FF623E; background:rgba(255,98,62,0.1); border:1px solid rgba(255,98,62,0.25); border-radius:4px; padding:1px 5px; margin-left:6px; vertical-align:middle; }
+
+  /* ── KPI STRIP (top of page, moved from Trainer Intelligence) ── */
+  .kpi-strip { margin-bottom: 0; }
+  .kpi-strip .intel-kpi-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; border-bottom: none;
+  }
+  .kpi-strip .intel-kpi {
+    border: 1.5px solid var(--border-mid); border-right: 1.5px solid var(--border-mid);
+    border-radius: 10px; padding: 14px 20px;
+    background: var(--bg); box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: box-shadow 0.15s;
+  }
+  .kpi-strip .intel-kpi:last-child { border-right: 1.5px solid var(--border-mid); }
+  .kpi-strip .intel-kpi:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
+  .kpi-strip .intel-kpi-num { font-size: 26px; }
+  .kpi-strip .intel-kpi-label { font-size: 8px; margin-bottom: 4px; }
+  .kpi-strip .intel-kpi-name { font-size: 11px; }
+
+  /* ── Smart Booking Suggester ───────────────────────── */
+  .sbs-trigger { background:rgba(0,255,99,0.1); border-color:rgba(0,255,99,0.35); color:var(--accent); cursor:pointer; }
+  .sbs-trigger:hover { background:rgba(0,255,99,0.18); border-color:rgba(0,255,99,0.6); box-shadow:0 0 18px rgba(0,255,99,0.25); color:var(--accent); }
+
+  .sbs-overlay { display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.68); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+  .sbs-overlay.open { display:flex; }
+  .sbs-modal { background:var(--bg); border-radius:14px; width:880px; max-width:96vw; max-height:88vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 28px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06); }
+  .sbs-head { background:var(--bg-dark); padding:18px 24px; border-bottom:2px solid rgba(0,255,99,0.3); display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .sbs-head-bar { width:3px; height:20px; background:var(--accent); border-radius:2px; box-shadow:0 0 8px var(--accent); }
+  .sbs-head-title { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:18px; letter-spacing:2px; text-transform:uppercase; color:#fff; }
+  .sbs-head-title em { color:var(--accent); font-style:normal; }
+  .sbs-head-sub { font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-left:2px; }
+  .sbs-close { margin-left:auto; background:none; border:1px solid rgba(255,255,255,0.18); color:rgba(255,255,255,0.5); width:30px; height:30px; border-radius:7px; cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .sbs-close:hover { border-color:rgba(255,255,255,0.5); color:#fff; }
+  .sbs-inputs { padding:20px 24px 24px; background:var(--bg-subtle); border-bottom:1px solid var(--border); display:grid; grid-template-columns:2fr 140px 1.5fr auto auto; gap:12px; align-items:end; flex-shrink:0; }
+  .sbs-field { display:flex; flex-direction:column; gap:5px; position:relative; }
+  .sbs-label { font-size:9px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); }
+  .sbs-select, .sbs-date-input, .sbs-loc-input { background:#FFFFFF; color:#111; font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; padding:8px 10px; border-radius:8px; outline:none; -webkit-appearance:none; appearance:none; transition:border-color 0.15s, box-shadow 0.15s; cursor:pointer; width:100%; border: 1.5px solid; }
+  .sbs-select     { border-color: rgba(0,200,80,0.6); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300C850' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  .sbs-date-input { border-color: rgba(8,145,178,0.5); cursor:text; }
+  .sbs-loc-input  { border-color: rgba(217,119,6,0.5); cursor:text; }
+  .sbs-select:focus     { border-color: #00C850; box-shadow: 0 0 0 3px rgba(0,200,80,0.15); }
+  .sbs-date-input:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,0.12); }
+  .sbs-loc-input:focus  { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
+  body.dark-mode .sbs-select     { background:#1a1a20; color:#EFEFEF; border-color: rgba(0,255,99,0.6); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300FF63' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  body.dark-mode .sbs-date-input { background:var(--bg); color:var(--text); border-color: rgba(34,211,238,0.35); }
+  body.dark-mode .sbs-loc-input  { background:var(--bg); color:var(--text); border-color: rgba(251,146,60,0.35); }
+  body.dark-mode .sbs-select:focus     { box-shadow: 0 0 0 3px rgba(0,255,99,0.2), 0 0 16px rgba(0,255,99,0.1); }
+  body.dark-mode .sbs-date-input:focus { box-shadow: 0 0 0 3px rgba(34,211,238,0.18), 0 0 16px rgba(34,211,238,0.1); }
+  body.dark-mode .sbs-loc-input:focus  { box-shadow: 0 0 0 3px rgba(251,146,60,0.18), 0 0 16px rgba(251,146,60,0.1); }
+  .sbs-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(55%) sepia(80%) saturate(400%) hue-rotate(155deg) brightness(1.0);
+    cursor: pointer; opacity: 0.85; transition: opacity 0.15s;
+  }
+  .sbs-date-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+  body.dark-mode .sbs-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(85%) sepia(60%) saturate(500%) hue-rotate(155deg) brightness(1.1);
+  }
+  .sbs-loc-input { cursor:text; }
+  .sbs-loc-tag { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--accent); position:absolute; bottom:-16px; left:0; }
+  .sbs-type-wrap { display:flex; flex-direction:column; gap:5px; }
+  .sbs-type-btns { display:flex; gap:6px; align-items:center; }
+  .sbs-type-btn { background:var(--bg); border:1.5px solid var(--border-mid); color:var(--ink-mid); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; padding:6px 10px; border-radius:7px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .sbs-type-btn:hover { border-color:var(--border-mid); color:var(--text); }
+  .sbs-type-btn.active.it       { background:rgba(14,116,144,0.15); border-color:rgba(14,116,144,0.55); color:#22d3ee; }
+  .sbs-type-btn.active.at       { background:rgba(184,92,0,0.15);   border-color:rgba(184,92,0,0.55);   color:var(--lm-amber); }
+  .sbs-type-btn.active.dt       { background:rgba(107,47,160,0.15); border-color:rgba(107,47,160,0.55); color:var(--lm-purple); }
+  .sbs-type-btn.active.workshop { background:rgba(255,98,62,0.15);  border-color:rgba(255,98,62,0.55);  color:#ff8a6e; }
+  .sbs-type-btn.active.rc       { background:rgba(0,255,99,0.1);    border-color:rgba(0,255,99,0.45);   color:var(--accent); }
+  .sbs-run { background:var(--accent); color:#000; border:none; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:14px; letter-spacing:1.5px; text-transform:uppercase; padding:9px 22px; border-radius:8px; white-space:nowrap; align-self:flex-end; transition:all 0.15s; box-shadow:0 0 16px rgba(0,255,99,0.2); }
+  .sbs-run:hover { background:#33ff84; box-shadow:0 0 26px rgba(0,255,99,0.38); }
+  .sbs-body { overflow-y:auto; flex:1; padding:20px 24px; }
+  .sbs-prompt { text-align:center; padding:44px 0; color:var(--muted); font-size:13px; }
+  .sbs-prompt strong { display:block; font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:var(--border-mid); margin-bottom:6px; }
+  .sbs-col-heads { display:grid; grid-template-columns:36px 1fr 160px 100px 70px; gap:10px; padding:0 16px 10px; }
+  .sbs-ch { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+  .sbs-list { display:flex; flex-direction:column; gap:6px; }
+  .sbs-row { display:grid; grid-template-columns:36px 1fr 160px 100px 70px; gap:10px; align-items:center; padding:13px 16px; background:var(--bg); border:1px solid var(--border); border-radius:10px; transition:border-color 0.15s; }
+  .sbs-row:hover { border-color:var(--border-mid); }
+  .sbs-row.unavail { opacity:0.35; }
+  .sbs-row.top1 { border-color:rgba(0,255,99,0.4); background:rgba(0,255,99,0.025); }
+  .sbs-rank { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px; color:var(--border-mid); line-height:1; }
+  .sbs-row.top1 .sbs-rank { color:var(--accent); }
+  .sbs-row.top2 .sbs-rank, .sbs-row.top3 .sbs-rank { color:var(--ink-mid); }
+  .sbs-name { font-weight:700; font-size:13px; color:var(--text); line-height:1.2; }
+  .sbs-rgn  { font-size:10px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:4px; }
+  .sbs-rgn-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .sbs-closest-tag { font-size:9px; font-weight:700; letter-spacing:0.5px; color:var(--accent); margin-left:4px; }
+  .sbs-divider { display:flex; align-items:center; gap:10px; margin:12px 0 8px; }
+  .sbs-divider-line { flex:1; height:1px; background:var(--border); }
+  .sbs-divider-label { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .sbs-gap-val { font-size:13px; font-weight:700; line-height:1; }
+  .sbs-gap-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+  .sbs-gap-val.long   { color:var(--lm-green); }
+  .sbs-gap-val.mid    { color:var(--lm-amber); }
+  .sbs-gap-val.recent { color:var(--accent2); }
+  .sbs-gap-val.first  { color:var(--lm-blue); }
+  .sbs-avail-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
+  .sbs-avail-badge.yes { background:rgba(26,122,60,0.1);  color:var(--lm-green); border:1px solid rgba(26,122,60,0.25); }
+  .sbs-avail-badge.no  { background:rgba(212,34,15,0.09); color:var(--lm-red);   border:1px solid rgba(212,34,15,0.22); }
+  .sbs-qcount { text-align:center; }
+  .sbs-qcount-val { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:22px; line-height:1; color:var(--text); }
+  .sbs-qcount-sub { font-size:9px; color:var(--muted); margin-top:2px; letter-spacing:0.5px; }
+  .sbs-prog-summary { margin-top:16px; padding:14px 16px; background:var(--bg-subtle); border:1px solid var(--border); border-radius:10px; }
+  .sbs-ps-title { font-size:9px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .sbs-ps-title::before { content:''; display:block; width:3px; height:12px; background:var(--accent); border-radius:2px; }
+  .sbs-ps-grid { display:flex; gap:28px; flex-wrap:wrap; }
+  .sbs-ps-val { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:24px; color:var(--text); line-height:1; }
+  .sbs-ps-sub { font-size:10px; color:var(--muted); margin-top:2px; }
 </style>
 </head>
 <body>
 
 <!-- AUTH GATE -->
 <div id="auth-screen">
+  <div class="auth-glow"></div>
   <div class="auth-card">
-    <div class="auth-logo"></div>
+    <div class="auth-corners" style="position:absolute;inset:0;pointer-events:none"></div>
+    <div class="auth-badge">
+      <div class="auth-badge-dot"></div>
+      Restricted Access
+    </div>
     <div class="auth-title">LMUS <em>TΛP</em></div>
-    <div class="auth-sub">Admin Access Required</div>
-    <input class="auth-input" type="password" id="pw-input" placeholder="Enter password" autocomplete="current-password" />
-    <button class="auth-btn" id="pw-btn">Sign In</button>
+    <div class="auth-sub">Admin credentials required</div>
+    <div class="auth-field">
+      <svg class="auth-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fff"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <input class="auth-input" type="password" id="pw-input" placeholder="Enter passphrase" autocomplete="current-password" />
+    </div>
+    <button class="auth-btn" id="pw-btn"><span>Authenticate &rarr;</span></button>
     <div class="auth-error" id="auth-error"></div>
+    <hr class="auth-sep">
+    <div class="auth-footer">LMUS TAP &middot; Secured &middot; Authorized Personnel Only</div>
   </div>
 </div>
 
@@ -320,119 +834,133 @@
     <input type="file" id="csv-file" accept=".csv" style="display:none" />
     <a href="map.html" class="back-link">Trainer Map</a>
     <a href="index.html" class="back-link">← Dashboard</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <span id="theme-label">Dark</span>
+    </button>
     <button class="signout-btn" id="signout-btn">Sign Out</button>
   </header>
 
-  <div class="filters-bar">
-    <div class="filter-group">
-      <span class="filter-label">FY</span>
-      <div class="filter-btns" id="fyFilters">
-        <button class="filter-btn active" data-val="All">All</button>
-        <button class="filter-btn" data-val="FY2026">FY2026</button>
-        <button class="filter-btn" data-val="FY2027">FY2027</button>
-      </div>
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">Quarter</span>
-      <div class="filter-btns" id="qFilters">
-        <button class="filter-btn active" data-val="All">All</button>
-        <button class="filter-btn" data-val="Q1">Q1</button>
-        <button class="filter-btn" data-val="Q2">Q2</button>
-        <button class="filter-btn" data-val="Q3">Q3</button>
-        <button class="filter-btn" data-val="Q4">Q4</button>
-      </div>
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">Type</span>
-      <div class="filter-btns" id="typeFilters">
-        <button class="filter-btn active" data-val="All">All</button>
-        <button class="filter-btn" data-val="Initial Training">Initial Training</button>
-        <button class="filter-btn" data-val="Dual Training">Dual Training</button>
-        <button class="filter-btn" data-val="Online IT">Online IT</button>
-        <button class="filter-btn" data-val="Advanced Training">Advanced Training</button>
-        <button class="filter-btn" data-val="Instructor Workshop">Instructor Workshop</button>
-      </div>
-    </div>
-    <div class="filter-group">
-      <span class="filter-label">Region</span>
-      <div class="filter-btns" id="regionFilters">
-        <button class="filter-btn active" data-val="All">All</button>
-        <button class="filter-btn" data-val="East Coast">East Coast</button>
-        <button class="filter-btn" data-val="Mid West">Mid West</button>
-        <button class="filter-btn" data-val="South Central">South Central</button>
-        <button class="filter-btn" data-val="Central">Central</button>
-        <button class="filter-btn" data-val="West Coast">West Coast</button>
-      </div>
-    </div>
-    <button class="filters-reset" id="resetBtn">Reset Filters</button>
-  </div>
+  <!-- filters-bar moved to Trainer Dashboard tab -->
 
   <main>
-    <div class="section-card">
-      <div class="section-header">
-        <div class="section-title">TRAINING TOTALS</div>
-        <span style="font-size:11px;color:var(--muted);margin-left:8px;">Select a program · click a cell to see totals and highlight trainers</span>
-      </div>
-      <div class="prog-pills" id="progPills"></div>
-      <div class="drill-region-filters" id="drillRegionFilters"></div>
-      <div class="drill-body" id="drillBody">
-        <div class="drill-empty">Select a program above to view distribution</div>
-      </div>
-    </div>
 
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Bookings by Region</div>
-        <div class="chart-wrap"><canvas id="regionChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">By Quarter</div>
-        <div class="chart-wrap"><canvas id="quarterChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Instructor Workshop by Region</div>
-        <div class="chart-wrap" style="height:240px" id="programWrap"><canvas id="programChart"></canvas></div>
-      </div>
-    </div>
-
-    <div class="section-card" style="margin-top:24px;">
-      <div class="section-header" style="background:var(--bg-dark);border-bottom-color:#1a1a1a;">
-        <div class="section-title" style="color:rgba(255,255,255,0.45);">TRAINER INTELLIGENCE</div>
-        <span style="font-size:11px;color:rgba(255,255,255,0.28);margin-left:8px;">Booking longevity · workload equity · program versatility · momentum · TAP priority</span>
-      </div>
-      <div class="intel-kpi-row" id="intelKpis"></div>
-      <div class="intel-sort-bar">
-        <span class="intel-sort-label">Sort by</span>
-        <button class="intel-sort-btn active" data-sort="tap">TAP Score</button>
-        <button class="intel-sort-btn" data-sort="tenure">Tenure</button>
-        <button class="intel-sort-btn" data-sort="total">Volume</button>
-        <button class="intel-sort-btn" data-sort="programs">Programs</button>
-        <button class="intel-sort-btn" data-sort="upcoming">Upcoming</button>
-        <button class="intel-sort-btn" data-sort="next">Next Event</button>
-        <span class="intel-score-explain">TAP Score = volume 45 · versatility 35 · pipeline 20</span>
-      </div>
-      <div class="intel-list">
-        <div class="intel-col-heads">
-          <div></div>
-          <div class="intel-col-head">Trainer</div>
-          <div class="intel-col-head">Tenure</div>
-          <div class="intel-col-head">Programs</div>
-          <div class="intel-col-head">Volume</div>
-          <div class="intel-col-head">Momentum</div>
-          <div class="intel-col-head">Next Event</div>
-          <div class="intel-col-head" style="text-align:center">Score</div>
+    <!-- ── Page Tabs ── -->
+    <nav class="page-tabs">
+      <button class="page-tab active" data-tab="overview" onclick="showTab('overview')">
+        <div class="page-tab-inner">
+          <span class="page-tab-dot"></span>
+          <span class="page-tab-index">01</span>
+          <span class="page-tab-label">OPS OVERVIEW</span>
         </div>
-        <div id="intelList"></div>
+      </button>
+      <button class="page-tab" data-tab="find-trainer" onclick="showTab('find-trainer')">
+        <div class="page-tab-inner">
+          <span class="page-tab-dot"></span>
+          <span class="page-tab-index">02</span>
+          <span class="page-tab-label">FIND A TRAINER</span>
+        </div>
+      </button>
+      <button class="page-tab" data-tab="directory" onclick="showTab('directory')">
+        <div class="page-tab-inner">
+          <span class="page-tab-dot"></span>
+          <span class="page-tab-index">03</span>
+          <span class="page-tab-label">CXM / CXS / RC DIRECTORY</span>
+        </div>
+      </button>
+    </nav>
+
+    <!-- ── TAB: OPS OVERVIEW ── -->
+    <div class="tab-panel active" id="tab-overview">
+      <!-- hidden: JS compat for intelKpis -->
+      <div id="intelKpis" style="display:none"></div>
+
+      <!-- Ops Quarter Intelligence -->
+      <div class="ops-strip" id="opsStrip"></div>
+
+      <!-- Training Breakdown -->
+      <div class="breakdown-strip" id="breakdownStrip"></div>
+
+      <!-- Training Totals (sits directly under breakdown) -->
+      <div class="section-card" style="margin-top:12px;">
+        <div class="section-header">
+          <div class="section-title">TRAINING TOTALS</div>
+          <span style="font-size:11px;color:rgba(255,255,255,0.3);margin-left:4px;">Select a program · click a cell</span>
+          <span id="totalsFilterBadge" style="display:none;margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(0,255,99,0.12);color:var(--accent);border:1px solid rgba(0,255,99,0.3);">Filtered from Breakdown</span>
+        </div>
+        <div class="prog-pills" id="progPills"></div>
+        <div class="drill-region-filters" id="drillRegionFilters"></div>
+        <div class="drill-body" id="drillBody">
+          <div class="drill-empty">Select a program above to view distribution</div>
+        </div>
       </div>
     </div>
 
-    <div class="section-card" style="margin-top:24px;">
-      <div class="section-header">
-        <div class="section-title">CXM / CXS Directory</div>
-        <span style="font-size:11px;color:var(--muted);margin-left:8px;">CXM's, Customer Experience Specialists and Regional Coach teams by territory</span>
+    <!-- ── TAB: FIND A TRAINER ── -->
+    <div class="tab-panel" id="tab-find-trainer">
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">FIND A <em style="color:var(--accent);font-style:normal;">TRAINER</em></div>
+          <span style="font-size:11px;color:rgba(255,255,255,0.28);margin-left:8px;">Smart booking suggestions · program · location · availability</span>
+        </div>
+        <div class="sbs-inputs">
+          <div class="sbs-field">
+            <label class="sbs-label">Program</label>
+            <select class="sbs-select" id="sbsProgram">
+              <option value="">Select program…</option>
+              <option>BODYATTACK</option><option>BODYBALANCE</option><option>BODYCOMBAT</option>
+              <option>BODYJAM</option><option>BODYPUMP</option><option>BODYPUMP HEAVY</option>
+              <option>BODYSTEP</option><option>LES MILLS CEREMONY</option>
+              <option>LES MILLS CONQUER</option><option>LES MILLS CORE</option>
+              <option>LES MILLS DANCE</option><option>LES MILLS FUNCTIONAL STRENGTH</option>
+              <option>LES MILLS GRIT</option><option>LES MILLS PILATES</option>
+              <option>LES MILLS SHAPES</option><option>LES MILLS SPRINT</option>
+              <option>LES MILLS THRIVE</option><option>LES MILLS TONE</option>
+              <option>LES MILLS UNITED</option><option>LES MILLS YOGA</option>
+              <option>RPM</option><option>STRENGTH DEVELOPMENT</option>
+            </select>
+          </div>
+          <div class="sbs-field">
+            <label class="sbs-label">Event Date</label>
+            <input class="sbs-date-input" type="date" id="sbsDate" />
+          </div>
+          <div class="sbs-field">
+            <label class="sbs-label">Event Location</label>
+            <input class="sbs-loc-input" type="text" id="sbsLocation" placeholder="Address, City, ST  (e.g. 123 Main St, Chicago, IL)" oninput="sbsDetectRegion()" />
+            <div class="sbs-loc-tag" id="sbsLocTag"></div>
+          </div>
+          <div class="sbs-type-wrap">
+            <label class="sbs-label">Training Type</label>
+            <div class="sbs-type-btns">
+              <button class="sbs-type-btn it"       data-type="it"       onclick="toggleSBSType(this)">IT</button>
+              <button class="sbs-type-btn at"       data-type="at"       onclick="toggleSBSType(this)">AT</button>
+              <button class="sbs-type-btn dt"       data-type="dt"       onclick="toggleSBSType(this)">DT</button>
+              <button class="sbs-type-btn workshop" data-type="workshop" onclick="toggleSBSType(this)">Workshop</button>
+              <button class="sbs-type-btn rc"       data-type="rc"       onclick="toggleSBSType(this)">RC</button>
+            </div>
+          </div>
+          <button class="sbs-run" onclick="runSBS()">Suggest &#x2192;</button>
+        </div>
+        <div id="sbsBody" style="padding:20px 24px;">
+          <div class="sbs-prompt"><strong>Select Program &amp; Date</strong>Fill in the fields above to see ranked trainer suggestions.</div>
+        </div>
       </div>
-      <div class="dir-grid" id="dirGrid"></div>
     </div>
+
+    <!-- ── TAB: CXM / CXS / RC DIRECTORY ── -->
+    <div class="tab-panel" id="tab-directory">
+      <!-- hidden: JS compat for intelList -->
+      <div id="intelList" style="display:none"></div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">CXM / CXS / RC DIRECTORY</div>
+          <span style="font-size:11px;color:var(--muted);margin-left:8px;">CXM's, Customer Experience Specialists and Regional Coaches by territory</span>
+        </div>
+        <div class="dir-grid" id="dirGrid"></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -443,9 +971,9 @@ const AUTH_KEY = 'lmus_admin_auth';
 
 // ── REGIONAL DIRECTORY DATA ───────────────────────────────────
 const REGION_COLORS = {
-  'West Coast':'#4a90d9','South Central':'#27ae60','North Central':'#f39c12',
-  'Midwest':'#c0392b','Mid East':'#8e44ad','East Coast':'#16a085',
-  'Mid Atlantic':'#d4ac0d','Southeast':'#e07040',
+  'West Coast':'#a855f7','South Central':'#FF623E','North Central':'#FACC15',
+  'Midwest':'#0ea5e9','Mid East':'#e879f9','East Coast':'#00FF63',
+  'Mid Atlantic':'#38bdf8','Southeast':'#fb923c',
 };
 const CXM_CXS = [
   { region:'West Coast',    cxm:'Jessica Lopez',          cxs:'Claire Martin',     rc:'Karen Torrell' },
@@ -459,95 +987,12 @@ const CXM_CXS = [
 ];
 const ADDITIONAL_COACHES = ['Andrew Aleman', 'Heather Biddle'];
 
-// ── CHARTS ────────────────────────────────────────────────────
-let regionChart, quarterChart, programChart;
-
-const CDEFS = {
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1,
-      titleColor: '#e0e0e0', bodyColor: '#888', padding: 10,
-      titleFont: { family: "'Barlow Condensed', sans-serif", size: 13, weight: '700' },
-      bodyFont: { family: "'Inter', sans-serif", size: 10 }
-    }
-  }
-};
-
-function initCharts() {
-  const gc = '#E5E5E5', tc = '#888888';
-  regionChart = new Chart(document.getElementById('regionChart'), {
-    type: 'bar',
-    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4, barPercentage: 0.7 }] },
-    options: {
-      ...CDEFS, indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { grid: { color: gc }, ticks: { color: tc, font: { family: "'Inter'", size: 9 } } },
-        y: { grid: { display: false }, ticks: { color: '#444', font: { family: "'Barlow Condensed'", size: 12, weight: '600' } } }
-      }
-    }
+// ── TAB NAVIGATION ──────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.page-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-' + tab);
   });
-  quarterChart = new Chart(document.getElementById('quarterChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Q1','Q2','Q3','Q4'],
-      datasets: [
-        { label: 'Initial Training',         data: [], backgroundColor: '#1A7A3C', borderRadius: 2, barPercentage: 0.8 },
-        { label: 'Dual Training',             data: [], backgroundColor: '#6B2FA0', borderRadius: 2, barPercentage: 0.8 },
-        { label: 'Online IT',                 data: [], backgroundColor: '#0E7490', borderRadius: 2, barPercentage: 0.8 },
-        { label: 'Advanced',                  data: [], backgroundColor: '#B85C00', borderRadius: 2, barPercentage: 0.8 },
-        { label: 'Online Advanced',           data: [], backgroundColor: '#E8941A', borderRadius: 2, barPercentage: 0.8 },
-        { label: 'Workshop',                  data: [], backgroundColor: '#FF623E', borderRadius: 2, barPercentage: 0.8 }
-      ]
-    },
-    options: {
-      ...CDEFS,
-      plugins: { ...CDEFS.plugins, legend: { display: true, labels: { color: '#888', font: { family: "'Inter'", size: 9 }, boxWidth: 8, padding: 10 } } },
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { stacked: false, grid: { display: false }, ticks: { color: '#444', font: { family: "'Barlow Condensed'", size: 12 } } },
-        y: { stacked: false, grid: { color: gc }, ticks: { color: tc, font: { family: "'Inter'", size: 9 } } }
-      }
-    }
-  });
-  programChart = new Chart(document.getElementById('programChart'), {
-    type: 'bar',
-    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4, barPercentage: 0.65 }] },
-    options: {
-      ...CDEFS, indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { grid: { color: gc }, ticks: { color: tc, font: { family: "'Inter'", size: 9 } } },
-        y: { grid: { display: false }, ticks: { color: '#888', font: { family: "'Barlow Condensed'", size: 12, weight: '700' } } }
-      }
-    }
-  });
-  updateCharts(BOOKINGS);
-}
-
-function updateCharts(filtered) {
-  const regionColors = {
-    'East Coast':'#00FF63','Mid West':'#0ea5e9','South Central':'#FF623E',
-    'Central':'#FACC15','West Coast':'#a855f7'
-  };
-  const regions = [...new Set(filtered.map(b => b.region))].sort();
-  regionChart.data.labels = regions;
-  regionChart.data.datasets[0].data = regions.map(r => filtered.filter(b => b.region === r).length);
-  regionChart.data.datasets[0].backgroundColor = regions.map(r => regionColors[r] || '#888');
-  regionChart.update();
-
-  const qs = ['Q1','Q2','Q3','Q4'];
-  const types = ['Initial Training','Dual Training','Online IT','Advanced Training','Online Advanced Training','Instructor Workshop'];
-  types.forEach((t, i) => {
-    quarterChart.data.datasets[i].data = qs.map(q => filtered.filter(b => b.fiscalQuarter === q && b.eventType === t).length);
-  });
-  quarterChart.update();
-
-  const wsRegions = ['East Coast','Mid West','South Central','Central','West Coast'];
-  const wsColors = ['#00FF63','#0ea5e9','#FF623E','#FACC15','#a855f7'];
-  programChart.data.labels = wsRegions;
-  programChart.data.datasets[0].data = wsRegions.map(r => filtered.filter(b => b.region===r && b.eventType==='Instructor Workshop').length);
-  programChart.data.datasets[0].backgroundColor = wsColors;
-  programChart.update();
 }
 
 function renderDirectory() {
@@ -590,6 +1035,7 @@ var intelWired = false;
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 const state = { fy:'All', q:'All', type:[], region:'All', selectedPrograms:[], drillRegion:'All' };
+var bdState = { type: 'all', q: 'all', fy: 'all', region: 'all' };
 let currentDrillData = [];
 
 function showApp() {
@@ -598,9 +1044,37 @@ function showApp() {
   document.getElementById('totalBadge').textContent = BOOKINGS.length + ' bookings';
   renderProgPills();
   renderDirectory();
-  initCharts();
   renderIntelligence();
+  renderOpsStrip();
+  renderTrainingBreakdown();
 }
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('lmus_theme', isDark ? 'dark' : 'light');
+  const label = document.getElementById('theme-label');
+  const icon  = document.getElementById('theme-icon');
+  if (isDark) {
+    label.textContent = 'Light';
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    label.textContent = 'Dark';
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+  renderTrainingBreakdown();
+}
+
+// Restore saved theme before app loads
+(function() {
+  const saved = localStorage.getItem('lmus_theme');
+  if (saved === 'dark') {
+    document.body.classList.add('dark-mode');
+    const label = document.getElementById('theme-label');
+    const icon  = document.getElementById('theme-icon');
+    if (label) label.textContent = 'Light';
+    if (icon)  icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+})();
 
 if (localStorage.getItem(AUTH_KEY) === '1') {
   showApp();
@@ -687,9 +1161,8 @@ document.getElementById('csv-file').addEventListener('change', function() {
       localStorage.setItem(BOOKINGS_TS_KEY, ts);
       setUploadTimestamp(ts);
       document.getElementById('totalBadge').textContent = BOOKINGS.length + ' bookings';
-      updateCharts(BOOKINGS);
       renderProgPills();
-      intelData = null; intelWired = false; renderIntelligence();
+      intelData = null; intelWired = false; renderIntelligence(); renderOpsStrip(); renderTrainingBreakdown();
     } else {
       alert('Upload failed — check that the CSV has the required columns.');
     }
@@ -723,7 +1196,7 @@ function renderProgPills() {
 }
 
 function renderDrillRegionFilters() {
-  const regions = ['All','East Coast','Mid West','South Central','Central','West Coast'];
+  const regions = ['All','East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
   document.getElementById('drillRegionFilters').innerHTML = state.selectedPrograms.length ? regions.map(r =>
     `<button class="drf-btn${state.drillRegion===r?' active':''}" onclick="selectDrillRegion('${r}')">${r}</button>`
   ).join('') : '';
@@ -751,9 +1224,19 @@ function refreshDrill() {
 }
 
 function renderDrill(filtered) {
+  const BD_FULL_TYPES = {
+    'Initial Training':    ['Initial Training'],
+    'Dual Training':       ['Dual Training'],
+    'Online IT':           ['Online IT'],
+    'Advanced Training':   ['Advanced Training','Online Advanced Training'],
+    'Instructor Workshop': ['Instructor Workshop'],
+  };
   const progData = filtered.filter(b =>
     state.selectedPrograms.includes(b.program) &&
-    (state.drillRegion === 'All' || b.region === state.drillRegion)
+    (state.drillRegion === 'All' || b.region === state.drillRegion) &&
+    (bdState.type === 'all' || (BD_FULL_TYPES[bdState.type] || []).includes(b.eventType)) &&
+    (bdState.q    === 'all' || b.fiscalQuarter === bdState.q) &&
+    (bdState.fy   === 'all' || b.fiscalYear    === bdState.fy)
   );
   currentDrillData = progData;
   if (!progData.length) {
@@ -761,9 +1244,9 @@ function renderDrill(filtered) {
     return;
   }
 
-  const regions = ['East Coast','Mid West','South Central','Central','West Coast'];
-  const regionColors = ['#00FF63','#0ea5e9','#FF623E','#FACC15','#a855f7'];
-  const RC = {'East Coast':'rb-east','Mid West':'rb-midwest','South Central':'rb-southcentral','Central':'rb-central','West Coast':'rb-west'};
+  const regions = ['East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const regionColors = ['#00FF63','#0ea5e9','#FF623E','#FACC15','#a855f7','#facc15','#f472b6','#2dd4bf','#fb923c'];
+  const RC = {'East Coast':'rb-east','Mid West':'rb-midwest','South Central':'rb-southcentral','Central':'rb-central','West Coast':'rb-west','North Central':'rb-northcentral','Mid East':'rb-mideast','Mid Atlantic':'rb-midatlantic','Southeast':'rb-southeast'};
 
   const trainerMap = {};
   progData.forEach(b => {
@@ -1143,6 +1626,276 @@ function renderIntelList() {
   }).join('');
 }
 
+/* ═══════════════════════════════════════════════
+   OPS QUARTER INTELLIGENCE
+═══════════════════════════════════════════════ */
+function computeOpsMetrics() {
+  const today = new Date();
+  function getFQ(date) {
+    const m = date.getMonth(), y = date.getFullYear();
+    if (m >= 3 && m <= 5)  return { fy:`FY${y+1}`, q:'Q1' };
+    if (m >= 6 && m <= 8)  return { fy:`FY${y+1}`, q:'Q2' };
+    if (m >= 9 && m <= 11) return { fy:`FY${y+1}`, q:'Q3' };
+    return { fy:`FY${y}`, q:'Q4' };
+  }
+  const currentFQ = getFQ(today);
+  const prevDate = new Date(today); prevDate.setMonth(prevDate.getMonth() - 3);
+  const prevFQ = getFQ(prevDate);
+
+  const allB = BOOKINGS;
+  const thisQB = allB.filter(b => b.fiscalYear === currentFQ.fy && b.fiscalQuarter === currentFQ.q);
+  const prevQB = allB.filter(b => b.fiscalYear === prevFQ.fy && b.fiscalQuarter === prevFQ.q);
+  const upcomingB = allB.filter(b => { const d = new Date(b.startDate); return !isNaN(d) && d > today; });
+  const activeTrainers = new Set(allB.map(b => b.trainer)).size;
+
+  const RCOLORS = { 'East Coast':'#00FF63','Mid West':'#38bdf8','South Central':'#fb7a5f','Central':'#fde047','West Coast':'#c084fc','North Central':'#facc15','Mid East':'#f472b6','Mid Atlantic':'#2dd4bf','Southeast':'#fb923c' };
+  const regions = ['East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const regionVols = regions.map(r => ({ r, n: allB.filter(b => b.region === r).length, color: RCOLORS[r] }))
+    .sort((a, b) => a.n - b.n);
+
+  const typeDefs = { IT: ['Initial Training','Online IT'], AT: ['Advanced Training','Online Advanced Training'], DT: ['Dual Training'], WS: ['Instructor Workshop'] };
+  const typeCounts = {};
+  Object.entries(typeDefs).forEach(([k, types]) => { typeCounts[k] = allB.filter(b => types.includes(b.eventType)).length; });
+
+  const typeColors = { IT: '#22d3ee', AT: '#f59e0b', DT: '#a855f7', WS: '#ff8a6e' };
+
+  // Upcoming by type
+  const upcomingByType = {};
+  Object.entries(typeDefs).forEach(([k, types]) => {
+    upcomingByType[k] = upcomingB.filter(b => types.includes(b.eventType)).length;
+  });
+
+  const delta = prevQB.length
+    ? Math.round(((thisQB.length - prevQB.length) / prevQB.length) * 100)
+    : null;
+
+  return { currentFQ, prevFQ, thisQB, prevQB, upcomingB, activeTrainers, regionVols, typeCounts, typeColors, upcomingByType, delta, total: allB.length };
+}
+
+function renderOpsStrip() {
+  const strip = document.getElementById('opsStrip');
+  if (!strip) return;
+  const m = computeOpsMetrics();
+
+  const deltaHtml = m.delta !== null
+    ? `<div class="ops-metric-delta ${m.delta > 0 ? 'up' : m.delta < 0 ? 'dn' : 'flat'}">
+        ${m.delta > 0 ? '↑' : m.delta < 0 ? '↓' : '→'} ${Math.abs(m.delta)}% vs ${m.prevFQ.q}
+       </div>`
+    : `<div class="ops-metric-delta flat">→ All-time data</div>`;
+
+  // FY2027 quarterly breakdown — Q1 started Apr 1; Q2/Q3/Q4 not yet planned
+  const fy27 = BOOKINGS.filter(b => b.fiscalYear === 'FY2027');
+  const qTotals27 = { Q1: 0, Q2: null, Q3: null, Q4: null };
+  fy27.forEach(b => { if (b.fiscalQuarter === 'Q1') qTotals27.Q1++; });
+  const qGrid = Object.entries(qTotals27).map(([q, n]) => {
+    const isActive = q === 'Q1';
+    const isUnplanned = n === null;
+    return `<div class="ops-q-cell${isActive ? ' active' : ''}${isUnplanned ? ' unplanned' : ''}">
+       <span class="ops-q-label">${q}</span>
+       <span class="ops-q-val">${isUnplanned ? '—' : n}</span>
+     </div>`;
+  }).join('');
+
+  const upcomingRows = Object.entries(m.upcomingByType).filter(([,n]) => n > 0).map(([k, n]) =>
+    `<div class="ops-upcoming-item">
+       <span class="ops-upcoming-dot" style="background:${m.typeColors[k]}"></span>
+       <span class="ops-upcoming-type" style="color:${m.typeColors[k]}">${k}</span>
+       <span class="ops-upcoming-count" style="color:${m.typeColors[k]}">${n}</span>
+     </div>`
+  ).join('') || `<div style="padding:8px 0;color:var(--muted);font-size:12px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;">No upcoming events</div>`;
+
+  const minN = m.regionVols[0].n, maxN = m.regionVols[m.regionVols.length-1].n;
+  const regionRows = [...m.regionVols].reverse().map(({ r, n, color }) => {
+    const flag = n <= minN ? 'focus' : n >= maxN ? 'strong' : 'mid';
+    const flagLabel = flag === 'focus' ? 'FOCUS' : flag === 'strong' ? 'STRONG' : 'MID';
+    return `<div class="ops-region-row">
+      <div class="ops-region-name"><span class="ops-region-dot" style="background:${color}"></span>${r}</div>
+      <div class="ops-region-right">
+        <span class="ops-region-count">${n}</span>
+        <span class="ops-region-flag ${flag}">${flagLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  strip.innerHTML = `
+    <div class="ops-metric" style="--om-color:var(--accent)">
+      <div class="ops-metric-label">Total Bookings</div>
+      <div class="ops-metric-val">${m.total}</div>
+      ${deltaHtml}
+      <div class="ops-q-grid">${qGrid}</div>
+    </div>
+    <div class="ops-metric" style="--om-color:var(--lm-teal)">
+      <div class="ops-metric-label">Confirmed Pipeline</div>
+      <div class="ops-metric-val">${m.upcomingB.length}</div>
+      <div class="ops-metric-sub">events scheduled from today</div>
+      <div class="ops-upcoming-list">${upcomingRows}</div>
+    </div>
+    <div class="ops-metric" style="--om-color:#ff8a6e">
+      <div class="ops-metric-label">Region Spread · Plan Ahead</div>
+      <div class="ops-region-list">${regionRows}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   TRAINING BREAKDOWN PANEL
+═══════════════════════════════════════════════ */
+function renderTrainingBreakdown() {
+  const el = document.getElementById('breakdownStrip');
+  if (!el) return;
+
+  const TYPE_DEFS = { IT: ['Initial Training','Online IT'], AT: ['Advanced Training','Online Advanced Training'], DT: ['Dual Training'], WS: ['Instructor Workshop'] };
+  const TYPE_COLORS = { IT: '#0891B2', AT: '#D97706', DT: '#7C3AED', WS: '#DC2626' };
+  const TYPE_COLORS_DARK = { IT: '#22d3ee', AT: '#f59e0b', DT: '#a855f7', WS: '#ff8a6e' };
+  const REGION_COLORS_LIGHT = {
+    'East Coast':    '#16a34a',
+    'Mid West':      '#0284c7',
+    'South Central': '#dc2626',
+    'Central':       '#b45309',
+    'West Coast':    '#7c3aed',
+    'North Central': '#a16207',
+    'Mid East':      '#be185d',
+    'Mid Atlantic':  '#0d9488',
+    'Southeast':     '#c2410c',
+  };
+  const REGION_COLORS_DARK = {
+    'East Coast':    '#00FF63',
+    'Mid West':      '#38bdf8',
+    'South Central': '#fb7a5f',
+    'Central':       '#fde047',
+    'West Coast':    '#c084fc',
+    'North Central': '#facc15',
+    'Mid East':      '#f472b6',
+    'Mid Atlantic':  '#2dd4bf',
+    'Southeast':     '#fb923c',
+  };
+
+  const isDark = document.body.classList.contains('dark-mode');
+  const RC = isDark ? REGION_COLORS_DARK : REGION_COLORS_LIGHT;
+
+  const regions = ['East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+
+  const FULL_TYPES = [
+    { key: 'all',                  label: 'All',               match: null },
+    { key: 'Initial Training',     label: 'Initial Training',  match: ['Initial Training'] },
+    { key: 'Dual Training',        label: 'Dual Training',     match: ['Dual Training'] },
+    { key: 'Online IT',            label: 'Online IT',         match: ['Online IT'] },
+    { key: 'Advanced Training',    label: 'Advanced Training', match: ['Advanced Training','Online Advanced Training'] },
+    { key: 'Instructor Workshop',  label: 'Workshop',          match: ['Instructor Workshop'] },
+  ];
+
+  const FULL_TYPE_COLORS_LIGHT = {
+    'Initial Training':'#1A7A3C','Dual Training':'#6B2FA0',
+    'Online IT':'#0E7490','Advanced Training':'#B85C00','Instructor Workshop':'#FF623E'
+  };
+  const FULL_TYPE_COLORS_DARK = {
+    'Initial Training':'#4ade80','Dual Training':'#a855f7',
+    'Online IT':'#22d3ee','Advanced Training':'#f59e0b','Instructor Workshop':'#ff8a6e'
+  };
+  const FTC = isDark ? FULL_TYPE_COLORS_DARK : FULL_TYPE_COLORS_LIGHT;
+
+  const activeTypeDef = FULL_TYPES.find(t => t.key === bdState.type);
+
+  function getBdFiltered() {
+    return BOOKINGS.filter(b => {
+      const typeMatch   = !activeTypeDef?.match || activeTypeDef.match.includes(b.eventType);
+      const qMatch      = bdState.q      === 'all' || b.fiscalQuarter === bdState.q;
+      const fyMatch     = bdState.fy     === 'all' || b.fiscalYear    === bdState.fy;
+      const regionMatch = bdState.region === 'all' || b.region        === bdState.region;
+      return typeMatch && qMatch && fyMatch && regionMatch;
+    });
+  }
+
+  const filtered = getBdFiltered();
+  const grandTotal = filtered.length;
+
+  const regionTotals = regions.map(r => ({ r, n: filtered.filter(b => b.region === r).length, color: RC[r] }));
+  const maxR = Math.max(...regionTotals.map(x => x.n), 1);
+  const barColor = bdState.type !== 'all' ? FTC[bdState.type] : null;
+
+  const barsHtml = regionTotals.map(({ r, n, color }) => {
+    const fillColor = barColor || color;
+    const pct = (n / maxR * 100).toFixed(1);
+    return `<div class="bd-region-block" style="--bd-rc:${color}">
+      <div class="bd-region-name" style="color:${color}">${r}</div>
+      <div class="bd-region-count${n === 0 ? ' zero' : ''}" style="color:${n > 0 ? color : ''}">${n}</div>
+      <div class="bd-bar-row">
+        <div class="bd-bar-bg"><div class="bd-bar-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const fyButtons = ['all','FY2026','FY2027'].map(fy => {
+    const label = fy === 'all' ? 'All' : fy;
+    return `<button class="bd-btn${bdState.fy===fy?' active':''}" onclick="setBdFy('${fy}')">${label}</button>`;
+  }).join('');
+
+  const REGION_LIST = ['all','East Coast','Mid West','South Central','Central','West Coast','North Central','Mid East','Mid Atlantic','Southeast'];
+  const regionButtons = REGION_LIST.map(r => {
+    const label = r === 'all' ? 'All' : r;
+    const col = r !== 'all' ? RC[r] : null;
+    const activeStyle = r !== 'all' && bdState.region === r
+      ? `style="color:${col};border-color:${col}55;background:${col}18"` : '';
+    return `<button class="bd-btn${bdState.region===r?' active':''}" ${activeStyle} onclick="setBdRegion('${r}')">${label}</button>`;
+  }).join('');
+
+  const typeButtons = FULL_TYPES.map(({ key, label }) => {
+    const col = key !== 'all' ? FTC[key] : null;
+    const activeStyle = key !== 'all' && bdState.type === key
+      ? `style="color:${col};border-color:${col}55;background:${col}18"` : '';
+    return `<button class="bd-btn${bdState.type===key?' active':''}" ${activeStyle} onclick="setBdType('${key}')">${label}</button>`;
+  }).join('');
+
+  const qButtons = ['all','Q1','Q2','Q3','Q4'].map(q => {
+    const label = q === 'all' ? 'All' : q;
+    return `<button class="bd-btn${bdState.q===q?' active':''}" onclick="setBdQ('${q}')">${label}</button>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="breakdown-head" style="flex-wrap:wrap;gap:10px 20px;">
+      <div class="breakdown-title">Training Breakdown</div>
+      <div class="breakdown-filter-group">
+        <span class="breakdown-filter-label">FY</span>
+        ${fyButtons}
+      </div>
+      <div class="breakdown-filter-group">
+        <span class="breakdown-filter-label">Type</span>
+        ${typeButtons}
+      </div>
+      <div class="breakdown-filter-group">
+        <span class="breakdown-filter-label">Quarter</span>
+        ${qButtons}
+      </div>
+      <div class="breakdown-filter-group">
+        <span class="breakdown-filter-label">Region</span>
+        ${regionButtons}
+      </div>
+      <div class="bd-total-col">
+        <div class="bd-total-label">Total</div>
+        <div class="bd-total-val">${grandTotal}</div>
+      </div>
+    </div>
+    <div class="breakdown-body">${barsHtml}</div>`;
+}
+
+function updateTotalsBadge() {
+  const badge = document.getElementById('totalsFilterBadge');
+  if (!badge) return;
+  const active = bdState.type !== 'all' || bdState.q !== 'all' || bdState.fy !== 'all' || bdState.region !== 'all';
+  badge.style.display = active ? 'inline-block' : 'none';
+  if (active) {
+    const parts = [];
+    if (bdState.fy     !== 'all') parts.push(bdState.fy);
+    if (bdState.region !== 'all') parts.push(bdState.region);
+    if (bdState.type   !== 'all') parts.push(bdState.type);
+    if (bdState.q      !== 'all') parts.push(bdState.q);
+    badge.textContent = parts.join(' · ') + ' active';
+  }
+}
+window.setBdType   = function(t) { bdState.type   = t; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
+window.setBdQ      = function(q) { bdState.q      = q; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
+window.setBdFy     = function(f) { bdState.fy     = f; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
+window.setBdRegion = function(r) { bdState.region = r; renderTrainingBreakdown(); updateTotalsBadge(); if (state.selectedPrograms.length) refreshDrill(); };
+
 function wireFilter(id, key) {
   document.getElementById(id).addEventListener('click', e => {
     const btn = e.target.closest('.filter-btn');
@@ -1184,6 +1937,208 @@ wireFilter('fyFilters','fy');
 wireFilter('qFilters','q');
 wireMultiFilter('typeFilters','type');
 wireFilter('regionFilters','region');
+
+/* ═══════════════════════════════════════════════
+   SMART BOOKING SUGGESTER
+═══════════════════════════════════════════════ */
+const SBS_REGION_COLORS = {
+  'East Coast':'#00FF63','Mid West':'#0ea5e9','South Central':'#FF623E','Central':'#FACC15','West Coast':'#a855f7'
+};
+const SBS_STATE_REGION = {
+  ME:'East Coast',NH:'East Coast',VT:'East Coast',MA:'East Coast',RI:'East Coast',CT:'East Coast',
+  NY:'East Coast',NJ:'East Coast',PA:'East Coast',DE:'East Coast',MD:'East Coast',DC:'East Coast',
+  VA:'East Coast',WV:'East Coast',NC:'East Coast',SC:'East Coast',GA:'East Coast',FL:'East Coast',
+  OH:'Mid West',MI:'Mid West',IN:'Mid West',IL:'Mid West',WI:'Mid West',MN:'Mid West',
+  IA:'Mid West',MO:'Mid West',ND:'Mid West',SD:'Mid West',NE:'Mid West',KS:'Mid West',
+  TX:'South Central',OK:'South Central',AR:'South Central',LA:'South Central',
+  MS:'South Central',AL:'South Central',TN:'South Central',KY:'South Central',
+  CO:'Central',WY:'Central',MT:'Central',ID:'Central',UT:'Central',NV:'Central',AZ:'Central',NM:'Central',
+  WA:'West Coast',OR:'West Coast',CA:'West Coast',AK:'West Coast',HI:'West Coast'
+};
+
+const RC_NAMES = new Set([
+  'Karen Torrell','Sarah Gruba','Trae Tripoli','Dan Maroun',
+  'Justine Collado','Jaime Terrell','Keri Ball','Stacy Dee Rathborne',
+]);
+
+let sbsTypeFilter = null;
+
+function sbsDetectRegion() {
+  const str = document.getElementById('sbsLocation').value.trim();
+  const tag = document.getElementById('sbsLocTag');
+  if (!str) { tag.textContent = ''; return null; }
+  const tokens = str.toUpperCase().replace(/[^A-Z\s]/g,' ').split(/\s+/).filter(Boolean);
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    if (SBS_STATE_REGION[tokens[i]]) {
+      const r = SBS_STATE_REGION[tokens[i]];
+      tag.textContent = '→ ' + r;
+      return r;
+    }
+  }
+  const lower = str.toLowerCase();
+  for (const r of ['East Coast','Mid West','South Central','Central','West Coast']) {
+    if (lower.includes(r.toLowerCase())) { tag.textContent = '→ ' + r; return r; }
+  }
+  tag.textContent = 'Region not detected';
+  return null;
+}
+
+function toggleSBSType(btn) {
+  const type = btn.dataset.type;
+  if (sbsTypeFilter === type) {
+    sbsTypeFilter = null;
+    document.querySelectorAll('.sbs-type-btn').forEach(b => b.classList.remove('active'));
+  } else {
+    sbsTypeFilter = type;
+    document.querySelectorAll('.sbs-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  }
+}
+
+
+function sbsFQ(date) {
+  const m = date.getMonth(), y = date.getFullYear();
+  if (m >= 3 && m <= 5)  return { fy:`FY${y+1}`, q:'Q1' };
+  if (m >= 6 && m <= 8)  return { fy:`FY${y+1}`, q:'Q2' };
+  if (m >= 9 && m <= 11) return { fy:`FY${y+1}`, q:'Q3' };
+  return { fy:`FY${y}`, q:'Q4' };
+}
+function sbsWeekend(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  const dow = d.getDay();
+  const sat = new Date(d); sat.setDate(d.getDate() + (dow === 0 ? 6 : 6 - dow));
+  const sun = new Date(sat); sun.setDate(sat.getDate() + 1);
+  return { sat, sun };
+}
+
+function runSBS() {
+  const program  = document.getElementById('sbsProgram').value;
+  const dateStr  = document.getElementById('sbsDate').value;
+  if (!program || !dateStr) {
+    document.getElementById('sbsBody').innerHTML =
+      '<div class="sbs-prompt"><strong>Missing Fields</strong>Select a program and event date to continue.</div>';
+    return;
+  }
+  const targetDate   = new Date(dateStr + 'T00:00:00');
+  const weekend      = sbsWeekend(targetDate);
+  const fq           = sbsFQ(targetDate);
+  const detectedReg  = sbsDetectRegion();
+
+  const map = {};
+  BOOKINGS.forEach(b => {
+    if (!map[b.trainer]) map[b.trainer] = { name:b.trainer, region:b.region, all:[], prog:[] };
+    map[b.trainer].all.push(b);
+    if (b.program === program) map[b.trainer].prog.push(b);
+  });
+
+  const results = [];
+  Object.values(map).forEach(t => {
+    if (!t.prog.length) return;
+
+    const hasIT       = t.prog.some(b => b.eventType === 'Initial Training' || b.eventType === 'Online IT');
+    const hasAT       = t.prog.some(b => b.eventType === 'Advanced Training' || b.eventType === 'Online Advanced Training');
+    const hasDT       = t.prog.some(b => b.eventType === 'Dual Training');
+    const hasWorkshop = t.prog.some(b => b.eventType === 'Instructor Workshop');
+    const isRC        = RC_NAMES.has(t.name);
+
+    // Training type filter (strict)
+    if (sbsTypeFilter === 'it'       && !hasIT)       return;
+    if (sbsTypeFilter === 'at'       && !hasAT)       return;
+    if (sbsTypeFilter === 'dt'       && !hasDT)       return;
+    if (sbsTypeFilter === 'workshop' && !hasWorkshop) return;
+    if (sbsTypeFilter === 'rc'       && !isRC)        return;
+
+    const isAvailable = !t.all.some(b => {
+      const bd = new Date(b.startDate);
+      return !isNaN(bd) && (bd.getTime() === weekend.sat.getTime() || bd.getTime() === weekend.sun.getTime());
+    });
+    const pastDates = t.prog.map(b => new Date(b.startDate)).filter(d => !isNaN(d) && d < targetDate).sort((a,b) => b-a);
+    const lastDate      = pastDates[0] || null;
+    const daysSinceLast = lastDate ? Math.round((targetDate - lastDate) / 86400000) : null;
+    const qCount = t.all.filter(b => {
+      const bd = new Date(b.startDate);
+      if (isNaN(bd)) return false;
+      const bfq = sbsFQ(bd);
+      return bfq.fy === fq.fy && bfq.q === fq.q;
+    }).length;
+
+    const inRegion = detectedReg ? t.region === detectedReg : null;
+    let score = 0;
+    if (inRegion) score += 30;
+    score += daysSinceLast === null ? 25 : Math.min(daysSinceLast / 10, 25);
+    score -= qCount * 2;
+
+    results.push({ name:t.name, region:t.region, inRegion, isAvailable, daysSinceLast, lastDate, qCount, score });
+  });
+
+  // Sort: available first; within available, in-region first; then by score desc
+  results.sort((a, b) => {
+    if (a.isAvailable !== b.isAvailable) return a.isAvailable ? -1 : 1;
+    if (detectedReg && a.inRegion !== b.inRegion) return a.inRegion ? -1 : 1;
+    return b.score - a.score;
+  });
+
+  renderSBS(results, { program, targetDate, detectedReg, fq });
+}
+
+function renderSBS(results, ctx) {
+  const body = document.getElementById('sbsBody');
+  if (!results.length) {
+    body.innerHTML = '<div class="sbs-prompt"><strong>No Qualified Trainers</strong>No trainers have prior bookings for this program.</div>';
+    return;
+  }
+  const fmt = d => d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+
+  // Split into in-region and other when location detected
+  const inRegion  = ctx.detectedReg ? results.filter(r => r.inRegion)  : results;
+  const otherReg  = ctx.detectedReg ? results.filter(r => !r.inRegion) : [];
+
+  let globalRank = 0;
+  function buildRow(r) {
+    globalRank++;
+    const rank = globalRank;
+    const rowCls = r.isAvailable ? (rank <= 3 ? `top${rank}` : '') : 'unavail';
+    let gapVal, gapCls, gapSub;
+    if (r.daysSinceLast === null)    { gapVal='—';                    gapCls='first';  gapSub='No prior booking'; }
+    else if (r.daysSinceLast > 90)   { gapVal=`${r.daysSinceLast}d`; gapCls='long';   gapSub='since last booking'; }
+    else if (r.daysSinceLast > 45)   { gapVal=`${r.daysSinceLast}d`; gapCls='mid';    gapSub='since last booking'; }
+    else                             { gapVal=`${r.daysSinceLast}d`; gapCls='recent'; gapSub='since last booking'; }
+    const rdot    = SBS_REGION_COLORS[r.region] || '#888';
+    const closest = r.inRegion ? '<span class="sbs-closest-tag">CLOSEST</span>' : '';
+    return `<div class="sbs-row ${rowCls}">
+      <div class="sbs-rank">${rank}</div>
+      <div><div class="sbs-name">${r.name}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${closest}</div></div>
+      <div><div class="sbs-gap-val ${gapCls}">${gapVal}</div><div class="sbs-gap-sub">${gapSub}</div></div>
+      <div><span class="sbs-avail-badge ${r.isAvailable?'yes':'no'}">${r.isAvailable?'&#x2713; Available':'&#x2717; Booked'}</span></div>
+      <div class="sbs-qcount"><div class="sbs-qcount-val">${r.qCount}</div><div class="sbs-qcount-sub">${ctx.fq.q} bookings</div></div>
+    </div>`;
+  }
+
+  const inRows    = inRegion.map(buildRow).join('');
+  const divider   = otherReg.length
+    ? `<div class="sbs-divider"><div class="sbs-divider-line"></div><div class="sbs-divider-label">Other Regions</div><div class="sbs-divider-line"></div></div>`
+    : '';
+  const otherRows = otherReg.map(buildRow).join('');
+
+  const pastAll   = results.flatMap(r => r.lastDate ? [r.lastDate] : []).sort((a,b) => b-a);
+  const available = results.filter(r => r.isAvailable).length;
+
+  body.innerHTML = `
+    <div class="sbs-col-heads">
+      <div class="sbs-ch">#</div><div class="sbs-ch">Trainer</div>
+      <div class="sbs-ch">Last Booked</div>
+      <div class="sbs-ch">Availability</div><div class="sbs-ch">Workload</div>
+    </div>
+    <div class="sbs-list">${inRows}${divider}${otherRows}</div>
+    <div class="sbs-prog-summary">
+      <div class="sbs-ps-title">${ctx.program} — Program Overview</div>
+      <div class="sbs-ps-grid">
+        <div><div class="sbs-ps-val">${results.length}</div><div class="sbs-ps-sub">Qualified trainers</div></div>
+        <div><div class="sbs-ps-val">${available}</div><div class="sbs-ps-sub">Available this weekend</div></div>
+        <div><div class="sbs-ps-val">${fmt(pastAll[0])}</div><div class="sbs-ps-sub">Most recent booking</div></div>
+        <div><div class="sbs-ps-val">${fmt(pastAll[pastAll.length-1])}</div><div class="sbs-ps-sub">Oldest booking on record</div></div>
+      </div>
+    </div>`;
+}
 </script>
 </body>
 </html>

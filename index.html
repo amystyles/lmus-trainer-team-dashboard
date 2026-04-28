@@ -302,6 +302,55 @@
   .td-next.soon { color:var(--lm-amber); font-weight:700; }
   .td-next.none { color:var(--border-mid); }
 
+  /* ── Dark mode ── */
+  body.dark-mode {
+    --bg:           #111115;
+    --bg-subtle:    #0B0B0E;
+    --bg-sunken:    #080809;
+    --bg-dark:      #000000;
+    --card:         #111115;
+    --lm-green:     #4ade80;
+    --lm-amber:     #f59e0b;
+    --lm-red:       #f87171;
+    --lm-blue:      #60a5fa;
+    --lm-gold:      #fcd34d;
+    --lm-purple:    #a855f7;
+    --lm-teal:      #22d3ee;
+    --text:         #EFEFEF;
+    --ink-mid:      #A0A0B0;
+    --muted:        #6A6A8A;
+    --border:       rgba(255,255,255,0.07);
+    --border-mid:   rgba(255,255,255,0.13);
+  }
+  body.dark-mode .rb-east         { color: #00FF63; border-color: rgba(0,255,99,0.35); background: rgba(0,255,99,0.08); }
+  body.dark-mode .rb-midwest      { color: #38bdf8; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
+  body.dark-mode .rb-southcentral { color: #fb7a5f; border-color: rgba(251,122,95,0.3); background: rgba(251,122,95,0.08); }
+  body.dark-mode .rb-central      { color: #fde047; border-color: rgba(253,224,71,0.4); background: rgba(253,224,71,0.08); }
+  body.dark-mode .rb-west         { color: #c084fc; border-color: rgba(192,132,252,0.3); background: rgba(192,132,252,0.08); }
+  body.dark-mode thead th         { background: rgba(255,255,255,0.03); }
+  body.dark-mode tbody tr:hover   { background: rgba(255,255,255,0.04); }
+  body.dark-mode .ei-prog,
+  body.dark-mode .ei-name         { color: var(--ink-mid); }
+  body.dark-mode .filters-bar     { background: var(--bg-dark); border-bottom-color: rgba(255,255,255,0.06); }
+  body.dark-mode .filter-btn      { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); color: var(--ink-mid); }
+  body.dark-mode .filter-btn:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+  body.dark-mode .filter-btn.active { background: rgba(0,255,99,0.12); border-color: rgba(0,255,99,0.4); color: var(--accent); }
+  body.dark-mode .chart-card,
+  body.dark-mode .section-card,
+  body.dark-mode .table-card,
+  body.dark-mode .stat-strip,
+  body.dark-mode .stat-card       { box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04); }
+
+  .theme-toggle-idx {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 20px; padding: 5px 12px; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap;
+  }
+  .theme-toggle-idx:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.35); }
+  .theme-toggle-idx svg { width: 13px; height: 13px; flex-shrink: 0; }
+
   /* ── Tabs ── */
 </style>
 </head>
@@ -317,6 +366,10 @@
   <a href="regional-ops.html" class="nav-btn">Regional Ops</a>
   <a href="map.html" class="nav-btn">Map View</a>
   <div class="header-badge" id="totalBadge">&#8212; bookings</div>
+  <button class="theme-toggle-idx" id="theme-toggle-idx" onclick="toggleThemeIdx()">
+    <svg id="theme-icon-idx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <span id="theme-label-idx">Dark</span>
+  </button>
 </header>
 
 <div class="filters-bar">
@@ -365,6 +418,7 @@
 </div>
 
 <main>
+  <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;" id="statStripLabel"></div>
   <div class="stat-strip">
     <div class="stat-chip it">
       <div class="sc-label">Initial Training</div>
@@ -441,6 +495,32 @@
 <script src="bookings-data.js"></script>
 <script>
 
+// ── DARK MODE ──────────────────────────────────────────────────
+function toggleThemeIdx() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('lmus_theme', isDark ? 'dark' : 'light');
+  const label = document.getElementById('theme-label-idx');
+  const icon  = document.getElementById('theme-icon-idx');
+  if (isDark) {
+    label.textContent = 'Light';
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    label.textContent = 'Dark';
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+  updateChartsTheme(isDark);
+}
+
+(function() {
+  const saved = localStorage.getItem('lmus_theme');
+  if (saved === 'dark') {
+    document.body.classList.add('dark-mode');
+    const label = document.getElementById('theme-label-idx');
+    const icon  = document.getElementById('theme-icon-idx');
+    if (label) label.textContent = 'Light';
+    if (icon)  icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+})();
 
 const TYPE_COLOR = {
   'Initial Training':'var(--lm-green)', 'Online IT':'var(--lm-teal)',
@@ -584,22 +664,35 @@ function renderRegionDir() {
   panel.classList.add('visible');
 }
 
+function getCurrentFiscalQY() {
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  let q, fy;
+  if (m >= 3 && m <= 5)  { q = 'Q1'; fy = `FY${y + 1}`; }
+  else if (m >= 6 && m <= 8)  { q = 'Q2'; fy = `FY${y + 1}`; }
+  else if (m >= 9 && m <= 11) { q = 'Q3'; fy = `FY${y + 1}`; }
+  else                         { q = 'Q4'; fy = `FY${y}`; }
+  return { q, fy };
+}
+
 function render() {
   const filtered = getFiltered();
   document.getElementById('totalBadge').textContent = filtered.length + ' bookings';
   renderRegionDir();
 
-  // Stat counts
-  const it     = filtered.filter(b => b.eventType === 'Initial Training').length;
-  const onlineIT = filtered.filter(b => b.eventType === 'Online IT').length;
-  const advIP  = filtered.filter(b => b.eventType === 'Advanced Training').length;
-  const advOnline = filtered.filter(b => b.eventType === 'Online Advanced Training').length;
+  // Stat strip: always current fiscal quarter only
+  const { q: cq, fy: cfy } = getCurrentFiscalQY();
+  document.getElementById('statStripLabel').textContent = `${cq} ${cfy} · Current Quarter`;
+  const cqData = BOOKINGS.filter(b => b.fiscalQuarter === cq && b.fiscalYear === cfy);
+  const it     = cqData.filter(b => b.eventType === 'Initial Training').length;
+  const onlineIT = cqData.filter(b => b.eventType === 'Online IT').length;
+  const advIP  = cqData.filter(b => b.eventType === 'Advanced Training').length;
+  const advOnline = cqData.filter(b => b.eventType === 'Online Advanced Training').length;
   const adv    = advIP + advOnline;
-  const ws     = filtered.filter(b => b.eventType === 'Instructor Workshop').length;
-  // Dual: count unique dualGroup values
-  const dualGroups = new Set(filtered.filter(b => b.eventType === 'Dual Training' && b.dualGroup).map(b => b.dualGroup));
-  const dualBookings = filtered.filter(b => b.eventType === 'Dual Training').length;
-  const tc = new Set(filtered.map(b => b.trainer)).size || 1;
+  const ws     = cqData.filter(b => b.eventType === 'Instructor Workshop').length;
+  const dualGroups = new Set(cqData.filter(b => b.eventType === 'Dual Training' && b.dualGroup).map(b => b.dualGroup));
+  const dualBookings = cqData.filter(b => b.eventType === 'Dual Training').length;
+  const tc = new Set(cqData.map(b => b.trainer)).size || 1;
   const avg = n => (n / tc).toFixed(1);
   document.getElementById('statIT').textContent         = it;
   document.getElementById('statITSub').textContent      = it ? `avg ${avg(it)}/trainer` : '';
@@ -639,6 +732,22 @@ function updateCharts(filtered) {
   programChart.data.datasets[0].backgroundColor = wsColors;
   document.getElementById('programWrap').style.height = '220px';
   programChart.update();
+}
+
+function updateChartsTheme(isDark) {
+  const gc  = isDark ? 'rgba(255,255,255,0.06)' : '#E8E8E3';
+  const tc  = isDark ? '#6A6A8A' : '#888888';
+  const ytc = isDark ? '#A0A0B0' : '#444444';
+  [regionChart, quarterChart, programChart].forEach(chart => {
+    if (!chart) return;
+    Object.keys(chart.options.scales).forEach(axis => {
+      const s = chart.options.scales[axis];
+      if (s.grid)  s.grid.color  = gc;
+      if (s.ticks) s.ticks.color = axis === 'y' ? ytc : tc;
+    });
+    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = tc;
+    chart.update();
+  });
 }
 
 // ── Trainer table ──────────────────────────────────────────────────────────
@@ -855,6 +964,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 
 initCharts();
 render();
+
 </script>
 </body>
 </html>
