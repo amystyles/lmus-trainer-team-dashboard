@@ -1198,6 +1198,9 @@
     background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
   body.dark-mode .sbs-prog2-select { background-color:#1a1a20; color:#EFEFEF; }
   .sbs-dual-badge { display:inline-block; font-size:8px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); color:#a855f7; margin-left:6px; vertical-align:middle; }
+  .sbs-prog-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:5px; }
+  .sbs-prog-chip { font-family:'DM Mono',monospace; font-size:8px; font-weight:500; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); letter-spacing:0.3px; }
+  body:not(.dark-mode) .sbs-prog-chip { background:rgba(0,0,0,0.05); border-color:rgba(0,0,0,0.1); color:rgba(0,0,0,0.4); }
   .sbs-ps-card--clickable { cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; }
   .sbs-ps-card--clickable:hover { box-shadow:0 0 0 2px rgba(245,158,11,0.3); }
   .sbs-ps-card--clickable.overdue-active { box-shadow:0 0 0 2px rgba(245,158,11,0.6), 0 0 16px rgba(245,158,11,0.15); }
@@ -3279,7 +3282,11 @@ function renderSBS(results, ctx) {
     return `<div class="sbs-row ${rowCls} tier-${r.regionTier}" ${r.daysSinceLast !== null && r.daysSinceLast > 90 ? 'data-overdue="true"' : ''} onclick="toggleSbsRow(this)">
       <div class="sbs-row-head">
         <div class="sbs-rank">${rank}</div>
-        <div><div class="sbs-name">${r.name}${r.isDualPair ? '<span class="sbs-dual-badge">Dual Pair</span>' : ''}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div></div>
+        <div>
+          <div class="sbs-name">${r.name}${r.isDualPair ? '<span class="sbs-dual-badge">Dual Pair</span>' : ''}</div>
+          <div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div>
+          ${(() => { const m = window.TEAM_MEMBERS?.find(x => x.full_name === r.name); const progs = m?.programs ? Object.keys(m.programs) : []; return progs.length ? `<div class="sbs-prog-chips">${progs.map(p=>`<span class="sbs-prog-chip">${p}</span>`).join('')}</div>` : ''; })()}
+        </div>
         <div class="sbs-gap-cell">
           <div class="sbs-gap-val ${gapCls}">${gapVal}</div>
           <div class="sbs-gap-sub">${gapSub}</div>
