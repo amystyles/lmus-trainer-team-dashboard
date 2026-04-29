@@ -476,7 +476,7 @@
     <div class="header-sub">TRAINER TEAM</div>
   </div>
   <div class="header-spacer"></div>
-  <a href="trainer.html" class="nav-btn">Trainer Login</a>
+  <a href="trainer.html" class="nav-btn">TAP Login</a>
   <a href="regional-ops.html" class="nav-btn">Regional Ops</a>
   <a href="map.html" class="nav-btn">Map View</a>
   <div class="header-badge" id="totalBadge">&#8212; bookings</div>
@@ -609,7 +609,7 @@
   </div>
 </main>
 
-<script src="bookings-data.js"></script>
+<script src="supabase-data.js"></script>
 <script>
 
 // ── 8-REGION MAP MAPPING (matches map.html) ───────────────────
@@ -620,14 +620,32 @@ const STATE_TO_MAP_REGION = {
   WI:'Midwest',MI:'Midwest',IL:'Midwest',IN:'Midwest',OH:'Midwest',MO:'Midwest',KS:'Midwest',
   ME:'Mid East',NH:'Mid East',VT:'Mid East',MA:'Mid East',CT:'Mid East',RI:'Mid East',NY:'Mid East',NJ:'Mid East',PA:'Mid East',
   VA:'East Coast',NC:'East Coast',SC:'East Coast',
-  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',
+  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',DC:'Mid Atlantic',
   FL:'Southeast',GA:'Southeast',AL:'Southeast',MS:'Southeast',TN:'Southeast',KY:'Southeast'
 };
 const LEGACY_TO_MAP_REGION = {
   'East Coast':'Mid East','Mid West':'Midwest','South Central':'South Central',
   'Central':'North Central','West Coast':'West Coast'
 };
-(function remapBookings() {
+function remapBookings() {
+  const RC_HOME_REGION = {
+    'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
+    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
+    'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
+  };
+  // Pass 0: capture legacy-assigned region per trainer before event parsing overwrites it
+  const legacyCount = {};
+  BOOKINGS.forEach(b => {
+    const mapped = LEGACY_TO_MAP_REGION[b.region];
+    if (!mapped) return;
+    const c = (legacyCount[b.trainer] = legacyCount[b.trainer] || {});
+    c[mapped] = (c[mapped] || 0) + 1;
+  });
+  const legacyPrimary = {};
+  Object.keys(legacyCount).forEach(t => {
+    legacyPrimary[t] = Object.entries(legacyCount[t]).sort((a, b) => b[1] - a[1])[0][0];
+  });
+  // Pass 1: parse state from event name
   BOOKINGS.forEach(b => {
     const m = (b.event || '').match(/,\s*([A-Z]{2})\b/);
     if (m && STATE_TO_MAP_REGION[m[1]]) b.region = STATE_TO_MAP_REGION[m[1]];
@@ -647,22 +665,20 @@ const LEGACY_TO_MAP_REGION = {
     const legacy = b.region.slice('__pending__:'.length);
     b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
   });
-  // Trainer home region (RC pins + most-common booking region)
-  const RC_HOME_REGION = {
-    'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
-    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
-    'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
-  };
-  window.TRAINER_HOME_REGION = {};
-  Object.keys(trainerPrimary).forEach(t => {
-    window.TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || trainerPrimary[t];
-  });
-  BOOKINGS.forEach(b => {
-    if (!window.TRAINER_HOME_REGION[b.trainer]) {
-      window.TRAINER_HOME_REGION[b.trainer] = RC_HOME_REGION[b.trainer] || b.region;
-    }
-  });
-})();
+  // Pass 4: only build home regions if Supabase hasn't pre-populated them
+  if (!window.SUPABASE_ACTIVE) {
+    window.TRAINER_HOME_REGION = {};
+    const allTrainers = new Set(BOOKINGS.map(b => b.trainer));
+    allTrainers.forEach(t => {
+      window.TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || legacyPrimary[t] || trainerPrimary[t] || null;
+    });
+    BOOKINGS.forEach(b => {
+      if (!window.TRAINER_HOME_REGION[b.trainer]) {
+        window.TRAINER_HOME_REGION[b.trainer] = b.region;
+      }
+    });
+  }
+}
 
 // ── DARK MODE ──────────────────────────────────────────────────
 function toggleThemeIdx() {
@@ -1129,19 +1145,20 @@ function wireMultiFilter(id, key) {
     render();
   });
 }
-wireFilter('fyFilters','fy');
-wireFilter('qFilters','q');
-wireMultiFilter('typeFilters','type');
-wireFilter('regionFilters','region');
-
-document.getElementById('resetBtn').addEventListener('click', () => {
-  Object.assign(state, { fy:'All',q:'All',type:[],region:'All',expandedTrainer:null });
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.val==='All'));
+window.initTAP = function() {
+  remapBookings();
+  wireFilter('fyFilters','fy');
+  wireFilter('qFilters','q');
+  wireMultiFilter('typeFilters','type');
+  wireFilter('regionFilters','region');
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    Object.assign(state, { fy:'All',q:'All',type:[],region:'All',expandedTrainer:null });
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.val==='All'));
+    render();
+  });
+  initCharts();
   render();
-});
-
-initCharts();
-render();
+};
 
 </script>
 </body>

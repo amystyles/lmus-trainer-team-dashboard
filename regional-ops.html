@@ -1338,7 +1338,7 @@
       <span class="upload-timestamp" id="upload-timestamp"></span>
     </div>
     <input type="file" id="csv-file" accept=".csv" style="display:none" />
-    <a href="trainer.html" class="back-link">Trainer Login</a>
+    <a href="trainer.html" class="back-link">TAP Login</a>
     <a href="map.html" class="back-link">Trainer Map</a>
     <a href="index.html" class="back-link">← Dashboard</a>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
@@ -1479,7 +1479,7 @@
   </main>
 </div>
 
-<script src="bookings-data.js"></script>
+<script src="supabase-data.js"></script>
 <script>
 const ADMIN_PASSWORD = 'lmus-tap-2026';
 const AUTH_KEY = 'lmus_admin_auth';
@@ -1492,7 +1492,7 @@ const STATE_TO_MAP_REGION = {
   WI:'Midwest',MI:'Midwest',IL:'Midwest',IN:'Midwest',OH:'Midwest',MO:'Midwest',KS:'Midwest',
   ME:'Mid East',NH:'Mid East',VT:'Mid East',MA:'Mid East',CT:'Mid East',RI:'Mid East',NY:'Mid East',NJ:'Mid East',PA:'Mid East',
   VA:'East Coast',NC:'East Coast',SC:'East Coast',
-  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',
+  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',DC:'Mid Atlantic',
   FL:'Southeast',GA:'Southeast',AL:'Southeast',MS:'Southeast',TN:'Southeast',KY:'Southeast'
 };
 // Fallback for trainers whose only bookings are online (no state in event name)
@@ -1517,6 +1517,20 @@ const RC_HOME_REGION = {
 var TRAINER_HOME_REGION = {};
 
 function remapBookingsToMapRegions() {
+  // Pass 0: capture each trainer's legacy-assigned region (administrative assignment)
+  // before event-name parsing overwrites b.region. This is the most reliable home signal.
+  const legacyCount = {};
+  BOOKINGS.forEach(b => {
+    const mapped = LEGACY_TO_MAP_REGION[b.region];
+    if (!mapped) return;
+    const c = (legacyCount[b.trainer] = legacyCount[b.trainer] || {});
+    c[mapped] = (c[mapped] || 0) + 1;
+  });
+  const legacyPrimary = {};
+  Object.keys(legacyCount).forEach(t => {
+    legacyPrimary[t] = Object.entries(legacyCount[t]).sort((a, b) => b[1] - a[1])[0][0];
+  });
+
   // Pass 1: parse state from event name (e.g. "...Littleton, CO")
   BOOKINGS.forEach(b => {
     const m = (b.event || '').match(/,\s*([A-Z]{2})\b/);
@@ -1539,17 +1553,24 @@ function remapBookingsToMapRegions() {
     const legacy = b.region.slice('__pending__:'.length);
     b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
   });
-  // Pass 4: build the trainer→home-region authoritative map (RC pins win)
-  TRAINER_HOME_REGION = {};
-  Object.keys(trainerPrimary).forEach(t => {
-    TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || trainerPrimary[t];
-  });
-  // Catch trainers that only have unparseable bookings (no entry in trainerPrimary)
-  BOOKINGS.forEach(b => {
-    if (!TRAINER_HOME_REGION[b.trainer]) {
-      TRAINER_HOME_REGION[b.trainer] = RC_HOME_REGION[b.trainer] || b.region;
-    }
-  });
+  // Pass 4: build the trainer→home-region authoritative map
+  // Priority: Supabase address data > RC pin > legacy-assigned > event-location primary
+  if (!window.SUPABASE_ACTIVE) {
+    TRAINER_HOME_REGION = {};
+    const allTrainers = new Set(BOOKINGS.map(b => b.trainer));
+    allTrainers.forEach(t => {
+      TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || legacyPrimary[t] || trainerPrimary[t] || null;
+    });
+    // Catch any remaining trainers with no resolved region
+    BOOKINGS.forEach(b => {
+      if (!TRAINER_HOME_REGION[b.trainer]) {
+        TRAINER_HOME_REGION[b.trainer] = b.region;
+      }
+    });
+  } else {
+    // Supabase already set window.TRAINER_HOME_REGION — sync to local var
+    TRAINER_HOME_REGION = window.TRAINER_HOME_REGION;
+  }
 }
 
 // ── REGIONAL DIRECTORY DATA ───────────────────────────────────
@@ -1734,12 +1755,15 @@ function loadStoredBookings() {
   setUploadTimestamp(ts);
 }
 
-loadStoredBookings();
-remapBookingsToMapRegions();
-
-if (localStorage.getItem(AUTH_KEY) === '1') {
-  showApp();
-}
+window.initTAP = function() {
+  if (!window.SUPABASE_ACTIVE) {
+    loadStoredBookings();
+  }
+  remapBookingsToMapRegions();
+  if (localStorage.getItem(AUTH_KEY) === '1') {
+    showApp();
+  }
+};
 
 document.getElementById('upload-btn').addEventListener('click', () => {
   document.getElementById('csv-file').click();
@@ -1836,7 +1860,7 @@ function renderDrill(filtered) {
   };
   const progData = filtered.filter(b =>
     state.selectedPrograms.includes(b.program) &&
-    (state.drillRegion === 'All' || b.region === state.drillRegion) &&
+    (state.drillRegion === 'All' || (TRAINER_HOME_REGION[b.trainer] || b.region) === state.drillRegion) &&
     (bdState.type === 'all' || (BD_FULL_TYPES[bdState.type] || []).includes(b.eventType)) &&
     (bdState.q    === 'all' || b.fiscalQuarter === bdState.q) &&
     (bdState.fy   === 'all' || b.fiscalYear    === bdState.fy)

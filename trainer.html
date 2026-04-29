@@ -531,6 +531,38 @@
     background: var(--pc, var(--accent));
   }
 
+  /* ── CERTIFICATIONS GRID ──────────────────────────────────── */
+  .cert-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px 20px;
+  }
+  .cert-chip {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 12px; border-radius: 8px; min-width: 52px;
+    border: 1px solid var(--cc-border, rgba(0,255,99,0.25));
+    background: var(--cc-bg, rgba(0,255,99,0.06));
+  }
+  .cert-code {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+    font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--cc-color, var(--accent));
+    line-height: 1;
+  }
+  .cert-role {
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.5px;
+    color: var(--cc-color, var(--accent)); opacity: 0.7;
+    margin-top: 3px; text-transform: uppercase;
+  }
+  .cert-section-role-group { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+  .cert-role-label {
+    width: 100%; font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-mid);
+    padding: 0 0 4px; border-bottom: 1px solid var(--border); margin-bottom: 2px;
+  }
+  .cert-empty {
+    padding: 16px 24px; font-family: 'Rajdhani', sans-serif; font-size: 13px;
+    color: var(--ink-mid); font-style: italic;
+  }
+
   /* ── BOOKING TIMELINE ─────────────────────────────────────── */
   .timeline-body { padding: 14px 24px 24px; }
   .tl-quarter {
@@ -813,11 +845,11 @@
 <!-- ── AUTH GATE ── -->
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-badge">Trainer Access</div>
+    <div class="auth-badge">TAP Login</div>
     <div class="auth-title">LMUS <em>TΛP</em></div>
     <div class="auth-sub">Sign in to view your profile</div>
     <div class="auth-field">
-      <label class="auth-field-label">Trainer Name</label>
+      <label class="auth-field-label">Your Name</label>
       <input class="auth-input" type="text" id="trainer-input" list="trainer-list" placeholder="Type your name..." autocomplete="off" />
       <datalist id="trainer-list"></datalist>
     </div>
@@ -833,7 +865,7 @@
     <div class="header-logo"></div>
     <div>
       <div class="header-title">LMUS <em>TΛP</em></div>
-      <div class="header-sub">Trainer Profile</div>
+      <div class="header-sub">TAP Profile</div>
     </div>
     <div class="header-spacer"></div>
     <a href="index.html" class="nav-btn">Dashboard</a>
@@ -868,12 +900,12 @@
 
       <div class="next-card" id="nextCard"></div>
 
-      <div class="section-card">
+      <div class="section-card" id="certCard">
         <div class="section-head">
-          <div class="section-title">Trainer Programs</div>
+          <div class="section-title">Certifications</div>
           <span class="section-meta" id="progCount"></span>
         </div>
-        <div class="programs-strip" id="progStrip"></div>
+        <div class="cert-grid" id="certGrid"></div>
       </div>
 
       <div class="section-card timeline-section">
@@ -896,7 +928,7 @@
   </main>
 </div>
 
-<script src="bookings-data.js"></script>
+<script src="supabase-data.js"></script>
 <script>
 // ── 8-REGION MAP MAPPING ──────────────────────────────────────
 const STATE_TO_MAP_REGION = {
@@ -906,14 +938,32 @@ const STATE_TO_MAP_REGION = {
   WI:'Midwest',MI:'Midwest',IL:'Midwest',IN:'Midwest',OH:'Midwest',MO:'Midwest',KS:'Midwest',
   ME:'Mid East',NH:'Mid East',VT:'Mid East',MA:'Mid East',CT:'Mid East',RI:'Mid East',NY:'Mid East',NJ:'Mid East',PA:'Mid East',
   VA:'East Coast',NC:'East Coast',SC:'East Coast',
-  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',
+  MD:'Mid Atlantic',DE:'Mid Atlantic',WV:'Mid Atlantic',DC:'Mid Atlantic',
   FL:'Southeast',GA:'Southeast',AL:'Southeast',MS:'Southeast',TN:'Southeast',KY:'Southeast'
 };
 const LEGACY_TO_MAP_REGION = {
   'East Coast':'Mid East','Mid West':'Midwest','South Central':'South Central',
   'Central':'North Central','West Coast':'West Coast'
 };
-(function remap() {
+function remap() {
+  const RC_HOME_REGION = {
+    'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
+    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
+    'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
+  };
+  // Pass 0: capture legacy-assigned region per trainer before event parsing overwrites it
+  const legacyCount = {};
+  BOOKINGS.forEach(b => {
+    const mapped = LEGACY_TO_MAP_REGION[b.region];
+    if (!mapped) return;
+    const c = (legacyCount[b.trainer] = legacyCount[b.trainer] || {});
+    c[mapped] = (c[mapped] || 0) + 1;
+  });
+  const legacyPrimary = {};
+  Object.keys(legacyCount).forEach(t => {
+    legacyPrimary[t] = Object.entries(legacyCount[t]).sort((a, b) => b[1] - a[1])[0][0];
+  });
+  // Pass 1: parse state from event name
   BOOKINGS.forEach(b => {
     const m = (b.event || '').match(/,\s*([A-Z]{2})\b/);
     if (m && STATE_TO_MAP_REGION[m[1]]) b.region = STATE_TO_MAP_REGION[m[1]];
@@ -933,22 +983,20 @@ const LEGACY_TO_MAP_REGION = {
     const legacy = b.region.slice('__pending__:'.length);
     b.region = trainerPrimary[b.trainer] || LEGACY_TO_MAP_REGION[legacy] || legacy;
   });
-  // Trainer home region (authoritative for trainer display) — RC pins + most-common
-  const RC_HOME_REGION = {
-    'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
-    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
-    'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
-  };
-  window.TRAINER_HOME_REGION = {};
-  Object.keys(trainerPrimary).forEach(t => {
-    window.TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || trainerPrimary[t];
-  });
-  BOOKINGS.forEach(b => {
-    if (!window.TRAINER_HOME_REGION[b.trainer]) {
-      window.TRAINER_HOME_REGION[b.trainer] = RC_HOME_REGION[b.trainer] || b.region;
-    }
-  });
-})();
+  // Pass 4: home region — RC pin > legacy-assigned > event-location primary
+  if (!window.SUPABASE_ACTIVE) {
+    window.TRAINER_HOME_REGION = {};
+    const allTrainers = new Set(BOOKINGS.map(b => b.trainer));
+    allTrainers.forEach(t => {
+      window.TRAINER_HOME_REGION[t] = RC_HOME_REGION[t] || legacyPrimary[t] || trainerPrimary[t] || null;
+    });
+    BOOKINGS.forEach(b => {
+      if (!window.TRAINER_HOME_REGION[b.trainer]) {
+        window.TRAINER_HOME_REGION[b.trainer] = b.region;
+      }
+    });
+  }
+}
 
 const REGION_COLORS = {
   'East Coast':'#16a34a','Mid East':'#c026d3','Mid Atlantic':'#0369a1','Southeast':'#ea580c',
@@ -1029,7 +1077,7 @@ function regionColor(r) {
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
-const ALL_TRAINERS = [...new Set(BOOKINGS.map(b => b.trainer))].sort();
+let ALL_TRAINERS = [];
 let currentTrainer = null;
 
 function populateDatalist() {
@@ -1076,14 +1124,51 @@ function fyq(date) {
   return { fy:`FY${y}`, q:'Q4' };
 }
 
+// ── CERT HELPERS ──────────────────────────────────────────────
+const ROLE_RANK = { T: 0, A: 1, P: 2, I: 3 };
+function roleColor(roleStr) {
+  if (!roleStr) return '#888';
+  if (roleStr.includes('T')) return { color:'#00C44F', bg:'rgba(0,196,79,0.08)', border:'rgba(0,196,79,0.25)' };
+  if (roleStr.includes('A')) return { color:'#a855f7', bg:'rgba(168,85,247,0.08)', border:'rgba(168,85,247,0.25)' };
+  if (roleStr.includes('P')) return { color:'#0ea5e9', bg:'rgba(14,165,233,0.08)', border:'rgba(14,165,233,0.25)' };
+  return { color:'#f97316', bg:'rgba(249,115,22,0.08)', border:'rgba(249,115,22,0.25)' };
+}
+
+function renderCertifications(member) {
+  const progs = member?.programs || {};
+  const entries = Object.entries(progs).filter(([,v]) => v && v !== 'NaN');
+  const countEl = document.getElementById('progCount');
+  const grid = document.getElementById('certGrid');
+  if (!entries.length) {
+    countEl.textContent = '';
+    grid.innerHTML = '<div class="cert-empty">No certifications on file.</div>';
+    return;
+  }
+  countEl.textContent = entries.length + ' programs';
+  grid.innerHTML = entries
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([code, role]) => {
+      const rc = roleColor(role);
+      return `<div class="cert-chip" style="--cc-color:${rc.color};--cc-bg:${rc.bg};--cc-border:${rc.border}">
+        <div class="cert-code">${code}</div>
+        <div class="cert-role">${role}</div>
+      </div>`;
+    }).join('');
+}
+
 // ── PROFILE TAB ───────────────────────────────────────────────
 function renderProfile() {
   const t = currentTrainer;
   const my = BOOKINGS.filter(b => b.trainer === t);
-  if (!my.length) return;
+  const member = window.TEAM_MEMBERS?.find(m => m.full_name === t);
+  const isAssessor = member?.role === 'Assessor' || !my.length;
 
-  const region = window.TRAINER_HOME_REGION?.[t] || my[0].region;
+  const region = window.TRAINER_HOME_REGION?.[t] || member?.home_region || (my[0] && my[0].region) || '—';
   const color = regionColor(region);
+
+  // Eyebrow: role label
+  const eyebrow = document.querySelector('.ph-eyebrow');
+  if (eyebrow) eyebrow.textContent = isAssessor && !my.length ? 'Assessor' : 'Active Trainer';
 
   // Hero
   document.getElementById('ph-name').textContent = t;
@@ -1095,19 +1180,45 @@ function renderProfile() {
   regEl.querySelector('.ph-region-dot').style.boxShadow = '0 0 8px ' + color;
   regEl.querySelector('span:last-child').textContent = region;
 
-  // Tenure
+  // Tenure (trainers only)
   const dates = my.map(b => parseDate(b.startDate)).filter(Boolean).sort((a,b) => a-b);
   const first = dates[0], last = dates[dates.length-1];
-  const months = first && last ? Math.round((last-first)/(1000*60*60*24*30.44)) : 0;
-  const tenStr = months >= 12 ? `${Math.floor(months/12)}y ${months%12}m` : `${months}mo`;
-  document.getElementById('ph-tenure').innerHTML = `<strong>${tenStr}</strong> active span · first booking ${first ? first.toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}`;
+  if (my.length) {
+    const months = first && last ? Math.round((last-first)/(1000*60*60*24*30.44)) : 0;
+    const tenStr = months >= 12 ? `${Math.floor(months/12)}y ${months%12}m` : `${months}mo`;
+    document.getElementById('ph-tenure').innerHTML = `<strong>${tenStr}</strong> active span · first booking ${first ? first.toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '—'}`;
+  } else {
+    document.getElementById('ph-tenure').innerHTML = '';
+  }
 
-  // Qualification badges
+  // Qualification badges — prefer Supabase flags, fall back to hardcoded sets
   const quals = [];
-  if (AT_NAMES.has(t)) quals.push('<span class="ph-qual at" title="Advanced Trainer">AT</span>');
-  if (DT_NAMES.has(t)) quals.push('<span class="ph-qual dt" title="Dual Trainer">DT</span>');
-  if (RC_NAMES.has(t)) quals.push('<span class="ph-qual rc" title="Regional Coach">RC</span>');
+  const isAT = member ? member.is_at : AT_NAMES.has(t);
+  const isDT = member ? member.is_dt : DT_NAMES.has(t);
+  const isRC = member ? member.is_rc : RC_NAMES.has(t);
+  if (isAT) quals.push('<span class="ph-qual at" title="Advanced Trainer">AT</span>');
+  if (isDT) quals.push('<span class="ph-qual dt" title="Dual Trainer">DT</span>');
+  if (isRC) quals.push('<span class="ph-qual rc" title="Regional Coach">RC</span>');
   document.getElementById('ph-quals').innerHTML = quals.join('');
+
+  // Certifications from TEAM_MEMBERS.programs
+  renderCertifications(member);
+
+  // Hide booking sections for assessors with no bookings
+  const bookingSections = ['kpiStrip', 'nextCard', 'timelineBody', 'pulseBody'];
+  const timelineCard = document.querySelector('.timeline-section');
+  const pulseCard    = document.querySelector('.pulse-section');
+  if (!my.length) {
+    document.getElementById('kpiStrip').innerHTML = '';
+    document.getElementById('nextCard').innerHTML = '';
+    if (timelineCard) timelineCard.style.display = 'none';
+    if (pulseCard)    pulseCard.style.display = 'none';
+    document.getElementById('tlCount').textContent = '';
+    document.getElementById('pulseCount').textContent = '';
+    return;
+  }
+  if (timelineCard) timelineCard.style.display = '';
+  if (pulseCard)    pulseCard.style.display = '';
 
   // KPIs
   const today = new Date(); today.setHours(0,0,0,0);
@@ -1163,15 +1274,6 @@ function renderProfile() {
       </div>`;
   }
 
-  // Programs strip
-  const progSorted = programs.map(p => ({
-    name: p,
-    count: my.filter(b => b.program === p).length
-  })).sort((a,b) => b.count - a.count);
-  document.getElementById('progCount').textContent = programs.length + ' programs';
-  document.getElementById('progStrip').innerHTML = progSorted.map(p =>
-    `<span class="prog-chip" style="--pc:${PROG_COLORS[p.name] || '#888'}">${p.name} · ${p.count}</span>`
-  ).join('');
 
   // Timeline grouped by quarter
   const sorted = my.slice().sort((a,b) => {
@@ -1225,16 +1327,36 @@ function renderProfile() {
     return PULSE_WINDOW.has(`${b.fiscalYear} ${b.fiscalQuarter}`);
   }).map(b => ({ b, d: parseDate(b.startDate) }))
     .sort((a, b) => a.d - b.d);
-  document.getElementById('pulseCount').textContent = pulse.length + ' events · ' + region + ' · Q4 FY26 → Q2 FY27';
-  if (!pulse.length) {
+  // Group dual trainings (same dualGroup, or same date+event) into one card
+  const pulseGrouped = [];
+  const pulseKeyMap = new Map();
+  pulse.forEach(({ b, d }) => {
+    const key = b.dualGroup || (b.startDate + '|' + b.event);
+    if (pulseKeyMap.has(key)) {
+      pulseKeyMap.get(key).bookings.push(b);
+    } else {
+      const entry = { bookings: [b], d };
+      pulseKeyMap.set(key, entry);
+      pulseGrouped.push(entry);
+    }
+  });
+
+  document.getElementById('pulseCount').textContent = pulseGrouped.length + ' events · ' + region + ' · Q4 FY26 → Q2 FY27';
+  if (!pulseGrouped.length) {
     document.getElementById('pulseBody').innerHTML = `<div class="empty">No other upcoming events in your region</div>`;
   } else {
-    document.getElementById('pulseBody').innerHTML = pulse.map(({ b, d }, i) => {
+    document.getElementById('pulseBody').innerHTML = pulseGrouped.map(({ bookings, d }, i) => {
+      const b = bookings[0];
+      const isDual = bookings.length > 1;
       const pColor = PROG_COLORS[b.program] || '#888';
       const tColor = TYPE_COLORS[b.eventType] || '#888';
       const days = Math.round((d - today) / (1000*60*60*24));
       const countdownCls = days <= 7 ? 'hot' : days <= 30 ? 'warm' : '';
       const countdownTxt = days === 0 ? 'TODAY' : days === 1 ? 'TOMORROW' : `IN ${days} DAYS`;
+      const progLabel = isDual ? bookings.map(x => x.program).join(' + ') : b.program;
+      const progPills = isDual
+        ? bookings.map(x => `<span class="pulse-d-pill"><span class="dot" style="background:${PROG_COLORS[x.program]||'#888'}"></span>${x.program}</span>`).join('')
+        : `<span class="pulse-d-pill"><span class="dot" style="background:${pColor}"></span>${b.program}</span>`;
       return `<div class="pulse-card" style="--pcc:${pColor}" data-i="${i}" onclick="togglePulse(this)">
         <div class="pulse-head">
           <div class="pulse-tile">
@@ -1243,9 +1365,9 @@ function renderProfile() {
             <div class="pulse-tile-yr">'${String(d.getFullYear()).slice(2)}</div>
           </div>
           <div class="pulse-info">
-            <div class="pulse-prog">${b.program}</div>
+            <div class="pulse-prog">${progLabel}</div>
             <div class="pulse-meta">
-              <span class="pulse-meta-tag"><span class="dot" style="background:${tColor}"></span>${TYPE_LABEL[b.eventType] || b.eventType}</span>
+              <span class="pulse-meta-tag"><span class="dot" style="background:${tColor}"></span>${isDual ? 'Dual' : (TYPE_LABEL[b.eventType] || b.eventType)}</span>
               <span class="pulse-meta-tag ${countdownCls}">${countdownTxt}</span>
             </div>
           </div>
@@ -1262,7 +1384,7 @@ function renderProfile() {
             <div class="pulse-d-label">Details</div>
             <div class="pulse-d-val" style="display:flex;flex-wrap:wrap;gap:6px;">
               <span class="pulse-d-pill"><span class="dot" style="background:${tColor}"></span>${b.eventType}</span>
-              <span class="pulse-d-pill"><span class="dot" style="background:${pColor}"></span>${b.program}</span>
+              ${progPills}
               <span class="pulse-d-pill">${b.fiscalYear} · ${b.fiscalQuarter}</span>
               ${b.bookingId ? `<span class="pulse-d-pill" style="font-family:'DM Mono',monospace;letter-spacing:0.5px;">${b.bookingId}</span>` : ''}
             </div>
@@ -1282,27 +1404,35 @@ function toggleQuarter(el) {
 }
 
 // ── WIRE UP ───────────────────────────────────────────────────
-populateDatalist();
-document.getElementById('signin-btn').addEventListener('click', () => {
-  tryLogin(document.getElementById('trainer-input').value);
-});
-document.getElementById('trainer-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') tryLogin(e.target.value);
-});
-document.getElementById('signout-btn').addEventListener('click', signOut);
+window.initTAP = function() {
+  ALL_TRAINERS = window.TEAM_MEMBERS
+    ? window.TEAM_MEMBERS.map(m => m.full_name).sort()
+    : [...new Set(BOOKINGS.map(b => b.trainer))].sort();
 
-// Restore session — supports ?trainer= param too
-const urlParams = new URLSearchParams(window.location.search);
-const urlTrainer = urlParams.get('trainer');
-const savedTrainer = localStorage.getItem(SESSION_KEY);
-if (urlTrainer && ALL_TRAINERS.includes(urlTrainer)) {
-  currentTrainer = urlTrainer;
-  localStorage.setItem(SESSION_KEY, urlTrainer);
-  showApp();
-} else if (savedTrainer && ALL_TRAINERS.includes(savedTrainer)) {
-  currentTrainer = savedTrainer;
-  showApp();
-}
+  remap();
+  populateDatalist();
+
+  document.getElementById('signin-btn').addEventListener('click', () => {
+    tryLogin(document.getElementById('trainer-input').value);
+  });
+  document.getElementById('trainer-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') tryLogin(e.target.value);
+  });
+  document.getElementById('signout-btn').addEventListener('click', signOut);
+
+  // Restore session — supports ?trainer= param too
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlTrainer = urlParams.get('trainer');
+  const savedTrainer = localStorage.getItem(SESSION_KEY);
+  if (urlTrainer && ALL_TRAINERS.includes(urlTrainer)) {
+    currentTrainer = urlTrainer;
+    localStorage.setItem(SESSION_KEY, urlTrainer);
+    showApp();
+  } else if (savedTrainer && ALL_TRAINERS.includes(savedTrainer)) {
+    currentTrainer = savedTrainer;
+    showApp();
+  }
+};
 </script>
 </body>
 </html>

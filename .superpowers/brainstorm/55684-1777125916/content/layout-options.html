@@ -1,0 +1,108 @@
+<h2>Dashboard Layout Redesign</h2>
+<p class="subtitle">Which structure puts the right info front and center for trainers and ops?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-family:monospace;font-size:11px;padding:12px;background:#f8f8f8;border-radius:6px;line-height:1.8">
+        <div style="background:#0a0a0a;color:#00ff63;padding:4px 8px;border-radius:3px;font-size:10px;margin-bottom:6px">▌ LMUS TΛP — TRAINER TEAM</div>
+        <div style="background:#e8f5ee;border:1px solid #c0ddc9;padding:3px 8px;border-radius:3px;font-size:10px;color:#1a7a3c;margin-bottom:6px">66 IT · 43 Dual · 113 Online IT · 15 Adv · 111 Workshop</div>
+        <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px 8px;margin-bottom:4px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#888;margin-bottom:4px">TRAINER SUMMARY — 24 TRAINERS</div>
+          <div style="display:grid;grid-template-columns:130px 90px 120px 40px 30px 30px;gap:4px;font-size:9px;border-bottom:1px solid #eee;padding-bottom:3px;color:#888">TRAINER · REGION · WORKLOAD · TOT · IT · DUAL</div>
+          <div style="display:grid;grid-template-columns:130px 90px 120px 40px 30px 30px;gap:4px;font-size:9px;padding:2px 0">Ashley McCallum · <span style="color:#1a7a3c">EAST</span> · <span style="background:#e8f5ee;height:6px;display:inline-block;width:40px;border-radius:2px"></span> · 4 · 1 · —</div>
+          <div style="display:grid;grid-template-columns:130px 90px 120px 40px 30px 30px;gap:4px;font-size:9px;padding:2px 0">Kamesha Myers · <span style="color:#1a7a3c">EAST</span> · <span style="background:#e8f5ee;height:6px;display:inline-block;width:70px;border-radius:2px"></span> · 6 · 3 · —</div>
+          <div style="font-size:8px;color:#aaa;margin-top:3px">+ 22 more rows…</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px;font-size:9px;color:#888;text-align:center">📊 By Region</div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px;font-size:9px;color:#888;text-align:center">📈 By Quarter</div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px;font-size:9px;color:#888;text-align:center">📋 By Program</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Trainer First</h3>
+      <p>Stat cards collapse to a single compact strip. Trainer table moves to the top — immediate hero. Charts drop below as secondary context.</p>
+      <ul style="font-size:12px;margin-top:8px;padding-left:16px;color:#666;line-height:1.7">
+        <li>Trainers see their row without scrolling</li>
+        <li>Ops gets team view as the landing state</li>
+        <li>Charts still accessible, just lower</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-family:monospace;font-size:11px;padding:12px;background:#f8f8f8;border-radius:6px;line-height:1.8">
+        <div style="background:#0a0a0a;color:#00ff63;padding:4px 8px;border-radius:3px;font-size:10px;margin-bottom:6px">▌ LMUS TΛP — TRAINER TEAM</div>
+        <div style="display:grid;grid-template-columns:180px 1fr;gap:6px">
+          <div>
+            <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px;margin-bottom:4px">
+              <div style="font-size:9px;font-weight:700;color:#888;margin-bottom:4px">TOTALS</div>
+              <div style="font-size:11px;line-height:1.6">66 IT<br>43 Dual<br>113 Online IT<br>15 Adv<br>111 WS</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px">
+              <div style="font-size:9px;font-weight:700;color:#888;margin-bottom:3px">BY REGION</div>
+              <div style="font-size:9px;line-height:1.8;color:#666">East Coast ████████<br>Mid West ████<br>South Cen ███<br>Central ██<br>West ██</div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px">
+            <div style="font-size:9px;font-weight:700;color:#888;margin-bottom:4px">TRAINER SUMMARY — 24 TRAINERS</div>
+            <div style="font-size:9px;color:#666;border-bottom:1px solid #eee;padding-bottom:3px">TRAINER · REGION · WORKLOAD · TOT</div>
+            <div style="font-size:9px;padding:2px 0">Ashley McCallum · EAST · ████ · 4</div>
+            <div style="font-size:9px;padding:2px 0">Kamesha Myers · EAST · ████████ · 6</div>
+            <div style="font-size:9px;padding:2px 0">Amy Russo · EAST · ██████████ · 9</div>
+            <div style="font-size:9px;padding:2px 0;color:#aaa">+ 21 more…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Side Rail + Table</h3>
+      <p>Fixed left sidebar with totals and region chart. Trainer table fills the right — always co-visible with context.</p>
+      <ul style="font-size:12px;margin-top:8px;padding-left:16px;color:#666;line-height:1.7">
+        <li>Context always visible alongside trainer data</li>
+        <li>Less horizontal space for trainer table</li>
+        <li>More complex layout — harder on narrow screens</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="font-family:monospace;font-size:11px;padding:12px;background:#f8f8f8;border-radius:6px;line-height:1.8">
+        <div style="background:#0a0a0a;color:#00ff63;padding:4px 8px;border-radius:3px;font-size:10px;margin-bottom:6px">▌ LMUS TΛP — TRAINER TEAM</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px">
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:5px;text-align:center"><div style="font-size:8px;color:#888">IT</div><div style="font-size:16px;font-weight:700;color:#1a7a3c">66</div><div style="font-size:7px;color:#bbb">avg 2.8/trainer</div></div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:5px;text-align:center"><div style="font-size:8px;color:#888">DUAL</div><div style="font-size:16px;font-weight:700;color:#6b2fa0">43</div><div style="font-size:7px;color:#bbb">86 bookings</div></div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:5px;text-align:center"><div style="font-size:8px;color:#888">ONLINE IT</div><div style="font-size:16px;font-weight:700;color:#0e7490">113</div><div style="font-size:7px;color:#bbb">avg 4.7/trainer</div></div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:5px;text-align:center"><div style="font-size:8px;color:#888">ADV</div><div style="font-size:16px;font-weight:700;color:#b85c00">15</div><div style="font-size:7px;color:#bbb">15 in-person</div></div>
+          <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:5px;text-align:center"><div style="font-size:8px;color:#888">WORKSHOP</div><div style="font-size:16px;font-weight:700;color:#ff623e">111</div><div style="font-size:7px;color:#bbb">avg 4.6/trainer</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:6px">
+          <div style="font-size:9px;font-weight:700;color:#888;margin-bottom:4px">TRAINER SUMMARY — 24 TRAINERS <span style="float:right;color:#bbb">avg 14.5 bookings</span></div>
+          <div style="font-size:9px;color:#666;border-bottom:1px solid #eee;padding-bottom:3px">TRAINER · REGION · WORKLOAD · TOT · NEXT EVENT</div>
+          <div style="font-size:9px;padding:2px 0">Ashley McCallum · EAST · <span style="color:#1a7a3c">▓▓▓░░</span> · 4 · <span style="color:#666">Jun 12</span></div>
+          <div style="font-size:9px;padding:2px 0">Kamesha Myers · EAST · <span style="color:#1a7a3c">▓▓▓▓░</span> · 6 · <span style="color:#666">May 28</span></div>
+          <div style="font-size:9px;padding:2px 0">Amy Russo · EAST · <span style="color:#b85c00">▓▓▓▓▓</span> · 9 · <span style="color:#666">Jun 6</span></div>
+          <div style="font-size:8px;color:#aaa;margin-top:3px">+ 21 more…</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Smart Cards + Table First</h3>
+      <p>Cards stay but get smarter — show team averages and per-booking context. Trainer table immediately below with a "Next Event" date column. Charts move to Regional Ops.</p>
+      <ul style="font-size:12px;margin-top:8px;padding-left:16px;color:#666;line-height:1.7">
+        <li>Cards become more useful (avg per trainer)</li>
+        <li>Next event date = instant scheduling transparency</li>
+        <li>Trainers can benchmark themselves vs team avg</li>
+        <li>Charts removed from landing view entirely</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Click a layout to select it, then reply in the terminal.</p>
