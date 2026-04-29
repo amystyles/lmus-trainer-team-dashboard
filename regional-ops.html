@@ -1193,10 +1193,16 @@
   .sbs-gap-latest { font-size:10px; color:var(--muted); margin-top:3px; opacity:0.7; }
   .sbs-dt-inline { display:none; flex-direction:column; gap:5px; }
   .sbs-dt-inline.visible { display:flex; }
-  .sbs-prog2-select { -webkit-appearance:none; appearance:none; cursor:pointer;
+  .sbs-prog2-select { -webkit-appearance:none; appearance:none; cursor:pointer; background-color:#FFFFFF; color:#111;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300C850' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
+  body.dark-mode .sbs-prog2-select { background-color:#1a1a20; color:#EFEFEF; }
   .sbs-dual-badge { display:inline-block; font-size:8px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); color:#a855f7; margin-left:6px; vertical-align:middle; }
+  .sbs-ps-card--clickable { cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; }
+  .sbs-ps-card--clickable:hover { box-shadow:0 0 0 2px rgba(245,158,11,0.3); }
+  .sbs-ps-card--clickable.overdue-active { box-shadow:0 0 0 2px rgba(245,158,11,0.6), 0 0 16px rgba(245,158,11,0.15); }
+  #sbsList.overdue-mode .sbs-row:not([data-overdue="true"]) { opacity:0.25; pointer-events:none; }
+  #sbsList.overdue-mode .sbs-row[data-overdue="true"] { border-color:rgba(245,158,11,0.55); background:rgba(245,158,11,0.04); box-shadow:0 0 0 1px rgba(245,158,11,0.2); }
   .sbs-avail-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
   .sbs-avail-badge.yes { background:rgba(26,122,60,0.1);  color:var(--lm-green); border:1px solid rgba(26,122,60,0.25); }
   .sbs-avail-badge.no  { background:rgba(212,34,15,0.09); color:var(--lm-red);   border:1px solid rgba(212,34,15,0.22); }
@@ -3017,6 +3023,14 @@ function sbsDetectRegion() {
   return null;
 }
 
+function toggleOverdueMode() {
+  const list = document.getElementById('sbsList');
+  const card = document.getElementById('sbsOverdueCard');
+  if (!list) return;
+  list.classList.toggle('overdue-mode');
+  card.classList.toggle('overdue-active');
+}
+
 function toggleSBSType(btn) {
   const type = btn.dataset.type;
   if (sbsTypeFilter === type) {
@@ -3262,7 +3276,7 @@ function renderSBS(results, ctx) {
         </div>`;
     }
 
-    return `<div class="sbs-row ${rowCls} tier-${r.regionTier}" onclick="toggleSbsRow(this)">
+    return `<div class="sbs-row ${rowCls} tier-${r.regionTier}" ${r.daysSinceLast !== null && r.daysSinceLast > 90 ? 'data-overdue="true"' : ''} onclick="toggleSbsRow(this)">
       <div class="sbs-row-head">
         <div class="sbs-rank">${rank}</div>
         <div><div class="sbs-name">${r.name}${r.isDualPair ? '<span class="sbs-dual-badge">Dual Pair</span>' : ''}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div></div>
@@ -3325,10 +3339,10 @@ function renderSBS(results, ctx) {
           <div class="sbs-ps-val">${active90}</div>
           <div class="sbs-ps-sub">trainers with a recent event</div>
         </div>
-        <div class="sbs-ps-card" style="--ps-c: #f59e0b">
+        <div class="sbs-ps-card sbs-ps-card--clickable" id="sbsOverdueCard" style="--ps-c: #f59e0b" onclick="toggleOverdueMode()" title="Click to highlight overdue trainers">
           <div class="sbs-ps-card-label">Last Event Over 90 Days</div>
           <div class="sbs-ps-val">${over90}</div>
-          <div class="sbs-ps-sub">trainers overdue for this program</div>
+          <div class="sbs-ps-sub">trainers overdue · <span style="color:#f59e0b;font-weight:700">click to highlight</span></div>
         </div>
       </div>
     </div>
@@ -3337,7 +3351,7 @@ function renderSBS(results, ctx) {
       <div class="sbs-ch">Last Booked</div>
       <div class="sbs-ch">Availability</div><div class="sbs-ch">Workload</div>
     </div>
-    <div class="sbs-list">${closestRows}${neighborRows}${otherRows}</div>`;
+    <div class="sbs-list" id="sbsList">${closestRows}${neighborRows}${otherRows}</div>`;
 }
 </script>
 </body>
