@@ -3135,34 +3135,32 @@ function runSBS() {
     const trainsP2 = program2 ? t.prog2.length > 0 : false;
     if (sbsTypeFilter === 'dt' && program2 && !isDualPair && !trainsP2) return;
 
-    // Parse YYYY-MM-DD as local midnight to avoid UTC timezone drift
-    const ld = s => { const [y,m,d] = s.split('-').map(Number); const dt = new Date(y,m-1,d); return isNaN(dt)?null:dt; };
     const isAvailable = !t.all.some(b => {
-      const bd = ld(b.startDate);
-      return bd && (bd.getTime() === weekend.sat.getTime() || bd.getTime() === weekend.sun.getTime());
+      const bd = new Date(b.startDate);
+      return !isNaN(bd) && (bd.getTime() === weekend.sat.getTime() || bd.getTime() === weekend.sun.getTime());
     });
     const today = new Date(); today.setHours(0,0,0,0);
     const pastBookings = t.prog
-      .map(b => ({ b, d: ld(b.startDate) }))
-      .filter(x => x.d && x.d <= today)
+      .map(b => ({ b, d: new Date(b.startDate) }))
+      .filter(x => !isNaN(x.d) && x.d <= today)
       .sort((a, b) => b.d - a.d);
     const lastBooking   = pastBookings[0] || null;
     const lastDate      = lastBooking ? lastBooking.d : null;
     const daysSinceLast = lastDate ? Math.round((today - lastDate) / 86400000) : null;
     const allPast = t.all
-      .map(b => ({ b, d: ld(b.startDate) }))
-      .filter(x => x.d && x.d <= today)
+      .map(b => ({ b, d: new Date(b.startDate) }))
+      .filter(x => !isNaN(x.d) && x.d <= today)
       .sort((a, b) => b.d - a.d);
     const latestAllDate  = allPast[0] ? allPast[0].d : null;
     const daysSinceLatest = latestAllDate ? Math.round((today - latestAllDate) / 86400000) : null;
     const upcomingProg  = t.prog
-      .map(b => ({ b, d: ld(b.startDate) }))
-      .filter(x => x.d && x.d > today)
+      .map(b => ({ b, d: new Date(b.startDate) }))
+      .filter(x => !isNaN(x.d) && x.d > today)
       .sort((a, b) => a.d - b.d)
       .slice(0, 3);
     const qCount = t.all.filter(b => {
-      const bd = ld(b.startDate);
-      if (!bd) return false;
+      const bd = new Date(b.startDate);
+      if (isNaN(bd)) return false;
       const bfq = sbsFQ(bd);
       return bfq.fy === fq.fy && bfq.q === fq.q;
     }).length;
