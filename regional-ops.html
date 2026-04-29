@@ -1184,13 +1184,18 @@
   .sbs-row.tier-closest  { box-shadow: inset 4px 0 0 rgba(0,255,99,0.5); }
   .sbs-row.tier-neighbor { box-shadow: inset 4px 0 0 rgba(14,165,233,0.45); }
   .sbs-row.tier-other    { box-shadow: inset 4px 0 0 rgba(255,255,255,0.05); }
-  .sbs-gap-val { font-size:13px; font-weight:700; line-height:1; }
-  .sbs-gap-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+  .sbs-gap-val { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; letter-spacing:0.5px; line-height:1; }
+  .sbs-gap-sub { font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:0.2px; }
   .sbs-gap-val.long   { color:var(--lm-green); }
   .sbs-gap-val.mid    { color:var(--lm-amber); }
   .sbs-gap-val.recent { color:var(--accent2); }
   .sbs-gap-val.first  { color:var(--lm-blue); }
-  .sbs-gap-latest { font-size:9px; color:var(--muted); margin-top:3px; letter-spacing:0.5px; }
+  .sbs-gap-latest { font-size:10px; color:var(--muted); margin-top:3px; opacity:0.7; }
+  .sbs-dt-row { display:none; gap:14px; align-items:center; padding:10px 24px; background:rgba(107,47,160,0.07); border-bottom:1px solid rgba(107,47,160,0.2); }
+  .sbs-dt-row.visible { display:flex; }
+  .sbs-dt-row-label { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#a855f7; white-space:nowrap; }
+  .sbs-dt-row-hint { font-size:10px; color:rgba(168,85,247,0.6); font-family:'Rajdhani',sans-serif; font-weight:600; }
+  .sbs-dual-badge { display:inline-block; font-size:8px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); color:#a855f7; margin-left:6px; vertical-align:middle; }
   .sbs-avail-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
   .sbs-avail-badge.yes { background:rgba(26,122,60,0.1);  color:var(--lm-green); border:1px solid rgba(26,122,60,0.25); }
   .sbs-avail-badge.no  { background:rgba(212,34,15,0.09); color:var(--lm-red);   border:1px solid rgba(212,34,15,0.22); }
@@ -1458,6 +1463,23 @@
             </div>
           </div>
           <button class="sbs-run" onclick="runSBS()">Suggest &#x2192;</button>
+        </div>
+        <div class="sbs-dt-row" id="sbsDTRow">
+          <span class="sbs-dt-row-label">&#x2295; Pair Program</span>
+          <select class="sbs-select" id="sbsProgram2" style="width:220px">
+            <option value="">Any / not specified</option>
+            <option>BODYATTACK</option><option>BODYBALANCE</option><option>BODYCOMBAT</option>
+            <option>BODYJAM</option><option>BODYPUMP</option><option>BODYPUMP HEAVY</option>
+            <option>BODYSTEP</option><option>LES MILLS CEREMONY</option>
+            <option>LES MILLS CONQUER</option><option>LES MILLS CORE</option>
+            <option>LES MILLS DANCE</option><option>LES MILLS FUNCTIONAL STRENGTH</option>
+            <option>LES MILLS GRIT</option><option>LES MILLS PILATES</option>
+            <option>LES MILLS SHAPES</option><option>LES MILLS SPRINT</option>
+            <option>LES MILLS THRIVE</option><option>LES MILLS TONE</option>
+            <option>LES MILLS UNITED</option><option>LES MILLS YOGA</option>
+            <option>RPM</option><option>STRENGTH DEVELOPMENT</option>
+          </select>
+          <span class="sbs-dt-row-hint">Finds trainers dual-certified for both programs</span>
         </div>
         <div id="sbsBody" style="padding:20px 24px;">
           <div class="sbs-prompt"><strong>Select Program &amp; Date</strong>Fill in the fields above to see ranked trainer suggestions.</div>
@@ -3004,6 +3026,10 @@ function toggleSBSType(btn) {
     sbsTypeFilter = type;
     document.querySelectorAll('.sbs-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
   }
+  const dtRow = document.getElementById('sbsDTRow');
+  const p2    = document.getElementById('sbsProgram2');
+  if (sbsTypeFilter === 'dt') { dtRow.classList.add('visible'); }
+  else { dtRow.classList.remove('visible'); if (p2) p2.value = ''; }
 }
 
 
@@ -3035,15 +3061,29 @@ function runSBS() {
   const fq           = sbsFQ(targetDate);
   const detectedReg  = sbsDetectRegion();
 
+  const program2 = (sbsTypeFilter === 'dt' && document.getElementById('sbsProgram2')?.value) || '';
+
+  // Build dual-group → programs map for pair-matching
+  const dualGroupProgs = {};
+  if (program2) {
+    BOOKINGS.forEach(b => {
+      if (b.dualGroup) {
+        if (!dualGroupProgs[b.dualGroup]) dualGroupProgs[b.dualGroup] = new Set();
+        dualGroupProgs[b.dualGroup].add(b.program);
+      }
+    });
+  }
+
   const map = {};
   BOOKINGS.forEach(b => {
     if (!map[b.trainer]) map[b.trainer] = {
       name: b.trainer,
       region: TRAINER_HOME_REGION[b.trainer] || b.region,  // home region (RC-pinned, then most-common)
-      all: [], prog: []
+      all: [], prog: [], prog2: []
     };
     map[b.trainer].all.push(b);
-    if (b.program === program) map[b.trainer].prog.push(b);
+    if (b.program === program)  map[b.trainer].prog.push(b);
+    if (program2 && b.program === program2) map[b.trainer].prog2.push(b);
   });
 
   const results = [];
@@ -3064,6 +3104,13 @@ function runSBS() {
     if (sbsTypeFilter === 'workshop' && !hasWorkshop) return;
     if (sbsTypeFilter === 'rc'       && !isRC)        return;
     if (sbsTypeFilter === 'online'   && !hasOnline)   return;
+
+    // DT pair-program: must train program1 AND (be a verified dual pair OR train program2)
+    const isDualPair = program2
+      ? t.prog.some(b => b.eventType === 'Dual Training' && b.dualGroup && dualGroupProgs[b.dualGroup]?.has(program2))
+      : false;
+    const trainsP2 = program2 ? t.prog2.length > 0 : false;
+    if (sbsTypeFilter === 'dt' && program2 && !isDualPair && !trainsP2) return;
 
     const isAvailable = !t.all.some(b => {
       const bd = new Date(b.startDate);
@@ -3112,7 +3159,7 @@ function runSBS() {
     score += daysSinceLast === null ? 25 : Math.min(daysSinceLast / 10, 25);
     score -= qCount * 2;
 
-    results.push({ name:t.name, region:t.region, regionTier, inRegion, isAvailable, daysSinceLast, lastDate, lastBooking, upcomingProg, qCount, score, daysSinceLatest });
+    results.push({ name:t.name, region:t.region, regionTier, inRegion, isAvailable, daysSinceLast, lastDate, lastBooking, upcomingProg, qCount, score, daysSinceLatest, isDualPair });
   });
 
   // Sort: available first; within available, by region tier; then score
@@ -3210,11 +3257,11 @@ function renderSBS(results, ctx) {
     return `<div class="sbs-row ${rowCls} tier-${r.regionTier}" onclick="toggleSbsRow(this)">
       <div class="sbs-row-head">
         <div class="sbs-rank">${rank}</div>
-        <div><div class="sbs-name">${r.name}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div></div>
+        <div><div class="sbs-name">${r.name}${r.isDualPair ? '<span class="sbs-dual-badge">Dual Pair</span>' : ''}</div><div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div></div>
         <div class="sbs-gap-cell">
           <div class="sbs-gap-val ${gapCls}">${gapVal}</div>
           <div class="sbs-gap-sub">${gapSub}</div>
-          ${r.daysSinceLatest !== null && r.daysSinceLatest !== r.daysSinceLast ? `<div class="sbs-gap-latest">↳ ${r.daysSinceLatest}d any</div>` : ''}
+          ${r.daysSinceLatest !== null && r.daysSinceLatest !== r.daysSinceLast ? `<div class="sbs-gap-latest">↳ ${r.daysSinceLatest}d last event</div>` : ''}
         </div>
         <div><span class="sbs-avail-badge ${r.isAvailable?'yes':'no'}">${r.isAvailable?'&#x2713; Available':'&#x2717; Booked'}</span></div>
         <div class="sbs-qcount"><div class="sbs-qcount-val">${r.qCount}</div><div class="sbs-qcount-sub">${ctx.fq.q} bookings</div></div>
