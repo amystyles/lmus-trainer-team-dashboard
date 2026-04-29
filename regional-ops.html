@@ -3290,15 +3290,12 @@ function renderSBS(results, ctx) {
     ? divider(`Other Regions`, other.length, 'var(--muted)') + other.map(buildRow).join('')
     : '';
 
-  const pastAll   = results.flatMap(r => r.lastDate ? [r.lastDate] : []).sort((a,b) => b-a);
   const available = results.filter(r => r.isAvailable).length;
-
-  // Quarter info for the date stats
-  const fqOf = d => d ? sbsFQ(d) : null;
-  const recentQ = fqOf(pastAll[0]);
-  const oldestQ = fqOf(pastAll[pastAll.length-1]);
-  const recentMeta = recentQ ? `${recentQ.q} ${recentQ.fy}` : '';
-  const oldestMeta = oldestQ ? `${oldestQ.q} ${oldestQ.fy}` : '';
+  const today90 = new Date(); today90.setDate(today90.getDate() - 90);
+  const active90 = results.filter(r => r.lastDate && r.lastDate >= today90).length;
+  const daysArr = results.filter(r => r.daysSinceLast !== null).map(r => r.daysSinceLast);
+  const avgDays = daysArr.length ? Math.round(daysArr.reduce((a,b) => a+b, 0) / daysArr.length) : null;
+  const avgDaysCls = avgDays === null ? 'first' : avgDays > 180 ? 'long' : avgDays > 90 ? 'mid' : 'recent';
 
   body.innerHTML = `
     <div class="sbs-prog-summary sbs-prog-summary-top">
@@ -3318,16 +3315,14 @@ function renderSBS(results, ctx) {
           <div class="sbs-ps-sub">no conflict on Sat/Sun</div>
         </div>
         <div class="sbs-ps-card" style="--ps-c: #a855f7">
-          <div class="sbs-ps-card-label">Most Recent Booking</div>
-          <div class="sbs-ps-val is-date">${fmt(pastAll[0])}</div>
-          <div class="sbs-ps-sub">latest event on record</div>
-          ${recentMeta ? `<div class="sbs-ps-meta">${recentMeta}</div>` : ''}
+          <div class="sbs-ps-card-label">Active Last 90 Days</div>
+          <div class="sbs-ps-val">${active90}</div>
+          <div class="sbs-ps-sub">trainers with a recent event</div>
         </div>
         <div class="sbs-ps-card" style="--ps-c: #f59e0b">
-          <div class="sbs-ps-card-label">Oldest On Record</div>
-          <div class="sbs-ps-val is-date">${fmt(pastAll[pastAll.length-1])}</div>
-          <div class="sbs-ps-sub">earliest tracked event</div>
-          ${oldestMeta ? `<div class="sbs-ps-meta">${oldestMeta}</div>` : ''}
+          <div class="sbs-ps-card-label">Avg Days Since Trained</div>
+          <div class="sbs-ps-val sbs-gap-val ${avgDaysCls}" style="font-size:28px">${avgDays !== null ? avgDays + 'd' : '—'}</div>
+          <div class="sbs-ps-sub">across all qualified trainers</div>
         </div>
       </div>
     </div>
