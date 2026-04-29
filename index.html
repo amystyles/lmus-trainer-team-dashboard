@@ -630,7 +630,7 @@ const LEGACY_TO_MAP_REGION = {
 function remapBookings() {
   const RC_HOME_REGION = {
     'Karen Torrell':'West Coast','Sarah Gruba':'South Central','Trae Tripoli':'North Central',
-    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrell':'East Coast',
+    'Dan Maroun':'Midwest','Justine Collado':'Mid East','Jaime Terrill':'East Coast',
     'Keri Ball':'Mid Atlantic','Stacy Dee Rathborne':'Southeast'
   };
   // Pass 0: capture legacy-assigned region per trainer before event parsing overwrites it
@@ -734,7 +734,7 @@ const ALL_MONTHS = (() => {
 const MAX_DOTS = 4;
 
 const CXM_CXS = [
-  { region:'East Coast',    cxm:'Shelby Saylor',          cxs:'Chelsea Savage',    rc:'Jaime Terrell' },
+  { region:'East Coast',    cxm:'Shelby Saylor',          cxs:'Chelsea Savage',    rc:'Jaime Terrill' },
   { region:'Mid East',      cxm:'Jessica Young',          cxs:'Chelsea Savage',    rc:'Justine Collado' },
   { region:'Mid Atlantic',  cxm:'Herschel Elder',         cxs:'Alison Salermo',    rc:'Keri Ball' },
   { region:'Southeast',     cxm:'Adam Farino',            cxs:'Alison Salermo',    rc:'Stacy Dee Rathborne' },
@@ -758,7 +758,7 @@ function getFiltered() {
     if (state.fy     !== 'All' && b.fiscalYear    !== state.fy)     return false;
     if (state.q      !== 'All' && b.fiscalQuarter !== state.q)      return false;
     if (state.type.length > 0 && !state.type.includes(b.eventType)) return false;
-    if (state.region !== 'All' && b.region        !== state.region) return false;
+    if (state.region !== 'All' && (window.TRAINER_HOME_REGION?.[b.trainer] || b.region) !== state.region) return false;
     return true;
   });
 }
