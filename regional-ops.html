@@ -1038,6 +1038,7 @@
   .sbs-type-btn.active.dt       { background:rgba(107,47,160,0.15); border-color:rgba(107,47,160,0.55); color:var(--lm-purple); }
   .sbs-type-btn.active.workshop { background:rgba(255,98,62,0.15);  border-color:rgba(255,98,62,0.55);  color:#ff8a6e; }
   .sbs-type-btn.active.rc       { background:rgba(0,255,99,0.1);    border-color:rgba(0,255,99,0.45);   color:var(--accent); }
+  .sbs-type-btn.active.online   { background:rgba(34,211,238,0.12); border-color:rgba(34,211,238,0.55); color:#22d3ee; }
   .sbs-run { background:var(--accent); color:#000; border:none; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:14px; letter-spacing:1.5px; text-transform:uppercase; padding:9px 22px; border-radius:8px; white-space:nowrap; align-self:flex-end; transition:all 0.15s; box-shadow:0 0 16px rgba(0,255,99,0.2); }
   .sbs-run:hover { background:#33ff84; box-shadow:0 0 26px rgba(0,255,99,0.38); }
   .sbs-body { overflow-y:auto; flex:1; padding:20px 24px; }
@@ -1189,6 +1190,7 @@
   .sbs-gap-val.mid    { color:var(--lm-amber); }
   .sbs-gap-val.recent { color:var(--accent2); }
   .sbs-gap-val.first  { color:var(--lm-blue); }
+  .sbs-gap-latest { font-size:9px; color:var(--muted); margin-top:3px; letter-spacing:0.5px; }
   .sbs-avail-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
   .sbs-avail-badge.yes { background:rgba(26,122,60,0.1);  color:var(--lm-green); border:1px solid rgba(26,122,60,0.25); }
   .sbs-avail-badge.no  { background:rgba(212,34,15,0.09); color:var(--lm-red);   border:1px solid rgba(212,34,15,0.22); }
@@ -1452,6 +1454,7 @@
               <button class="sbs-type-btn dt"       data-type="dt"       onclick="toggleSBSType(this)">DT</button>
               <button class="sbs-type-btn workshop" data-type="workshop" onclick="toggleSBSType(this)">Workshop</button>
               <button class="sbs-type-btn rc"       data-type="rc"       onclick="toggleSBSType(this)">RC</button>
+              <button class="sbs-type-btn online"  data-type="online"  onclick="toggleSBSType(this)">Online</button>
             </div>
           </div>
           <button class="sbs-run" onclick="runSBS()">Suggest &#x2192;</button>
@@ -3051,6 +3054,7 @@ function runSBS() {
     const hasAT       = t.prog.some(b => b.eventType === 'Advanced Training' || b.eventType === 'Online Advanced Training');
     const hasDT       = t.prog.some(b => b.eventType === 'Dual Training');
     const hasWorkshop = t.prog.some(b => b.eventType === 'Instructor Workshop');
+    const hasOnline   = t.prog.some(b => b.eventType === 'Online IT' || b.eventType === 'Online Advanced Training');
     const isRC        = RC_NAMES.has(t.name);
 
     // Training type filter (strict)
@@ -3059,6 +3063,7 @@ function runSBS() {
     if (sbsTypeFilter === 'dt'       && !hasDT)       return;
     if (sbsTypeFilter === 'workshop' && !hasWorkshop) return;
     if (sbsTypeFilter === 'rc'       && !isRC)        return;
+    if (sbsTypeFilter === 'online'   && !hasOnline)   return;
 
     const isAvailable = !t.all.some(b => {
       const bd = new Date(b.startDate);
@@ -3074,6 +3079,12 @@ function runSBS() {
     const lastBooking   = pastBookings[0] || null;
     const lastDate      = lastBooking ? lastBooking.d : null;
     const daysSinceLast = lastDate ? Math.round((today - lastDate) / 86400000) : null;
+    const allPast = t.all
+      .map(b => ({ b, d: new Date(b.startDate) }))
+      .filter(x => !isNaN(x.d) && x.d <= today)
+      .sort((a, b) => b.d - a.d);
+    const latestAllDate  = allPast[0] ? allPast[0].d : null;
+    const daysSinceLatest = latestAllDate ? Math.round((today - latestAllDate) / 86400000) : null;
     // Pre-compute upcoming bookings for this program (used in the expand panel)
     const upcomingProg  = t.prog
       .map(b => ({ b, d: new Date(b.startDate) }))
@@ -3101,7 +3112,7 @@ function runSBS() {
     score += daysSinceLast === null ? 25 : Math.min(daysSinceLast / 10, 25);
     score -= qCount * 2;
 
-    results.push({ name:t.name, region:t.region, regionTier, inRegion, isAvailable, daysSinceLast, lastDate, lastBooking, upcomingProg, qCount, score });
+    results.push({ name:t.name, region:t.region, regionTier, inRegion, isAvailable, daysSinceLast, lastDate, lastBooking, upcomingProg, qCount, score, daysSinceLatest });
   });
 
   // Sort: available first; within available, by region tier; then score
@@ -3203,6 +3214,7 @@ function renderSBS(results, ctx) {
         <div class="sbs-gap-cell">
           <div class="sbs-gap-val ${gapCls}">${gapVal}</div>
           <div class="sbs-gap-sub">${gapSub}</div>
+          ${r.daysSinceLatest !== null && r.daysSinceLatest !== r.daysSinceLast ? `<div class="sbs-gap-latest">↳ ${r.daysSinceLatest}d any</div>` : ''}
         </div>
         <div><span class="sbs-avail-badge ${r.isAvailable?'yes':'no'}">${r.isAvailable?'&#x2713; Available':'&#x2717; Booked'}</span></div>
         <div class="sbs-qcount"><div class="sbs-qcount-val">${r.qCount}</div><div class="sbs-qcount-sub">${ctx.fq.q} bookings</div></div>
