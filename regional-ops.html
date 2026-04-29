@@ -1191,10 +1191,11 @@
   .sbs-gap-val.recent { color:var(--accent2); }
   .sbs-gap-val.first  { color:var(--lm-blue); }
   .sbs-gap-latest { font-size:10px; color:var(--muted); margin-top:3px; opacity:0.7; }
-  .sbs-dt-row { display:none; gap:14px; align-items:center; padding:10px 24px; background:rgba(107,47,160,0.07); border-bottom:1px solid rgba(107,47,160,0.2); }
-  .sbs-dt-row.visible { display:flex; }
-  .sbs-dt-row-label { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#a855f7; white-space:nowrap; }
-  .sbs-dt-row-hint { font-size:10px; color:rgba(168,85,247,0.6); font-family:'Rajdhani',sans-serif; font-weight:600; }
+  .sbs-dt-inline { display:none; flex-direction:column; gap:5px; }
+  .sbs-dt-inline.visible { display:flex; }
+  .sbs-prog2-select { -webkit-appearance:none; appearance:none; cursor:pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300C850' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center; padding-right:30px; }
   .sbs-dual-badge { display:inline-block; font-size:8px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); color:#a855f7; margin-left:6px; vertical-align:middle; }
   .sbs-avail-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
   .sbs-avail-badge.yes { background:rgba(26,122,60,0.1);  color:var(--lm-green); border:1px solid rgba(26,122,60,0.25); }
@@ -1437,6 +1438,22 @@
               <option>LES MILLS UNITED</option><option>LES MILLS YOGA</option>
               <option>RPM</option><option>STRENGTH DEVELOPMENT</option>
             </select>
+            <div class="sbs-dt-inline" id="sbsDTRow">
+              <label class="sbs-label" style="color:#a855f7;margin-top:6px">&#x2295; Program DT</label>
+              <select class="prog-dd-btn sbs-prog2-select" id="sbsProgram2">
+                <option value="">Any / not specified</option>
+                <option>BODYATTACK</option><option>BODYBALANCE</option><option>BODYCOMBAT</option>
+                <option>BODYJAM</option><option>BODYPUMP</option><option>BODYPUMP HEAVY</option>
+                <option>BODYSTEP</option><option>LES MILLS CEREMONY</option>
+                <option>LES MILLS CONQUER</option><option>LES MILLS CORE</option>
+                <option>LES MILLS DANCE</option><option>LES MILLS FUNCTIONAL STRENGTH</option>
+                <option>LES MILLS GRIT</option><option>LES MILLS PILATES</option>
+                <option>LES MILLS SHAPES</option><option>LES MILLS SPRINT</option>
+                <option>LES MILLS THRIVE</option><option>LES MILLS TONE</option>
+                <option>LES MILLS UNITED</option><option>LES MILLS YOGA</option>
+                <option>RPM</option><option>STRENGTH DEVELOPMENT</option>
+              </select>
+            </div>
           </div>
           <div class="sbs-field">
             <label class="sbs-label">Event Date</label>
@@ -1463,23 +1480,6 @@
             </div>
           </div>
           <button class="sbs-run" onclick="runSBS()">Suggest &#x2192;</button>
-        </div>
-        <div class="sbs-dt-row" id="sbsDTRow">
-          <span class="sbs-dt-row-label">&#x2295; Pair Program</span>
-          <select class="sbs-select" id="sbsProgram2" style="width:220px">
-            <option value="">Any / not specified</option>
-            <option>BODYATTACK</option><option>BODYBALANCE</option><option>BODYCOMBAT</option>
-            <option>BODYJAM</option><option>BODYPUMP</option><option>BODYPUMP HEAVY</option>
-            <option>BODYSTEP</option><option>LES MILLS CEREMONY</option>
-            <option>LES MILLS CONQUER</option><option>LES MILLS CORE</option>
-            <option>LES MILLS DANCE</option><option>LES MILLS FUNCTIONAL STRENGTH</option>
-            <option>LES MILLS GRIT</option><option>LES MILLS PILATES</option>
-            <option>LES MILLS SHAPES</option><option>LES MILLS SPRINT</option>
-            <option>LES MILLS THRIVE</option><option>LES MILLS TONE</option>
-            <option>LES MILLS UNITED</option><option>LES MILLS YOGA</option>
-            <option>RPM</option><option>STRENGTH DEVELOPMENT</option>
-          </select>
-          <span class="sbs-dt-row-hint">Finds trainers dual-certified for both programs</span>
         </div>
         <div id="sbsBody" style="padding:20px 24px;">
           <div class="sbs-prompt"><strong>Select Program &amp; Date</strong>Fill in the fields above to see ranked trainer suggestions.</div>
