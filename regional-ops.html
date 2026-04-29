@@ -3293,9 +3293,7 @@ function renderSBS(results, ctx) {
   const available = results.filter(r => r.isAvailable).length;
   const today90 = new Date(); today90.setDate(today90.getDate() - 90);
   const active90 = results.filter(r => r.lastDate && r.lastDate >= today90).length;
-  const daysArr = results.filter(r => r.daysSinceLast !== null).map(r => r.daysSinceLast);
-  const avgDays = daysArr.length ? Math.round(daysArr.reduce((a,b) => a+b, 0) / daysArr.length) : null;
-  const avgDaysCls = avgDays === null ? 'first' : avgDays > 180 ? 'long' : avgDays > 90 ? 'mid' : 'recent';
+  const over90 = results.filter(r => r.daysSinceLast !== null && r.daysSinceLast > 90).length;
 
   body.innerHTML = `
     <div class="sbs-prog-summary sbs-prog-summary-top">
@@ -3315,14 +3313,14 @@ function renderSBS(results, ctx) {
           <div class="sbs-ps-sub">no conflict on Sat/Sun</div>
         </div>
         <div class="sbs-ps-card" style="--ps-c: #a855f7">
-          <div class="sbs-ps-card-label">Active Last 90 Days</div>
+          <div class="sbs-ps-card-label">Booked Last 90 Days</div>
           <div class="sbs-ps-val">${active90}</div>
           <div class="sbs-ps-sub">trainers with a recent event</div>
         </div>
         <div class="sbs-ps-card" style="--ps-c: #f59e0b">
-          <div class="sbs-ps-card-label">Avg Days Since Trained</div>
-          <div class="sbs-ps-val sbs-gap-val ${avgDaysCls}" style="font-size:28px">${avgDays !== null ? avgDays + 'd' : '—'}</div>
-          <div class="sbs-ps-sub">across all qualified trainers</div>
+          <div class="sbs-ps-card-label">Last Event Over 90 Days</div>
+          <div class="sbs-ps-val">${over90}</div>
+          <div class="sbs-ps-sub">trainers overdue for this program</div>
         </div>
       </div>
     </div>
