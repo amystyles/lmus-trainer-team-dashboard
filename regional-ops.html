@@ -3283,7 +3283,7 @@ function renderSBS(results, ctx) {
       <div class="sbs-row-head">
         <div class="sbs-rank">${rank}</div>
         <div>
-          <div class="sbs-name">${r.name}${r.isDualPair ? '<span class="sbs-dual-badge">Dual Pair</span>' : ''}</div>
+          <div class="sbs-name">${r.name}${r.isDualPair ? '<span class="sbs-dual-badge">Dual Trainer</span>' : ''}</div>
           <div class="sbs-rgn"><span class="sbs-rgn-dot" style="background:${rdot}"></span>${r.region}${regionTag}</div>
           ${(() => { const m = window.TEAM_MEMBERS?.find(x => x.full_name === r.name); const progs = m?.programs ? Object.keys(m.programs) : []; return progs.length ? `<div class="sbs-prog-chips">${progs.map(p=>`<span class="sbs-prog-chip">${p}</span>`).join('')}</div>` : ''; })()}
         </div>
