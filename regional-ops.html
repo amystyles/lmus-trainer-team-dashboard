@@ -3213,6 +3213,13 @@ function renderSBS(results, ctx) {
     if (r.lastBooking) {
       const lb = r.lastBooking.b;
       const tColor = TYPE_COLORS_DARK[lb.eventType] || '#888';
+      // For dual training, find the paired program via dualGroup
+      const pairedProg = (lb.eventType === 'Dual Training' && lb.dualGroup)
+        ? (BOOKINGS.find(b => b.dualGroup === lb.dualGroup && b.program !== lb.program) || null)
+        : null;
+      const lastEventLabel = pairedProg
+        ? `Last Event · <span style="color:#a855f7">${lb.program}</span> <span style="opacity:0.4">+</span> <span style="color:#a855f7">${pairedProg.program}</span>`
+        : `Last Event for ${ctx.program}`;
       const upcoming = r.upcomingProg.map(({b, d}) => {
         const ufq = sbsFQ(d);
         return `<div class="sbs-d-up-row">
@@ -3226,11 +3233,12 @@ function renderSBS(results, ctx) {
         <div class="sbs-detail">
           <div class="sbs-detail-inner">
             <div class="sbs-d-section">
-              <div class="sbs-d-label">Last Event for ${ctx.program}</div>
+              <div class="sbs-d-label">${lastEventLabel}</div>
               <div class="sbs-d-event">
                 <div class="sbs-d-event-name">${lb.event}</div>
                 <div class="sbs-d-event-meta">
                   <span class="sbs-d-pill" style="color:${tColor};border-color:${tColor}55;background:${tColor}1a">${lb.eventType}</span>
+                  ${pairedProg ? `<span class="sbs-d-pill" style="color:#a855f7;border-color:#a85577;background:rgba(168,85,247,0.1)">${lb.program} + ${pairedProg.program}</span>` : ''}
                   <span class="sbs-d-pill">${r.lastDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
                   <span class="sbs-d-pill">${gapQ}</span>
                   ${lb.bookingId ? `<span class="sbs-d-pill mono">${lb.bookingId}</span>` : ''}
