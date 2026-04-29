@@ -1036,10 +1036,7 @@ const AT_NAMES = new Set([
   'Lauren Vibbert','Luca Callini','Mohamed Bounaim','Nikki Snow-Ybe','Sanna Ronkko',
   'Stacy Dee Rathborne','Sydnee Weinberg'
 ]);
-const DT_NAMES = new Set([
-  ...BOOKINGS.filter(b => b.dualGroup).map(b => b.trainer),
-  'Jaime Terrell'
-]);
+let DT_NAMES = new Set(['Jaime Terrell']); // populated in initTAP once BOOKINGS loads
 const RC_NAMES = new Set([
   'Karen Torrell','Sarah Gruba','Trae Tripoli','Dan Maroun',
   'Justine Collado','Jaime Terrell','Keri Ball','Stacy Dee Rathborne'
