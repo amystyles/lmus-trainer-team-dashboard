@@ -1201,11 +1201,13 @@
   .sbs-prog-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:5px; }
   .sbs-prog-chip { font-family:'DM Mono',monospace; font-size:8px; font-weight:500; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); letter-spacing:0.3px; }
   body:not(.dark-mode) .sbs-prog-chip { background:rgba(0,0,0,0.05); border-color:rgba(0,0,0,0.1); color:rgba(0,0,0,0.4); }
-  .sbs-ps-card--clickable { cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; }
-  .sbs-ps-card--clickable:hover { box-shadow:0 0 0 2px rgba(245,158,11,0.3); }
-  .sbs-ps-card--clickable.overdue-active { box-shadow:0 0 0 2px rgba(245,158,11,0.6), 0 0 16px rgba(245,158,11,0.15); }
-  #sbsList.overdue-mode .sbs-row:not([data-overdue="true"]) { opacity:0.25; pointer-events:none; }
-  #sbsList.overdue-mode .sbs-row[data-overdue="true"] { border-color:rgba(245,158,11,0.55); background:rgba(245,158,11,0.04); box-shadow:0 0 0 1px rgba(245,158,11,0.2); }
+  .sbs-ps-card--clickable { cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s, background 0.15s; }
+  .sbs-ps-card--clickable:hover { box-shadow:0 0 0 2px rgba(245,158,11,0.35); }
+  .sbs-ps-card--clickable.overdue-active { background:rgba(245,158,11,0.08) !important; box-shadow:0 0 0 2px rgba(245,158,11,0.7), 0 0 20px rgba(245,158,11,0.18); }
+  .sbs-ps-card--clickable.overdue-active .sbs-ps-card-label::after { content:' — FILTERING'; color:rgba(245,158,11,0.6); font-size:8px; letter-spacing:1px; }
+  #sbsList.overdue-mode .sbs-row:not([data-overdue="true"]) { opacity:0.18; pointer-events:none; }
+  #sbsList.overdue-mode .sbs-row[data-overdue="true"] { border-color:rgba(245,158,11,0.6); background:rgba(245,158,11,0.05); box-shadow:inset 3px 0 0 #f59e0b, 0 0 0 1px rgba(245,158,11,0.25); }
+  #sbsList.overdue-mode .sbs-divider { opacity:0.18; }
   .sbs-avail-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
   .sbs-avail-badge.yes { background:rgba(26,122,60,0.1);  color:var(--lm-green); border:1px solid rgba(26,122,60,0.25); }
   .sbs-avail-badge.no  { background:rgba(212,34,15,0.09); color:var(--lm-red);   border:1px solid rgba(212,34,15,0.22); }
@@ -3029,9 +3031,13 @@ function sbsDetectRegion() {
 function toggleOverdueMode() {
   const list = document.getElementById('sbsList');
   const card = document.getElementById('sbsOverdueCard');
+  const sub  = document.getElementById('sbsOverdueSub');
   if (!list) return;
-  list.classList.toggle('overdue-mode');
-  card.classList.toggle('overdue-active');
+  const on = list.classList.toggle('overdue-mode');
+  card.classList.toggle('overdue-active', on);
+  if (sub) sub.innerHTML = on
+    ? 'showing overdue only · <span style="color:#f59e0b;font-weight:700">click to clear</span>'
+    : 'trainers overdue · <span style="color:#f59e0b;font-weight:700">click to filter</span>';
 }
 
 function toggleSBSType(btn) {
@@ -3129,35 +3135,34 @@ function runSBS() {
     const trainsP2 = program2 ? t.prog2.length > 0 : false;
     if (sbsTypeFilter === 'dt' && program2 && !isDualPair && !trainsP2) return;
 
+    // Parse YYYY-MM-DD as local midnight to avoid UTC timezone drift
+    const ld = s => { const [y,m,d] = s.split('-').map(Number); const dt = new Date(y,m-1,d); return isNaN(dt)?null:dt; };
     const isAvailable = !t.all.some(b => {
-      const bd = new Date(b.startDate);
-      return !isNaN(bd) && (bd.getTime() === weekend.sat.getTime() || bd.getTime() === weekend.sun.getTime());
+      const bd = ld(b.startDate);
+      return bd && (bd.getTime() === weekend.sat.getTime() || bd.getTime() === weekend.sun.getTime());
     });
-    // Days-since-last-booked is measured from TODAY (not the target event date)
-    // so the "freshness" reflects real elapsed time, not the gap to a hypothetical future event.
     const today = new Date(); today.setHours(0,0,0,0);
     const pastBookings = t.prog
-      .map(b => ({ b, d: new Date(b.startDate) }))
-      .filter(x => !isNaN(x.d) && x.d <= today)
+      .map(b => ({ b, d: ld(b.startDate) }))
+      .filter(x => x.d && x.d <= today)
       .sort((a, b) => b.d - a.d);
     const lastBooking   = pastBookings[0] || null;
     const lastDate      = lastBooking ? lastBooking.d : null;
     const daysSinceLast = lastDate ? Math.round((today - lastDate) / 86400000) : null;
     const allPast = t.all
-      .map(b => ({ b, d: new Date(b.startDate) }))
-      .filter(x => !isNaN(x.d) && x.d <= today)
+      .map(b => ({ b, d: ld(b.startDate) }))
+      .filter(x => x.d && x.d <= today)
       .sort((a, b) => b.d - a.d);
     const latestAllDate  = allPast[0] ? allPast[0].d : null;
     const daysSinceLatest = latestAllDate ? Math.round((today - latestAllDate) / 86400000) : null;
-    // Pre-compute upcoming bookings for this program (used in the expand panel)
     const upcomingProg  = t.prog
-      .map(b => ({ b, d: new Date(b.startDate) }))
-      .filter(x => !isNaN(x.d) && x.d > today)
+      .map(b => ({ b, d: ld(b.startDate) }))
+      .filter(x => x.d && x.d > today)
       .sort((a, b) => a.d - b.d)
       .slice(0, 3);
     const qCount = t.all.filter(b => {
-      const bd = new Date(b.startDate);
-      if (isNaN(bd)) return false;
+      const bd = ld(b.startDate);
+      if (!bd) return false;
       const bfq = sbsFQ(bd);
       return bfq.fy === fq.fy && bfq.q === fq.q;
     }).length;
@@ -3349,7 +3354,7 @@ function renderSBS(results, ctx) {
         <div class="sbs-ps-card sbs-ps-card--clickable" id="sbsOverdueCard" style="--ps-c: #f59e0b" onclick="toggleOverdueMode()" title="Click to highlight overdue trainers">
           <div class="sbs-ps-card-label">Last Event Over 90 Days</div>
           <div class="sbs-ps-val">${over90}</div>
-          <div class="sbs-ps-sub">trainers overdue · <span style="color:#f59e0b;font-weight:700">click to highlight</span></div>
+          <div class="sbs-ps-sub" id="sbsOverdueSub">trainers overdue · <span style="color:#f59e0b;font-weight:700">click to filter</span></div>
         </div>
       </div>
     </div>
