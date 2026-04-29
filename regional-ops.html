@@ -1044,7 +1044,7 @@
   .sbs-body { overflow-y:auto; flex:1; padding:20px 24px; }
   .sbs-prompt { text-align:center; padding:44px 0; color:var(--muted); font-size:13px; }
   .sbs-prompt strong { display:block; font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:var(--border-mid); margin-bottom:6px; }
-  .sbs-col-heads { display:grid; grid-template-columns:36px 1fr 160px 100px 70px; gap:10px; padding:0 16px 10px; }
+  .sbs-col-heads { display:grid; grid-template-columns:36px 1fr 180px 110px 78px 28px; gap:10px; padding:0 16px 10px; }
   .sbs-ch { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
   .sbs-list { display:flex; flex-direction:column; gap:6px; }
   .sbs-row {
@@ -3361,7 +3361,7 @@ function renderSBS(results, ctx) {
     <div class="sbs-col-heads">
       <div class="sbs-ch">#</div><div class="sbs-ch">Trainer</div>
       <div class="sbs-ch">Last Booked</div>
-      <div class="sbs-ch">Availability</div><div class="sbs-ch">Workload</div>
+      <div class="sbs-ch">Availability</div><div class="sbs-ch">Workload</div><div></div>
     </div>
     <div class="sbs-list" id="sbsList">${closestRows}${neighborRows}${otherRows}</div>`;
 }
